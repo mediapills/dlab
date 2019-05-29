@@ -25,3 +25,52 @@ import six
 @six.add_metaclass(abc.ABCMeta)
 class BaseEntity:
     pass
+
+
+class LogMessage(BaseEntity):
+    """Log message entity."""
+
+    def __init__(self):
+        self._message = None
+        self._timestamp = None
+
+    @property
+    def message(self):
+        """Get log message
+
+        Returns:
+            str: string representation of log
+        """
+        return self._message
+
+    @message.setter
+    def message(self, message):
+        """Set log message
+
+        Args:
+            :param str message: log message
+
+        Returns:
+            None
+        """
+        self._message = message
+
+    @property
+    def timestamp(self):
+        """Get timestamp
+
+        Returns:
+            int: timestamp
+        """
+        return self._timestamp
+
+    @timestamp.setter
+    def timestamp(self, timestamp):
+        """Set timestamp
+
+        Args:
+            :param int timestamp: timestamp
+        Returns:
+            None
+        """
+        self._timestamp = timestamp
