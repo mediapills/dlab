@@ -18,32 +18,49 @@
 # under the License.
 #
 # ******************************************************************************
-
 import abc
 import six
-from jsonschema import validate, exceptions
+import unittest
+
+from dlab.infrastructure.validators import JSONValidator
 
 
 @six.add_metaclass(abc.ABCMeta)
-class BaseValidator:
+class BaseValidatorTestCase:
 
     @abc.abstractmethod
-    def validate(self, json):
+    def test_invalid_json(self):
+        pass
+
+    @abc.abstractmethod
+    def test_valid_json(self):
         pass
 
 
-class JSONValidator(BaseValidator):
-    """Validator for json data
+class TestJSONValidator(BaseValidatorTestCase, unittest.TestCase):
+    TEST_SCHEMA = {
+        "type": "object",
+        "properties": {
+            "description": {"type": "string"},
+            "status": {"type": "boolean"},
+            "value_a": {"type": "number"}
+        },
+        "required": ["value_a", "status"],
+        }
 
-    Args:
-        schema (dict): schema which describes what kind of json you expect
-    """
-    def __init__(self, schema):
-        self._schema = schema
+    def setUp(self):
+        self.validator = JSONValidator(self.TEST_SCHEMA)
 
-    def validate(self, json):
-        try:
-            validate(json, self._schema)
-        except exceptions.ValidationError:
-            return False
-        return True
+    def test_invalid_json(self):
+        test_data = {"description": "Hello world", "status": True}
+
+        valid = self.validator.validate(test_data)
+
+        self.assertFalse(valid)
+
+    def test_valid_json(self):
+        test_data = {"description": "Hello world", "value_a": 111, "status": True}
+
+        valid = self.validator.validate(test_data)
+
+        self.assertTrue(valid)
