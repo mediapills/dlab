@@ -1,9 +1,11 @@
+# Local vars for IAM-things
 locals {
   role_name = "${var.env_name}-endpoint-role"
   role_profile = "${var.env_name}-endpoint-profile"
   policy_name = "${var.env_name}-endpoint-policy"
 }
 
+# IAM role
 resource "aws_iam_role" "endpoint_role" {
   name = "${local.role_name}"
   assume_role_policy = <<EOF
@@ -27,11 +29,13 @@ EOF
   }
 }
 
+# IAM profile for attaching to EC2-instance
 resource "aws_iam_instance_profile" "endpoint_profile" {
   name = "${local.role_profile}"
   role = "${aws_iam_role.endpoint_role.name}"
 }
 
+# IAM policy
 resource "aws_iam_policy" "endpoint_policy" {
   name        = "${local.policy_name}"
 
@@ -93,6 +97,7 @@ resource "aws_iam_policy" "endpoint_policy" {
 EOF
 }
 
+# Policy attachment to the Role
 resource "aws_iam_role_policy_attachment" "endpoint_policy_attach" {
   role       = "${aws_iam_role.endpoint_role.name}"
   policy_arn = "${aws_iam_policy.endpoint_policy.arn}"

@@ -1,3 +1,4 @@
+# Modules vars
 variable "env_name" {}
 
 variable "region" {}
@@ -15,3 +16,7 @@ variable "key_name_var" {}
 variable "ami" {}
 
 variable "env_os" {}
+
+variable "vpc_id_existed" {}
+
+variable "vpc_check" {}

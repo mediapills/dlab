@@ -15,4 +15,6 @@ module "aws_endpoint" {
   key_name_var = "${var.key_name_var}"
   ami = "${var.ami}"
   env_os = "${var.env_os}"
+  vpc_check = "${var.vpc_check}"
+  vpc_id_existed = "${var.vpc_id_existed}"
 }
