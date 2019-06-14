@@ -3,7 +3,7 @@ variable "env_name" {}
 
 variable "region" {}
 
-variable "zone" {}
+variable "zone_var" {}
 
 variable "product" {}
 
@@ -19,4 +19,6 @@ variable "env_os" {}
 
 variable "vpc_id_existed" {}
 
-variable "vpc_check" {}
+variable "subnet_id" {}
+
+variable "network_type" {}

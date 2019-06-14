@@ -1,4 +1,3 @@
-# Main vars
 variable "access_key_var" {}
 
 variable "secret_key_var" {}
@@ -41,9 +40,15 @@ variable "ami" {
 # Variable used to import OS for EC2 (debian or redhat)
 variable "env_os" {}
 
-# Variable for check VPC existence (1 - if existed, 0 - if NOT existed and require creating)
-variable "vpc_check" {}
-
 # ID of existed VPC
-variable "vpc_id_existed" {}
+variable "vpc_id_existed" {
+  default = ""
+}
 
+variable "subnet_id" {
+    default = ""
+}
+
+variable "network_type" {
+    default = "private"
+}
