@@ -1,0 +1,132 @@
+swagger: '2.0'
+info:
+  title: DLab cloud endpoint API
+  description: DLab cloud endpoint API
+  contact:
+    email: Andriy_Yatskovets@epam.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.0.1
+tags:
+- name: billing
+paths:
+  '/billing/report/{id}':
+    get:
+      summary: Provide general information of billing report
+      description: |
+        See `GET /billing/report/{id}` for the information returned
+      tags:
+        - billing
+      produces:
+        - application/json
+      parameters:
+        - $ref: '#/parameters/id'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/BillingResponse'
+        '404':
+          description: Not Found
+parameters:
+  id:
+    name: id
+    in: path
+    required: true
+    description: Identifier of billing report.
+    type: string
+definitions:
+  BillingResponse:
+      type: object
+      required:
+      - meta
+      - data
+      - links
+      properties:
+        meta:
+          $ref: '#/definitions/Meta'
+        data:
+          $ref: '#/definitions/Data'
+        links:
+          $ref: '#/definitions/Links'
+  Meta:
+    type: object
+    properties:
+      costString:
+        type: string
+        minLength: 1
+        description: Total cost
+      currencyCode:
+        type: string
+        minLength: 1
+        description: Currency
+      from:
+        type: string
+        minLength: 1
+        description: Datetime
+      full_report:
+        type: string
+        minLength: 1
+        description: full report
+  Data:
+    type: object
+    properties:
+      cost:
+        type: number
+        description: Total cost
+      costString:
+        type: string
+        minLength: 1
+        description: Total cost in string
+      currencyCode:
+        type: string
+        minLength: 1
+        description: Currency
+      dlabId:
+        type: string
+        minLength: 1
+        description: dlab id
+      from:
+        type: string
+        minLength: 1
+        description: Datetime
+      meterCategory:
+        type: string
+        minLength: 1
+        description: Category
+      resourceType:
+        type: string
+        minLength: 1
+        description: Type of resource
+      size:
+        type: string
+        minLength: 1
+        description: Content size
+      status:
+        type: string
+        minLength: 1
+        description: Main status
+      to:
+        type: string
+        minLength: 1
+        description: Datetime
+      user:
+        type: string
+        minLength: 1
+        description: Username
+  Links:
+    type: object
+    properties:
+      self:
+        type: string
+        minLength: 1
+        description: Link to self collection
+      next:
+        type: string
+        minLength: 1
+        description: links to subsequent members in collection
+      last:
+        type: string
+        minLength: 1
+        description: links to last members in collection
