@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: dlab-gcp
+Version: 0.0.1
+Summary: Self-service, Fail-safe Exploratory Environment for Collaborative Data Science Workflow
+Home-page: http://dlab.apache.org/
+Author: Apache Software Foundation
+Author-email: dev@dlab.apache.org
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN

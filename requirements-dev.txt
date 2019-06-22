@@ -1,1 +1,19 @@
-mock
+-r requirements.txt
+
+# Test & lint packages
+coverage==4.5.3
+mock==3.0.5
+flake8==3.7.7
+pytest==4.5.0
+
+# Load requirements from services and tools
+-r services/dlab_aws/requirements.txt
+-r services/dlab_azure/requirements.txt
+-r services/dlab_gcp/requirements.txt
+-r tools/dlab_oauth/requirements.txt
+
+# Local packages required for global tests
+-e services/dlab_aws
+-e services/dlab_azure
+-e services/dlab_gcp
+-e tools/dlab_oauth

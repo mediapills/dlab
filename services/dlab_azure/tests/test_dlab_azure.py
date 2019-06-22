@@ -18,43 +18,14 @@
 # under the License.
 #
 # ******************************************************************************
-
-# TODO: Nodes deployment versions nodes with new and old deployment procedures
-
 import abc
+import unittest
+
 import six
 
-from dlab.infrastructure.repositories import ArrayRepository
-
-
-registry = ArrayRepository()
-
-
-def register(key):
-    """Register a class as a plug-in"""
-    def wrapper(cls):
-        # TODO show error if key already exists
-        registry.append(key, cls)
-        return cls
-
-    return wrapper
-
 
 @six.add_metaclass(abc.ABCMeta)
-class BaseController:
+class AzureTestCase(unittest.TestCase):
 
-    def __init__(self, logger):
-        self._logger = logger
-        logger.debug('Init controller "{name}".'.format(
-            name=self.__class__.__name__
-        ))
-
-
-@six.add_metaclass(abc.ABCMeta)
-class BaseAPIController:
-    pass
-
-
-# @six.add_metaclass(abc.ABCMeta)
-# class BaseCLIController:
-#     pass
+    def test_azure(self):
+        self.assertTrue(True)

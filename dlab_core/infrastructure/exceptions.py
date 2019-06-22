@@ -19,5 +19,14 @@
 #
 # ******************************************************************************
 
-import dlab.domain                                                 # noqa: F401
-import dlab.infrastructure                                         # noqa: F401
+from dlab_core.domain.exceptions import DLabException
+
+
+class CLIException(DLabException):
+    """DeploymentException class for DLab exceptions during deployment."""
+    pass
+
+
+class APIException(DLabException):
+    """ProvisioningException class for DLab exceptions during provisioning."""
+    pass

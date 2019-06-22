@@ -19,8 +19,8 @@
 #
 # ******************************************************************************
 
-import dlab.domain.entities                                        # noqa: F401
-import dlab.domain.exceptions                                      # noqa: F401
-import dlab.domain.logger                                          # noqa: F401
-import dlab.domain.repositories                                    # noqa: F401
-import dlab.domain.usecases                                        # noqa: F401
+import dlab_core.domain.entities                                        # noqa: F401
+import dlab_core.domain.exceptions                                      # noqa: F401
+import dlab_core.domain.logger                                          # noqa: F401
+import dlab_core.domain.repositories                                    # noqa: F401
+import dlab_core.domain.usecases                                        # noqa: F401

@@ -19,14 +19,10 @@
 #
 # ******************************************************************************
 
-from dlab.domain.exceptions import DLabException
+import abc
+import six
 
 
-class CLIException(DLabException):
-    """DeploymentException class for DLab exceptions during deployment."""
-    pass
-
-
-class APIException(DLabException):
-    """ProvisioningException class for DLab exceptions during provisioning."""
+@six.add_metaclass(abc.ABCMeta)
+class BaseEntity:
     pass

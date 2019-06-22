@@ -31,8 +31,9 @@ import sys
 
 from contextlib import contextmanager
 from copy import deepcopy
-from dlab.domain.exceptions import DLabException
-from dlab.domain.repositories import BaseRepository
+
+from dlab_core.domain.exceptions import DLabException
+from dlab_core.domain.repositories import BaseRepository
 
 # TODO remove PyUnresolvedReferences after python 3 migration
 if six.PY2:

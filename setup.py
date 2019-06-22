@@ -19,12 +19,13 @@
 #
 # ******************************************************************************
 import sys
+
 from setuptools import setup, find_packages
 
 __version_info__ = (0, 0, 1)
 __version__ = ".".join(map(str, __version_info__))
 
-NAME = "dlab"
+NAME = "dlab_core"
 DESCRIPTION = "DLab CLI - Common functionality"
 CLASSIFIERS = [
         "Development Status :: 1 - Planning  ",

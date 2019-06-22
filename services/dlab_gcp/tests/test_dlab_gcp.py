@@ -19,9 +19,13 @@
 #
 # ******************************************************************************
 import abc
+import unittest
+
 import six
 
 
 @six.add_metaclass(abc.ABCMeta)
-class BaseEntity:
-    pass
+class GCPTestCase(unittest.TestCase):
+
+    def test_gcp(self):
+        self.assertTrue(True)

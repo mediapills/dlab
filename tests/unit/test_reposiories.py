@@ -23,9 +23,10 @@ import sys
 import six
 import unittest
 
-from dlab.domain import exceptions
-from dlab.infrastructure import repositories
 from mock import patch
+
+from dlab_core.domain import exceptions
+from dlab_core.infrastructure import repositories
 
 
 # TODO: check keys and values with quotes, single and double
