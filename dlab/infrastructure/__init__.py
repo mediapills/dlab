@@ -19,9 +19,6 @@
 #
 # ******************************************************************************
 
-import dlab.infrastructure.aws                                     # noqa: F401
-import dlab.infrastructure.azure                                   # noqa: F401
-import dlab.infrastructure.gcp                                     # noqa: F401
 import dlab.infrastructure.controllers                             # noqa: F401
 import dlab.infrastructure.logger                                  # noqa: F401
 import dlab.infrastructure.repositories                            # noqa: F401

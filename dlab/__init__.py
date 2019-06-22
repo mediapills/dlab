@@ -18,3 +18,6 @@
 # under the License.
 #
 # ******************************************************************************
+
+import dlab.domain                                                 # noqa: F401
+import dlab.infrastructure                                         # noqa: F401
