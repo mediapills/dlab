@@ -19,6 +19,9 @@
 #
 # ******************************************************************************
 
-import dlab_core.domain                                                 # noqa: F401
-import dlab_core.infrastructure                                         # noqa: F401
-import dlab_core.plugins                                                # noqa: F401
+from dlab_core.domain.exceptions import DLabException
+
+
+class PluginException(DLabException):
+    """DeploymentException class for DLab exceptions during deployment."""
+    pass

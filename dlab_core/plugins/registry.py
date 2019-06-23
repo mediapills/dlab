@@ -19,6 +19,30 @@
 #
 # ******************************************************************************
 
-import dlab_core.domain                                                 # noqa: F401
-import dlab_core.infrastructure                                         # noqa: F401
-import dlab_core.plugins                                                # noqa: F401
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+# implement hooks logic integrated with plugins
+# TODO create wrapper for hooks do_action
+"""
+# hooks.do_action("routes.register")
+
+"""
+
+# TODO create add_action function (name, exec)
+# add_action("routes.register")
+
+#
+# from flask import Flask
+#
+# app = Flask(__name__)
+#
+#
+# @app.route('/user/<username>')
+# def show_user_profile(username):
+#     # show the user profile for that user
+#     return 'User %s' % username
+#
+# dlab.providers
+# dlab.hooks
+
+# Get PluginRegistry from custodian

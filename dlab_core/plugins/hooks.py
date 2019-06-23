@@ -19,6 +19,25 @@
 #
 # ******************************************************************************
 
-import dlab_core.domain                                                 # noqa: F401
-import dlab_core.infrastructure                                         # noqa: F401
-import dlab_core.plugins                                                # noqa: F401
+
+def do_action():
+    """
+    This function invokes all functions attached to action hook $tag. It is
+    possible to create new action hooks by simply calling this function,
+    specifying the name of the new hook using the $tag parameter.
+
+    :return: Any
+    """
+    pass
+
+
+def add_action():
+    """
+    Actions are the hooks that the WordPress core launches at specific points
+    during execution, or when specific events occur. Plugins can specify that
+    one or more of its Python functions are executed at these points, using the
+    Action API.
+
+    :return: None
+    """
+    pass
