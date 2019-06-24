@@ -1,7 +1,0 @@
-README.md
-setup.py
-dlab_azure/__init__.py
-dlab_azure.egg-info/PKG-INFO
-dlab_azure.egg-info/SOURCES.txt
-dlab_azure.egg-info/dependency_links.txt
-dlab_azure.egg-info/top_level.txt
