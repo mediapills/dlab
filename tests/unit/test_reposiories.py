@@ -417,8 +417,10 @@ class TestSQLiteRepository(unittest.TestCase):
         self.assertEqual({'key': 'value'}, data)
 
     def test_table_not_found_exception(self):
-        with self.assertRaises(exceptions.DLabException):
-            self.repo.find_all()
+        with patch('sqlite3.connect') as con:
+            con.return_value.execute.side_effect = exceptions.DLabException('Test')
+            with self.assertRaises(exceptions.DLabException):
+                self.repo.find_all()
 
     def test_constructor_wrong_file_type_exception(self):
         with self.assertRaises(exceptions.DLabException):
