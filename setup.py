@@ -51,21 +51,11 @@ with open("README.md", "r") as fh:
 
 packages = find_packages()
 
-requirements = [
-    'six',
-    'configparser',
-    'flask'
-]
-# TODO: while tox create environment it can't read from local file
-# TODO: need to be clarified
-# with open('requirements.txt') as f:
-#     requirements = f.read().splitlines()
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
 
 if sys.platform == 'win32':
     requirements.append('pypiwin32')
-
-# TODO: while tox create environment it can't read from local file
-# TODO: need to be clarified
 
 # Version info -- read without importing
 # _locals = {}
