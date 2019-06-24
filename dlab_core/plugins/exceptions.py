@@ -23,5 +23,5 @@ from dlab_core.domain.exceptions import DLabException
 
 
 class PluginException(DLabException):
-    """DeploymentException class for DLab exceptions during deployment."""
+    """PluginException class for DLab exceptions during plugin load."""
     pass

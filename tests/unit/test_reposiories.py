@@ -416,6 +416,7 @@ class TestSQLiteRepository(unittest.TestCase):
 
         self.assertEqual({'key': 'value'}, data)
 
+    # TODO check what is wrong with this test
     def test_table_not_found_exception(self):
         with patch('sqlite3.connect') as con:
             con.return_value.execute.side_effect = exceptions.DLabException('Test')

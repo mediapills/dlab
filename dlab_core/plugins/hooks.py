@@ -19,6 +19,13 @@
 #
 # ******************************************************************************
 
+# hooks needs to have next naming convention <verb>.<noun>
+
+# TODO Register all hooks
+
+HOOK_REGISTER_ROUTES = 'register.routes'
+HOOK_CHECK_AUTH = 'check.auth'
+
 
 def do_action():
     """

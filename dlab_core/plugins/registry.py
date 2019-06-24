@@ -21,28 +21,84 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-# implement hooks logic integrated with plugins
-# TODO create wrapper for hooks do_action
-"""
-# hooks.do_action("routes.register")
 
-"""
+# TODO finish this
+class PluginRegistry(object):
 
-# TODO create add_action function (name, exec)
-# add_action("routes.register")
+    EVENT_REGISTER = 0
+    EVENT_FINAL = 1
+    EVENTS = (EVENT_REGISTER, EVENT_FINAL)
 
-#
-# from flask import Flask
-#
-# app = Flask(__name__)
-#
-#
-# @app.route('/user/<username>')
-# def show_user_profile(username):
-#     # show the user profile for that user
-#     return 'User %s' % username
-#
-# dlab.providers
-# dlab.hooks
+    def __init__(self, plugin_type):
+        self.plugin_type = plugin_type
+        self._factories = {}
+        self._subscribers = {x: [] for x in self.EVENTS}
 
-# Get PluginRegistry from custodian
+    def subscribe(self, event, func):
+        if event not in self.EVENTS:
+            raise ValueError('Invalid event')
+        self._subscribers[event].append(func)
+
+    def register(self, name, klass=None, condition=True,
+                 condition_message="Missing dependency for {}"):
+        # TODO Check this
+        # if not condition and klass:
+        #     return klass
+        # # invoked as function
+        # if klass:
+        #     klass.type = name
+        #     self._factories[name] = klass
+        #     self.notify(self.EVENT_REGISTER, klass)
+        #     return klass
+        #
+        # # invoked as class decorator
+        # def _register_class(klass):
+        #     if not condition:
+        #         return klass
+        #     self._factories[name] = klass
+        #     klass.type = name
+        #     self.notify(self.EVENT_REGISTER, klass)
+        #     return klass
+        # return _register_class
+        pass
+
+    def unregister(self, name):
+        if name in self._factories:
+            del self._factories[name]
+
+    def notify(self, event, key=None):
+        for subscriber in self._subscribers[event]:
+            subscriber(self, key)
+
+    def __contains__(self, key):
+        return key in self._factories
+
+    def __getitem__(self, name):
+        return self.get(name)
+
+    def get(self, name):
+        return self._factories.get(name)
+
+    def keys(self):
+        return self._factories.keys()
+
+    def values(self):
+        return self._factories.values()
+
+    def items(self):
+        return self._factories.items()
+
+    def load_plugins(self):
+        """ Load external plugins.
+        Custodian is intended to interact with internal and external systems
+        that are not suitable for embedding into the custodian code base.
+        """
+        # TODO Check this
+        # try:
+        #     from pkg_resources import iter_entry_points
+        # except ImportError:
+        #     return
+        # for ep in iter_entry_points(group="custodian.%s" % self.plugin_type):
+        #     f = ep.load()
+        #     f()
+        pass

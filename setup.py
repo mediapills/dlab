@@ -18,9 +18,12 @@
 # under the License.
 #
 # ******************************************************************************
-import sys
 
+import sys
 from setuptools import setup, find_packages
+
+#  TODO Create setup.py builder like on example below:
+#  https://github.com/apache/airflow/blob/master/setup.py
 
 __version_info__ = (0, 0, 1)
 __version__ = ".".join(map(str, __version_info__))
@@ -51,15 +54,8 @@ with open("README.md", "r") as fh:
 
 packages = find_packages()
 
-requirements = [
-    'six',
-    'configparser',
-    'flask'
-]
-# TODO: while tox create environment it can't read from local file
-# TODO: need to be clarified
-# with open('requirements.txt') as f:
-#     requirements = f.read().splitlines()
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
 
 if sys.platform == 'win32':
     requirements.append('pypiwin32')

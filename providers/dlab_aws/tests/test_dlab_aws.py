@@ -19,9 +19,8 @@
 #
 # ******************************************************************************
 import abc
-import unittest
-
 import six
+import unittest
 
 
 @six.add_metaclass(abc.ABCMeta)

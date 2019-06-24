@@ -1,6 +1,8 @@
 Folder Structure Conventions
 ============================
 
+> **TODO Fix structure**
+
 > Folder structure options and naming conventions for software projects
 
 ### directory layout

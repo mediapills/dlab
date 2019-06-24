@@ -1,19 +1,29 @@
 -r requirements.txt
 
 # Test & lint packages
+
 coverage==4.5.3
 mock==3.0.5
 flake8==3.7.7
 pytest==4.5.0
 
-# Load requirements from services and tools
--r services/dlab_aws/requirements.txt
--r services/dlab_azure/requirements.txt
--r services/dlab_gcp/requirements.txt
--r tools/dlab_oauth/requirements.txt
+-r plugins/dlab_billing/requirements.txt
+-e plugins/dlab_billing
 
-# Local packages required for global tests
--e services/dlab_aws
--e services/dlab_azure
--e services/dlab_gcp
--e tools/dlab_oauth
+-r plugins/dlab_notebooks/requirements.txt
+-e plugins/dlab_notebooks
+
+-r providers/dlab_aws/requirements.txt
+-e providers/dlab_aws
+
+-r providers/dlab_azure/requirements.txt
+-e providers/dlab_azure
+
+-r providers/dlab_gcp/requirements.txt
+-e providers/dlab_gcp
+
+-r providers/dlab_oauth/requirements.txt
+-e providers/dlab_oauth
+
+-r providers/dlab_traefik/requirements.txt
+-e providers/dlab_traefik

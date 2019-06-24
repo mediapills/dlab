@@ -6,8 +6,6 @@ dlab_core.egg-info
 .eggs
 .idea
 *.pyc
-services/dlab_aws/dlab_aws.egg-info
-services/dlab_aws/dlab_azure.egg-info
-services/dlab_aws/dlab_gcp.egg-info
-tools/dlab_oauth/dlab_oauth.egg-info
+providers/*/*.egg-info
+plugins/*/*.egg-info
 .tox
