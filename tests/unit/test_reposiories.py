@@ -18,6 +18,7 @@
 # under the License.
 #
 # ******************************************************************************
+
 import abc
 import sys
 import six
@@ -278,9 +279,11 @@ class TestArgumentsRepository(BaseRepositoryTestCase, unittest.TestCase):
 
         self.assertEqual({'key': 'value'}, data)
 
+    @patch('sys.argv', MOCK_ARGS)
     def test_find_one_wrong_key(self):
-        val = self.repo.find_one('wrong_key')
-        self.assertIsNone(val)
+        with self.assertRaises(exceptions.DLabException):
+            val = self.repo.find_one('wrong_key')
+            self.assertIsNone(val)
 
     @patch('sys.argv', MOCK_ARGS_LOWER_CASE)
     def test_lower_case_sensitivity(self):
