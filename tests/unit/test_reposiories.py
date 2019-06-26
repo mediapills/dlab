@@ -34,7 +34,7 @@ from dlab_core.infrastructure import repositories
 # TODO: add constructor correct data type input test
 # TODO: add setter value data type check
 
-def config_parser_mock(data):
+def mock_config_parser(data):
 
     def decorator(func):
 
@@ -54,7 +54,7 @@ def config_parser_mock(data):
     return decorator
 
 
-def sqlite3_mock_fetchall(data=()):
+def mock_sqlite3_fetchall(data=()):
 
     def decorator(func):
 
@@ -68,7 +68,7 @@ def sqlite3_mock_fetchall(data=()):
     return decorator
 
 
-def sqlite3_mock_without_table(func):
+def mock_sqlite3_without_table(func):
 
     def wrapper(*args):
         with patch('sqlite3.connect') as con:
@@ -78,7 +78,7 @@ def sqlite3_mock_without_table(func):
     return wrapper
 
 
-def file_exists_mock(func):
+def mock_isfile(func):
 
     def wrapper(*args):
         with patch('os.path.isfile', return_value=True):
@@ -337,22 +337,22 @@ class TestConfigRepository(BaseRepositoryTestCase, unittest.TestCase):
         'v': 'upper_case_value',
     }
 
-    @file_exists_mock
+    @mock_isfile
     def setUp(self):
         self.repo = repositories.ConfigRepository(self.MOCK_FILE_PATH)
 
-    @config_parser_mock(data=MOCK_CONFIG)
+    @mock_config_parser(data=MOCK_CONFIG)
     def test_find_one(self):
         val = self.repo.find_one('section_key')
 
         self.assertEqual('value', val)
 
-    @config_parser_mock(data=MOCK_CONFIG)
+    @mock_config_parser(data=MOCK_CONFIG)
     def test_find_all(self):
         data = self.repo.find_all()
         self.assertEqual({'section_key': 'value'}, data)
 
-    @config_parser_mock(data=MOCK_CONFIG)
+    @mock_config_parser(data=MOCK_CONFIG)
     def test_find_one_wrong_key(self):
         val = self.repo.find_one('wrong_key')
 
@@ -364,21 +364,21 @@ class TestConfigRepository(BaseRepositoryTestCase, unittest.TestCase):
         with self.assertRaises(exceptions.DLabException):
             self.repo.file_path = file_path
 
-    @file_exists_mock
+    @mock_isfile
     def test_change_file(self):
         file_path = 'new_test.ini'
         self.repo.file_path = file_path
 
         self.assertEqual(file_path, self.repo.file_path)
 
-    @config_parser_mock(data=MOCK_CONFIG_LOWER_CASE)
+    @mock_config_parser(data=MOCK_CONFIG_LOWER_CASE)
     def test_lower_case_sensitivity(self):
         val = self.repo.find_one('section_lower_case_key')
 
         self.assertEqual('lower_case_value', val)
         self.assertIsNone(self.repo.find_one('SECTION_LOWER_CASE_KEY'))
 
-    @config_parser_mock(data=MOCK_CONFIG_UPPER_CASE)
+    @mock_config_parser(data=MOCK_CONFIG_UPPER_CASE)
     def test_upper_case_sensitivity(self):
         val = self.repo.find_one('SECTION_UPPER_CASE_KEY')
 
@@ -389,7 +389,7 @@ class TestConfigRepository(BaseRepositoryTestCase, unittest.TestCase):
         with self.assertRaises(exceptions.DLabException):
             self.repo = repositories.ConfigRepository(None)
 
-    @file_exists_mock
+    @mock_isfile
     def test_file_path_exception(self):
         with self.assertRaises(exceptions.DLabException):
             self.repo.file_path = None
@@ -403,7 +403,7 @@ class TestSQLiteRepository(unittest.TestCase):
     DATA_LOWER_CASE = (('lower_case_key', 'lower_case_value'),)
     DATA_UPPER_CASE = (('UPPER_CASE_KEY', 'upper_case_value'),)
 
-    @file_exists_mock
+    @mock_isfile
     def setUp(self):
         self.repo = repositories.SQLiteRepository(
             absolute_path=self.MOCK_FILE_PATH,
@@ -416,19 +416,19 @@ class TestSQLiteRepository(unittest.TestCase):
         with self.assertRaises(exceptions.DLabException):
             self.repo.file_path = file_path
 
-    @sqlite3_mock_fetchall(data=DATA)
+    @mock_sqlite3_fetchall(data=DATA)
     def test_find_one(self):
         val = self.repo.find_one('key')
 
         self.assertEqual('value', val)
 
-    @sqlite3_mock_fetchall(data=DATA)
+    @mock_sqlite3_fetchall(data=DATA)
     def test_find_all(self):
         data = self.repo.find_all()
 
         self.assertEqual({'key': 'value'}, data)
 
-    @sqlite3_mock_without_table
+    @mock_sqlite3_without_table
     def test_table_not_found_exception(self):
         with self.assertRaises(exceptions.DLabException):
             self.repo.find_all()
@@ -448,7 +448,7 @@ class TestSQLiteRepository(unittest.TestCase):
     #             table_name=None
     #         )
 
-    @file_exists_mock
+    @mock_isfile
     def test_file_path_exception(self):
         with self.assertRaises(exceptions.DLabException):
             self.repo.file_path = None
