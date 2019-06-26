@@ -54,7 +54,7 @@ def config_parser_mock(data):
     return decorator
 
 
-def sqlite3_mock(data=()):
+def sqlite3_mock_fetchall(data=()):
 
     def decorator(func):
 
@@ -66,6 +66,16 @@ def sqlite3_mock(data=()):
         return wrapper
 
     return decorator
+
+
+def sqlite3_mock_without_table(func):
+
+    def wrapper(*args):
+        with patch('sqlite3.connect') as con:
+            con.return_value.execute.side_effect = exceptions.DLabException('Table not found.')
+            return func(*args)
+
+    return wrapper
 
 
 def file_exists_mock(func):
@@ -385,7 +395,6 @@ class TestConfigRepository(BaseRepositoryTestCase, unittest.TestCase):
             self.repo.file_path = None
 
 
-# TODO: investigate why after test i got new files test.db :)
 class TestSQLiteRepository(unittest.TestCase):
     MOCK_FILE_PATH = 'test.db'
     DB_TABLE = 'config'
@@ -407,28 +416,26 @@ class TestSQLiteRepository(unittest.TestCase):
         with self.assertRaises(exceptions.DLabException):
             self.repo.file_path = file_path
 
-    @sqlite3_mock(data=DATA)
+    @sqlite3_mock_fetchall(data=DATA)
     def test_find_one(self):
         val = self.repo.find_one('key')
 
         self.assertEqual('value', val)
 
-    @sqlite3_mock(data=DATA)
+    @sqlite3_mock_fetchall(data=DATA)
     def test_find_all(self):
         data = self.repo.find_all()
 
         self.assertEqual({'key': 'value'}, data)
 
-    # TODO check what is wrong with this test
+    @sqlite3_mock_without_table
     def test_table_not_found_exception(self):
-        with patch('sqlite3.connect') as con:
-            con.return_value.execute.side_effect = exceptions.DLabException('Test')
-            with self.assertRaises(exceptions.DLabException):
-                self.repo.find_all()
+        with self.assertRaises(exceptions.DLabException):
+            self.repo.find_all()
 
     def test_constructor_wrong_file_type_exception(self):
         with self.assertRaises(exceptions.DLabException):
-            self.repo = self.repo = repositories.SQLiteRepository(
+            self.repo = repositories.SQLiteRepository(
                 absolute_path=None,
                 table_name=self.DB_TABLE
             )
