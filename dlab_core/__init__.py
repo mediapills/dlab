@@ -19,6 +19,7 @@
 #
 # ******************************************************************************
 
-import dlab_core.domain                                             # noqa: F401
-import dlab_core.infrastructure                                     # noqa: F401
-import dlab_core.plugins                                            # noqa: F401
+import dlab_core.domain
+import dlab_core.infrastructure
+import dlab_core.plugins
+import dlab_core.setup
