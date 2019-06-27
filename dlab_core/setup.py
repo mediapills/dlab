@@ -134,9 +134,6 @@ class AbstractParametersBuilder:
     def __init__(self):
         """
         Builder constructor
-
-        :param name: str Distribution name of your package
-        :param description: str Short, one-sentence summary of the package
         """
 
         self._parameters = {

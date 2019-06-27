@@ -163,7 +163,6 @@ class TestArrayRepository(BaseRepositoryTestCase, unittest.TestCase):
 
 
 class TestEnvironRepository(BaseRepositoryTestCase, unittest.TestCase):
-    # TODO: fix this dicts for win (uppercase them) to
     MOCK_ENVIRON = {'key': 'value'}
     MOCK_ENVIRON_LOWER_CASE = {'lower_case_key': 'lower_case_value'}
     MOCK_ENVIRON_UPPER_CASE = {'UPPER_CASE_KEY': 'upper_case_value'}
@@ -180,7 +179,7 @@ class TestEnvironRepository(BaseRepositoryTestCase, unittest.TestCase):
         self.repo = repositories.EnvironRepository()
         data = self.repo.find_all()
 
-        self.assertIn('key', data.keys())
+        self.assertIn('KEY' if sys.platform == 'win32' else 'key', data.keys())
 
     def test_find_one_wrong_key(self):
         self.repo = repositories.EnvironRepository()
@@ -299,7 +298,7 @@ class TestArgumentsRepository(BaseRepositoryTestCase, unittest.TestCase):
     def test_lower_case_sensitivity(self):
         self.repo.add_argument('--lower_case_key')
         val = self.repo.find_one('lower_case_key')
-        
+
         self.assertEqual('lower_case_value', val)
         self.assertIsNone(self.repo.find_one('LOWER_CASE_KEY'))
 
