@@ -19,5 +19,4 @@
 #
 # ******************************************************************************
 
-import dlab_core.domain.exceptions
-import dlab_core.domain.repositories
+import dlab_core.infrastructure.repositories

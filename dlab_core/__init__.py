@@ -20,4 +20,5 @@
 # ******************************************************************************
 
 import dlab_core.domain
+import dlab_core.infrastructure
 import dlab_core.setup

@@ -19,5 +19,17 @@
 #
 # ******************************************************************************
 
-import dlab_core.domain.exceptions
-import dlab_core.domain.repositories
+import abc
+import six
+
+
+@six.add_metaclass(abc.ABCMeta)
+class BaseRepository:
+
+    @abc.abstractmethod
+    def find_one(self, key):
+        pass
+
+    @abc.abstractmethod
+    def find_all(self):
+        pass
