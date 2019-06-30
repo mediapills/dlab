@@ -8,3 +8,11 @@ mock==3.0.5
 pytest==4.5.0
 pytest-cov==2.7.1
 
+-r providers/dlab_aws/requirements.txt
+-e providers/dlab_aws
+
+-r providers/dlab_azure/requirements.txt
+-e providers/dlab_azure
+
+-r providers/dlab_gcp/requirements.txt
+-e providers/dlab_gcp
