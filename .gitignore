@@ -1,0 +1,11 @@
+build
+.coverage
+dist
+dlab_core.egg-info
+.DS_Store
+.eggs
+.idea
+plugins/*/*.egg-info
+providers/*/*.egg-info
+*.pyc
+.tox
