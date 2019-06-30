@@ -60,7 +60,8 @@ def mock_sqlite3_fetchall(data=()):
 
         def wrapper(*args):
             with patch('sqlite3.connect') as con:
-                con.return_value.execute.return_value.fetchall.return_value = data
+                # TODO
+                con.return_value.execute.return_value.fetchall.return_value = data  # noqa: E501
                 return func(*args)
 
         return wrapper
