@@ -19,25 +19,68 @@
 #
 # ******************************************************************************
 
-from setuptools import setup
-from dlab_core.setup import Director, ParametersBuilder
+import sys
+from setuptools import setup, find_packages
 
+#  TODO Create setup.py builder like on example below:
+#  https://github.com/apache/airflow/blob/master/setup.py
 
-def do_setup():
-    description = "Self-service, Fail-safe Exploratory Environment for" \
-                  "Collaborative Data Science Workflow"
+__version_info__ = (0, 0, 1)
+__version__ = ".".join(map(str, __version_info__))
 
-    builder = ParametersBuilder(
-        'dlab_core',
-        description
-    )
+NAME = "dlab_core"
+DESCRIPTION = "DLab CLI - Common functionality"
+CLASSIFIERS = [
+        "Development Status :: 1 - Planning  ",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Intended Audience :: System Administrators",
+        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python",
+        "Topic :: Software Development",
+        "Topic :: Software Development :: Build Tools",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: System :: Clustering",
+        "Topic :: System :: Software Distribution",
+        "Topic :: System :: Systems Administration",
+    ]
+URL = "https://github.com/apache/incubator-dlab"
+AUTHOR = "Andrew Yatskovets"
+AUTHOR_EMAIL = 'andrew.yatskovets@gmail.com'
 
-    director = Director()
-    director.build(builder)
-    args = director.parameters
+with open("README.md", "r") as fh:
+    LONG_DESCRIPTION = fh.read()
 
-    setup(**args)
+packages = find_packages()
 
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
 
-if __name__ == "__main__":
-    do_setup()
+if sys.platform == 'win32':
+    requirements.append('pypiwin32')
+
+# TODO: while tox create environment it can't read from local file
+# TODO: need to be clarified
+
+# Version info -- read without importing
+# _locals = {}
+# with open("version.py") as fp:
+#     exec(fp.read(), None, _locals)
+version = __version__
+
+setup(
+    name=NAME,
+    version=version,
+    description=DESCRIPTION,
+    classifiers=CLASSIFIERS,
+    url=URL,
+    author=AUTHOR,
+    author_email=AUTHOR_EMAIL,
+    license="Apache-2.0",
+    packages=packages,
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
+    install_requires=requirements,
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type="text/markdown",
+)

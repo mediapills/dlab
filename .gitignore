@@ -5,7 +5,7 @@ dlab_core.egg-info
 .DS_Store
 .eggs
 .idea
-plugins/*/*.egg-info
-providers/*/*.egg-info
 *.pyc
+providers/*/*.egg-info
+plugins/*/*.egg-info
 .tox

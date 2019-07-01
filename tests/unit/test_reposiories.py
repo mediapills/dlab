@@ -35,9 +35,7 @@ from dlab_core.infrastructure import repositories
 # TODO: add setter value data type check
 
 def mock_config_parser(data):
-
     def decorator(func):
-
         def wrapper(*args):
             parser = '.'.join([
                 repositories.ConfigParser.__module__,
@@ -55,13 +53,10 @@ def mock_config_parser(data):
 
 
 def mock_sqlite3_fetchall(data=()):
-
     def decorator(func):
-
         def wrapper(*args):
             with patch('sqlite3.connect') as con:
-                # TODO
-                con.return_value.execute.return_value.fetchall.return_value = data  # noqa: E501
+                con.return_value.execute.return_value.fetchall.return_value = data
                 return func(*args)
 
         return wrapper
@@ -70,19 +65,15 @@ def mock_sqlite3_fetchall(data=()):
 
 
 def mock_sqlite3_without_table(func):
-
     def wrapper(*args):
         with patch('sqlite3.connect') as con:
-            con.return_value.execute.side_effect = exceptions.DLabException(
-                'Table not found.'
-            )
+            con.return_value.execute.side_effect = exceptions.DLabException('Table not found.')
             return func(*args)
 
     return wrapper
 
 
-def mock_isfile_true(func):
-
+def mock_isfile(func):
     def wrapper(*args):
         with patch('os.path.isfile', return_value=True):
             return func(*args)
@@ -166,6 +157,7 @@ class TestArrayRepository(BaseRepositoryTestCase, unittest.TestCase):
 
 
 class TestEnvironRepository(BaseRepositoryTestCase, unittest.TestCase):
+    # TODO: fix this dicts for win (uppercase them) to
     MOCK_ENVIRON = {'key': 'value'}
     MOCK_ENVIRON_LOWER_CASE = {'lower_case_key': 'lower_case_value'}
     MOCK_ENVIRON_UPPER_CASE = {'UPPER_CASE_KEY': 'upper_case_value'}
@@ -181,12 +173,8 @@ class TestEnvironRepository(BaseRepositoryTestCase, unittest.TestCase):
     def test_find_all(self):
         self.repo = repositories.EnvironRepository()
         data = self.repo.find_all()
-        key = 'key'
-        # TODO must work in library not tests (move this if in lib)
-        if sys.platform == 'win32':
-            key = 'KEY'
 
-        self.assertIn(key, data.keys())
+        self.assertIn('key', data.keys())
 
     def test_find_one_wrong_key(self):
         self.repo = repositories.EnvironRepository()
@@ -194,7 +182,6 @@ class TestEnvironRepository(BaseRepositoryTestCase, unittest.TestCase):
 
         self.assertIsNone(val)
 
-    # TODO check if sys.platform can help here for win
     @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
     @patch.dict('os.environ', MOCK_ENVIRON_LOWER_CASE)
     def test_lower_case_sensitivity(self):
@@ -204,7 +191,6 @@ class TestEnvironRepository(BaseRepositoryTestCase, unittest.TestCase):
         self.assertEqual('lower_case_value', val)
         self.assertIsNone(self.repo.find_one('LOWER_CASE_KEY'))
 
-    # TODO check if sys.platform can help here for win
     @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
     @patch.dict('os.environ', MOCK_ENVIRON_UPPER_CASE)
     def test_upper_case_sensitivity(self):
@@ -239,18 +225,14 @@ class TestJSONContentRepository(BaseRepositoryTestCase, unittest.TestCase):
         self.assertIsNone(val)
 
     def test_lower_case_sensitivity(self):
-        self.repo = repositories.JSONContentRepository(
-            self.MOCK_CONTENT_LOWER_CASE
-        )
+        self.repo = repositories.JSONContentRepository(self.MOCK_CONTENT_LOWER_CASE)
         val = self.repo.find_one('lower_case_key')
 
         self.assertEqual('lower_case_value', val)
         self.assertIsNone(self.repo.find_one('LOWER_CASE_KEY'))
 
     def test_upper_case_sensitivity(self):
-        self.repo = repositories.JSONContentRepository(
-            self.MOCK_CONTENT_UPPER_CASE
-        )
+        self.repo = repositories.JSONContentRepository(self.MOCK_CONTENT_UPPER_CASE)
         val = self.repo.find_one('UPPER_CASE_KEY')
 
         self.assertEqual('upper_case_value', val)
@@ -349,7 +331,7 @@ class TestConfigRepository(BaseRepositoryTestCase, unittest.TestCase):
         'v': 'upper_case_value',
     }
 
-    @mock_isfile_true
+    @mock_isfile
     def setUp(self):
         self.repo = repositories.ConfigRepository(self.MOCK_FILE_PATH)
 
@@ -376,7 +358,7 @@ class TestConfigRepository(BaseRepositoryTestCase, unittest.TestCase):
         with self.assertRaises(exceptions.DLabException):
             self.repo.file_path = file_path
 
-    @mock_isfile_true
+    @mock_isfile
     def test_change_file(self):
         file_path = 'new_test.ini'
         self.repo.file_path = file_path
@@ -401,7 +383,7 @@ class TestConfigRepository(BaseRepositoryTestCase, unittest.TestCase):
         with self.assertRaises(exceptions.DLabException):
             self.repo = repositories.ConfigRepository(None)
 
-    @mock_isfile_true
+    @mock_isfile
     def test_file_path_exception(self):
         with self.assertRaises(exceptions.DLabException):
             self.repo.file_path = None
@@ -415,7 +397,7 @@ class TestSQLiteRepository(unittest.TestCase):
     DATA_LOWER_CASE = (('lower_case_key', 'lower_case_value'),)
     DATA_UPPER_CASE = (('UPPER_CASE_KEY', 'upper_case_value'),)
 
-    @mock_isfile_true
+    @mock_isfile
     def setUp(self):
         self.repo = repositories.SQLiteRepository(
             absolute_path=self.MOCK_FILE_PATH,
@@ -460,7 +442,7 @@ class TestSQLiteRepository(unittest.TestCase):
     #             table_name=None
     #         )
 
-    @mock_isfile_true
+    @mock_isfile
     def test_file_path_exception(self):
         with self.assertRaises(exceptions.DLabException):
             self.repo.file_path = None

@@ -1,0 +1,13 @@
+openapi: 3.0.0
+info:
+  title: DLab cloud endpoint API
+  description: DLab cloud endpoint API
+  contact:
+    email: bohdan_hliva@epam.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.0.1
+tags:
+- name: notebooks
+  description: API connected with notebook actions

@@ -19,5 +19,4 @@
 #
 # ******************************************************************************
 
-__version_info__ = (0, 0, 1)                                 # pragma: no cover
-__version__ = ".".join(map(str, __version_info__))           # pragma: no cover
+__version__ = "0.0.1"

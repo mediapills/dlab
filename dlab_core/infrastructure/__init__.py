@@ -19,4 +19,6 @@
 #
 # ******************************************************************************
 
-import dlab_core.infrastructure.repositories
+import dlab_core.infrastructure.controllers                         # noqa: F401
+import dlab_core.infrastructure.logger                              # noqa: F401
+import dlab_core.infrastructure.repositories                        # noqa: F401

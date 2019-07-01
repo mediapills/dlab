@@ -3,10 +3,15 @@
 # Test & lint packages
 
 coverage==4.5.3
-flake8==3.7.7
 mock==3.0.5
+flake8==3.7.7
 pytest==4.5.0
-pytest-cov==2.7.1
+
+-r plugins/dlab_billing/requirements.txt
+-e plugins/dlab_billing
+
+-r plugins/dlab_notebooks/requirements.txt
+-e plugins/dlab_notebooks
 
 -r providers/dlab_aws/requirements.txt
 -e providers/dlab_aws
@@ -16,3 +21,9 @@ pytest-cov==2.7.1
 
 -r providers/dlab_gcp/requirements.txt
 -e providers/dlab_gcp
+
+-r providers/dlab_oauth/requirements.txt
+-e providers/dlab_oauth
+
+-r providers/dlab_traefik/requirements.txt
+-e providers/dlab_traefik

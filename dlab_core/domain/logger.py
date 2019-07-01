@@ -21,7 +21,6 @@
 
 import abc
 import six
-import logging
 
 ERROR = 40
 WARNING = 30

@@ -243,8 +243,7 @@ class SQLiteRepository(BaseFileRepository):
 
     LC_READING_ERROR = 'Error while data reading with message "{msg}".'
 
-    def __init__(self, absolute_path, table_name, key_field_name='key',
-                 value_field_name='value'):
+    def __init__(self, absolute_path, table_name, key_field_name='key', value_field_name='value'):
         super(SQLiteRepository, self).__init__(absolute_path)
 
         # TODO: table, key and value needs to be string
