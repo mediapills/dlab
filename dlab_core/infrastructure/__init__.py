@@ -19,4 +19,5 @@
 #
 # ******************************************************************************
 
+import dlab_core.infrastructure.logger
 import dlab_core.infrastructure.repositories
