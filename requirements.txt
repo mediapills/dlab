@@ -1,3 +1,5 @@
 six
 configparser
 flask
+moto
+boto3
