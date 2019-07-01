@@ -19,7 +19,43 @@
 #
 # ******************************************************************************
 
-import dlab_core.domain.entities
-import dlab_core.domain.exceptions
-import dlab_core.domain.logger
-import dlab_core.domain.repositories
+import abc
+import six
+
+ERROR = 40
+WARNING = 30
+WARN = WARNING
+INFO = 20
+DEBUG = 10
+
+
+@six.add_metaclass(abc.ABCMeta)
+class BaseLogger:
+
+    @abc.abstractmethod
+    def debug(self, msg):
+        """
+        Delegate an debug call to the underlying logger.
+        """
+        pass
+
+    @abc.abstractmethod
+    def info(self, msg):
+        """
+        Delegate an info call to the underlying logger.
+        """
+        pass
+
+    @abc.abstractmethod
+    def warn(self, msg):
+        """
+        Delegate a warning call to the underlying logger.
+        """
+        pass
+
+    @abc.abstractmethod
+    def err(self, msg):
+        """
+        Delegate an error call to the underlying logger.
+        """
+        pass
