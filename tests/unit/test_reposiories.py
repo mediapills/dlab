@@ -20,6 +20,7 @@
 # ******************************************************************************
 
 import abc
+import argparse
 import sys
 import six
 import unittest
@@ -29,10 +30,6 @@ from mock import patch
 from dlab_core.domain import exceptions
 from dlab_core.infrastructure import repositories
 
-
-# TODO: check keys and values with quotes, single and double
-# TODO: add constructor correct data type input test
-# TODO: add setter value data type check
 
 def mock_config_parser(data):
 
@@ -60,7 +57,6 @@ def mock_sqlite3_fetchall(data=()):
 
         def wrapper(*args):
             with patch('sqlite3.connect') as con:
-                # TODO
                 con.return_value.execute.return_value.fetchall.return_value = data  # noqa: E501
                 return func(*args)
 
@@ -118,6 +114,14 @@ class TestArrayRepository(BaseRepositoryTestCase, unittest.TestCase):
 
     def setUp(self):
         self.repo = repositories.ArrayRepository()
+
+    def test_constructor(self):
+        repo = repositories.ArrayRepository({})
+        self.assertEqual(repo.data, {})
+
+    def test_constructor_validation(self):
+        with self.assertRaises(exceptions.DLabException):
+            repositories.ArrayRepository('string')
 
     def test_find_one(self):
         self.repo.append('key', 'value')
@@ -220,46 +224,55 @@ class TestJSONContentRepository(BaseRepositoryTestCase, unittest.TestCase):
     MOCK_CONTENT_LOWER_CASE = '{"lower_case_key": "lower_case_value"}'
     MOCK_CONTENT_UPPER_CASE = '{"UPPER_CASE_KEY": "upper_case_value"}'
 
+    def test_constructor(self):
+        repo = repositories.JSONContentRepository(self.MOCK_CONTENT)
+
+        self.assertEqual(repo.content, self.MOCK_CONTENT)
+
+    def test_constructor_validation(self):
+        with self.assertRaises(exceptions.DLabException):
+            repositories.JSONContentRepository({})
+
     def test_find_one(self):
-        self.repo = repositories.JSONContentRepository(self.MOCK_CONTENT)
-        val = self.repo.find_one('key')
+        repo = repositories.JSONContentRepository(self.MOCK_CONTENT)
+        val = repo.find_one('key')
 
         self.assertEqual('value', val)
 
     def test_find_all(self):
-        self.repo = repositories.JSONContentRepository(self.MOCK_CONTENT)
-        data = self.repo.find_all()
+        repo = repositories.JSONContentRepository(self.MOCK_CONTENT)
+        data = repo.find_all()
 
         self.assertEqual({'key': 'value'}, data)
 
     def test_find_one_wrong_key(self):
-        self.repo = repositories.JSONContentRepository(self.MOCK_CONTENT)
-        val = self.repo.find_one('wrong_key')
+        repo = repositories.JSONContentRepository(self.MOCK_CONTENT)
+        val = repo.find_one('wrong_key')
 
         self.assertIsNone(val)
 
     def test_lower_case_sensitivity(self):
-        self.repo = repositories.JSONContentRepository(
+        repo = repositories.JSONContentRepository(
             self.MOCK_CONTENT_LOWER_CASE
         )
-        val = self.repo.find_one('lower_case_key')
+        val = repo.find_one('lower_case_key')
 
         self.assertEqual('lower_case_value', val)
-        self.assertIsNone(self.repo.find_one('LOWER_CASE_KEY'))
+        self.assertIsNone(repo.find_one('LOWER_CASE_KEY'))
 
     def test_upper_case_sensitivity(self):
-        self.repo = repositories.JSONContentRepository(
+        repo = repositories.JSONContentRepository(
             self.MOCK_CONTENT_UPPER_CASE
         )
-        val = self.repo.find_one('UPPER_CASE_KEY')
+        val = repo.find_one('UPPER_CASE_KEY')
 
         self.assertEqual('upper_case_value', val)
-        self.assertIsNone(self.repo.find_one('upper_case_key'))
+        self.assertIsNone(repo.find_one('upper_case_key'))
 
     def test_reload_content(self):
-        self.repo = repositories.JSONContentRepository(self.MOCK_CONTENT)
-        self.repo.content = '{"new_key": "new_value"}'
-        data = self.repo.find_all()
+        repo = repositories.JSONContentRepository(self.MOCK_CONTENT)
+        repo.content = '{"new_key": "new_value"}'
+        data = repo.find_all()
 
         self.assertEqual({'new_key': 'new_value'}, data)
 
@@ -286,6 +299,16 @@ class TestArgumentsRepository(BaseRepositoryTestCase, unittest.TestCase):
 
     def setUp(self):
         self.repo = repositories.ArgumentsRepository()
+
+    def test_constructor(self):
+        parser = argparse.ArgumentParser()
+        repo = repositories.ArgumentsRepository(parser)
+
+        self.assertEqual(repo.arg_parse, parser)
+
+    def test_constructor_validation(self):
+        with self.assertRaises(exceptions.DLabException):
+            repositories.ArgumentsRepository('string')
 
     @patch('sys.argv', MOCK_ARGS)
     def test_find_one(self):
@@ -468,6 +491,16 @@ class TestSQLiteRepository(unittest.TestCase):
 
 class TestChainOfRepositories(BaseRepositoryTestCase, unittest.TestCase):
 
+    def test_constructor(self):
+        arr = repositories.ArrayRepository()
+        repo = repositories.ChainOfRepositories([arr])
+
+        self.assertEqual(repo._repos[0], arr)
+
+    def test_constructor_validation(self):
+        with self.assertRaises(exceptions.DLabException):
+            repositories.ChainOfRepositories('string')
+
     def setUp(self):
         arr = repositories.ArrayRepository()
         arr.append('key', 'value')
@@ -507,3 +540,7 @@ class TestChainOfRepositories(BaseRepositoryTestCase, unittest.TestCase):
 
         self.assertEqual('upper_case_value', val)
         self.assertIsNone(self.repo.find_one('upper_case_key'))
+
+    def test_register_validation(self):
+        with self.assertRaises(exceptions.DLabException):
+            self.repo.register('str')

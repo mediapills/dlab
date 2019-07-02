@@ -28,8 +28,8 @@ class BaseRepository:
 
     @abc.abstractmethod
     def find_one(self, key):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def find_all(self):
-        pass
+        raise NotImplementedError

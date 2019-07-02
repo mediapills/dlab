@@ -35,10 +35,10 @@ from copy import deepcopy
 from dlab_core.domain.exceptions import DLabException
 from dlab_core.domain.repositories import BaseRepository
 
-# TODO remove PyUnresolvedReferences after python 3 migration
+# TODO remove condition after Python 2.7 retirement
 if six.PY2:
     # noinspection PyUnresolvedReferences
-    from ConfigParser import ConfigParser
+    from ConfigParser import ConfigParser  # pragma: no cover
 else:
     # noinspection PyUnresolvedReferences
     from configparser import ConfigParser
@@ -74,12 +74,12 @@ class BaseLazyLoadRepository(DictRepository):
 
     @abc.abstractmethod
     def _load_data(self):
-        pass
+        raise NotImplementedError
 
 
 @six.add_metaclass(abc.ABCMeta)
 class BaseFileRepository(DictRepository):
-    # TODO: Rename error message
+    # FIXME: Rename error message
     LC_NO_FILE = 'There is no file with path "{file_path}"'
 
     def __init__(self, absolute_path):
@@ -137,7 +137,7 @@ class EnvironRepository(DictRepository):
 
     def find_one(self, key):
         if sys.platform == 'win32':
-            key = key.upper()
+            key = key.upper()  # pragma: no cover
         return super(EnvironRepository, self).find_one(key)
 
 
@@ -247,7 +247,7 @@ class SQLiteRepository(BaseFileRepository):
                  value_field_name='value'):
         super(SQLiteRepository, self).__init__(absolute_path)
 
-        # TODO: table, key and value needs to be string
+        # TODO: add validation table, key and value needs to be string
         self._table_name = table_name
         self._key_field_name = key_field_name
         self._value_field_name = value_field_name
