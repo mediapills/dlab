@@ -30,6 +30,9 @@ LIB_NAME = 'dlab_core.setup.'
 FN_OPEN = LIB_NAME + 'open'
 FN_FIND_PACKAGES = LIB_NAME + 'find_packages'
 FN_ISFILE = LIB_NAME + 'os.path.isfile'
+LIB_NAME_PATH = LIB_NAME + 'os.path'
+LIB_NAME_SYS = LIB_NAME + 'sys'
+SYS_PLATFORM = LIB_NAME_SYS + '.platform'
 
 MOCK_NAME = 'dlab_core'
 MOCK_DESCRIPTION_SHORT = 'Test short description ...'
@@ -41,6 +44,18 @@ def mock_isfile(result=True):
 
         def wrapper(*args):
             with patch(FN_ISFILE, return_value=result):
+                return func(*args)
+
+        return wrapper
+
+    return decorator
+
+
+def mock_sys_platform(result='linux2'):
+    def decorator(func):
+
+        def wrapper(*args):
+            with patch(SYS_PLATFORM, return_value=result):
                 return func(*args)
 
         return wrapper
@@ -69,8 +84,9 @@ class TestParametersBuilder(unittest.TestCase):
 
         self.assertEqual(params['packages'], ['foo', 'bar', 'baz'])
 
-    @mock_isfile()
     @patch(FN_OPEN, mock_open(read_data="foo==1.0.0\nbar>=0.0.0\nbaz"))
+    @mock_sys_platform()
+    @mock_isfile()
     def test_set_requirements(self):
         self.builder.set_requirements()
         params = self.builder.parameters
@@ -89,7 +105,7 @@ class TestParametersBuilder(unittest.TestCase):
     @mock_isfile()
     @patch(FN_OPEN, mock_open(read_data=''))
     def test_set_requirements_for_win(self):
-        with patch(LIB_NAME + 'sys') as mock:
+        with patch(LIB_NAME_SYS) as mock:
             mock.platform = 'win32'
 
             self.builder.set_requirements()
@@ -97,9 +113,19 @@ class TestParametersBuilder(unittest.TestCase):
 
             self.assertGreater(len(requires), 0)
 
+    @patch(FN_OPEN, Mock(side_effect=IOError(
+        ENOENT,
+        "No such file or directory",
+        'some_file.txt'
+    )))
+    @mock_isfile()
+    def test_set_requirements_file_read_error(self):
+        with self.assertRaises(DLabSetupException):
+            self.builder.set_requirements()
+
     @patch(FN_OPEN, mock_open(read_data='__version__ = "0.0.1"'))
     def test_set_lib_version(self):
-        with patch(LIB_NAME + 'os.path') as mock:
+        with patch(LIB_NAME_PATH) as mock:
             mock.isfile = lambda path: path == self.builder.lib_file
 
             self.builder.set_version()
@@ -109,7 +135,7 @@ class TestParametersBuilder(unittest.TestCase):
 
     @patch(FN_OPEN, mock_open(read_data='__version__ = "0.0.1"'))
     def test_set_file_version(self):
-        with patch(LIB_NAME + 'os.path') as mock:
+        with patch(LIB_NAME_PATH) as mock:
             mock.isfile = lambda path: path == self.builder.version_file
 
             self.builder.set_version()
