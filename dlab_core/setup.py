@@ -267,4 +267,4 @@ class ParametersBuilder:
 
         :return: None
         """
-        self._parameters['entry_points'] = {}
+        raise NotImplementedError

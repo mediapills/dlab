@@ -19,14 +19,17 @@
 #
 # ******************************************************************************
 
+from errno import ENOENT
 import unittest
 from mock import patch, mock_open, Mock
 
 from dlab_core.setup import Director, DLabSetupException, ParametersBuilder
 
-LIB_NAME = 'dlab_core.'
-FN_OPEN = LIB_NAME + 'setup.open'
-FN_FIND_PACKAGES = LIB_NAME + 'setup.find_packages'
+LIB_NAME = 'dlab_core.setup.'
+
+FN_OPEN = LIB_NAME + 'open'
+FN_FIND_PACKAGES = LIB_NAME + 'find_packages'
+FN_ISFILE = LIB_NAME + 'os.path.isfile'
 
 MOCK_NAME = 'dlab_core'
 MOCK_DESCRIPTION_SHORT = 'Test short description ...'
@@ -37,7 +40,7 @@ def mock_isfile(result=True):
     def decorator(func):
 
         def wrapper(*args):
-            with patch('os.path.isfile', return_value=result):
+            with patch(FN_ISFILE, return_value=result):
                 return func(*args)
 
         return wrapper
@@ -66,13 +69,13 @@ class TestParametersBuilder(unittest.TestCase):
 
         self.assertEqual(params['packages'], ['foo', 'bar', 'baz'])
 
+    @mock_isfile()
     @patch(FN_OPEN, mock_open(read_data="foo==1.0.0\nbar>=0.0.0\nbaz"))
-    @mock_isfile
     def test_set_requirements(self):
         self.builder.set_requirements()
         params = self.builder.parameters
 
-        self.assertEqual(params['requirements'], [
+        self.assertEqual(params['install_requires'], [
             'foo==1.0.0',
             'bar>=0.0.0',
             'baz'
@@ -83,9 +86,20 @@ class TestParametersBuilder(unittest.TestCase):
         with self.assertRaises(DLabSetupException):
             self.builder.set_requirements()
 
+    @mock_isfile()
+    @patch(FN_OPEN, mock_open(read_data=''))
+    def test_set_requirements_for_win(self):
+        with patch(LIB_NAME + 'sys') as mock:
+            mock.platform = 'win32'
+
+            self.builder.set_requirements()
+            requires = self.builder.parameters['install_requires']
+
+            self.assertGreater(len(requires), 0)
+
     @patch(FN_OPEN, mock_open(read_data='__version__ = "0.0.1"'))
     def test_set_lib_version(self):
-        with patch('os.path.isfile') as mock:
+        with patch(LIB_NAME + 'os.path') as mock:
             mock.isfile = lambda path: path == self.builder.lib_file
 
             self.builder.set_version()
@@ -95,7 +109,7 @@ class TestParametersBuilder(unittest.TestCase):
 
     @patch(FN_OPEN, mock_open(read_data='__version__ = "0.0.1"'))
     def test_set_file_version(self):
-        with patch('os.path.isfile') as mock:
+        with patch(LIB_NAME + 'os.path') as mock:
             mock.isfile = lambda path: path == self.builder.version_file
 
             self.builder.set_version()
@@ -108,20 +122,30 @@ class TestParametersBuilder(unittest.TestCase):
         with self.assertRaises(DLabSetupException):
             self.builder.set_version()
 
+    @mock_isfile()
+    @patch(FN_OPEN, Mock(side_effect=IOError(
+        ENOENT,
+        "No such file or directory",
+        'some_file.txt'
+    )))
+    def test_version_file_read_error(self):
+        with self.assertRaises(DLabSetupException):
+            self.builder.set_version()
+
     @patch(FN_OPEN, mock_open(read_data=''))
-    @mock_isfile
+    @mock_isfile()
     def test_no_version_var(self):
         with self.assertRaises(DLabSetupException):
             self.builder.set_version()
 
     @patch(FN_OPEN, mock_open(read_data='file content'))
-    @mock_isfile
+    @mock_isfile()
     def test_version_not_exec_content(self):
         with self.assertRaises(DLabSetupException):
             self.builder.set_version()
 
     @patch(FN_OPEN, mock_open(read_data='Long description ...'))
-    @mock_isfile
+    @mock_isfile()
     def test_set_long_description(self):
         self.builder.set_long_description()
         params = self.builder.parameters
@@ -145,7 +169,7 @@ class TestDirector(unittest.TestCase):
 
     class ParametersBuilderA(ParametersBuilder):
         def set_requirements(self):
-            self._parameters['requirements'] = 'foo>=0.0.0'
+            self._parameters['install_requires'] = 'foo>=0.0.0'
 
         def set_version(self):
             self._parameters['version'] = '0.0.0'
@@ -160,3 +184,4 @@ class TestDirector(unittest.TestCase):
         parameters = self._director.parameters  # type: dict
 
         self.assertTrue(self.REQUIRED.issubset(parameters.keys()))
+        self.assertEqual(builder.name, MOCK_NAME)

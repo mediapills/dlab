@@ -1,11 +1,12 @@
-build
+*.pyc
 .coverage
-dist
-dlab_core.egg-info
 .DS_Store
 .eggs
 .idea
+.tox
+build
+dist
+dlab_core.egg-info
+htmlcov
 plugins/*/*.egg-info
 providers/*/*.egg-info
-*.pyc
-.tox
