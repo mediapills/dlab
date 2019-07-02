@@ -11,17 +11,28 @@ info:
 tags:
 - name: billing
 paths:
-  '/billing/report/{id}':
+  '/billing/report':
     get:
       summary: Provide general information of billing report
       description: |
-        See `GET /billing/report/{id}` for the information returned
+        See `GET /billing/report` for the information returned
       tags:
         - billing
       produces:
         - application/json
       parameters:
-        - $ref: '#/parameters/id'
+        - $ref: '#/parameters/filter%5Bfrom%5D'
+        - $ref: '#/parameters/filter%5Bto%5D'
+        - $ref: '#/parameters/filter%5BcostString%5D'
+        - $ref: '#/parameters/filter%5BcurrencyCode%5D'
+        - $ref: '#/parameters/filter%5Bfull_report%5D'
+        - $ref: '#/parameters/filter%5Bcost%5D'
+        - $ref: '#/parameters/filter%5BresourceType%5D'
+        - $ref: '#/parameters/filter%5BdlabId%5D'
+        - $ref: '#/parameters/filter%5BmeterCategory%5D'
+        - $ref: '#/parameters/filter%5Bsize%5D'
+        - $ref: '#/parameters/filter%5Bstatus%5D'
+        - $ref: '#/parameters/filter%5Buser%5D'
       responses:
         '200':
           description: OK
@@ -30,11 +41,77 @@ paths:
         '404':
           description: Not Found
 parameters:
-  id:
-    name: id
-    in: path
-    required: true
-    description: Identifier of billing report.
+  filter[from]:
+    in: query
+    name: filter[from]
+    required: false
+    description: Filter on the `from` date field.
+    type: string
+  filter[to]:
+    in: query
+    name: filter[to]
+    required: false
+    description: Filter on the `to` date field.
+    type: string
+  filter[costString]:
+    in: query
+    name: filter[costString]
+    required: false
+    description: Filter on the `costString` field.
+    type: string
+  filter[currencyCode]:
+    in: query
+    name: filter[currencyCode]
+    required: false
+    description: Filter on the `currencyCode` field.
+    type: string
+  filter[full_report]:
+    in: query
+    name: filter[full_report]
+    required: false
+    description: Filter on the `full_report` field.
+    type: string
+  filter[cost]:
+    in: query
+    name: filter[cost]
+    required: false
+    description: Filter on the `cost` field.
+    type: string
+  filter[resourceType]:
+    in: query
+    name: filter[resourceType]
+    required: false
+    description: Filter on the `resourceType` field.
+    type: string
+  filter[dlabId]:
+    in: query
+    name: filter[dlabId]
+    required: false
+    description: Filter on the `dlabId` field.
+    type: string
+  filter[meterCategory]:
+    in: query
+    name: filter[meterCategory]
+    required: false
+    description: Filter on the `meterCategory` field.
+    type: string
+  filter[size]:
+    in: query
+    name: filter[size]
+    required: false
+    description: Filter on the `size` field.
+    type: string
+  filter[status]:
+    in: query
+    name: filter[status]
+    required: false
+    description: Filter on the `status` field.
+    type: string
+  filter[user]:
+    in: query
+    name: filter[user]
+    required: false
+    description: Filter on the `user` field.
     type: string
 definitions:
   BillingResponse:
