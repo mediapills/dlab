@@ -8,7 +8,7 @@ mock==3.0.5
 pytest==4.5.0
 pytest-cov==2.7.1
 
--r providers/dlab_aws/requirements.txt
+-r providers/dlab_aws/requirements-dev.txt
 -e providers/dlab_aws
 
 -r providers/dlab_azure/requirements.txt
