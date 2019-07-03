@@ -5,6 +5,7 @@
 .idea
 .tox
 build
+coverage.xml
 dist
 dlab_core.egg-info
 htmlcov
