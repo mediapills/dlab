@@ -25,6 +25,7 @@ import abc
 import argparse
 import json
 import os
+import nt
 import six
 import sqlite3
 import sys
@@ -133,11 +134,9 @@ class EnvironRepository(DictRepository):
 
     def __init__(self):
         super(EnvironRepository, self).__init__()
-        self._data.update(os.environ)
+        self._data.update(nt.environ)
 
     def find_one(self, key):
-        if sys.platform == 'win32':
-            key = key.upper()  # pragma: no cover
         return super(EnvironRepository, self).find_one(key)
 
 

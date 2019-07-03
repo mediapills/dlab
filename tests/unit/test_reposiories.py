@@ -174,21 +174,18 @@ class TestEnvironRepository(BaseRepositoryTestCase, unittest.TestCase):
     MOCK_ENVIRON_LOWER_CASE = {'lower_case_key': 'lower_case_value'}
     MOCK_ENVIRON_UPPER_CASE = {'UPPER_CASE_KEY': 'upper_case_value'}
 
-    @patch.dict('os.environ', MOCK_ENVIRON)
+    @patch.dict('nt.environ', MOCK_ENVIRON)
     def test_find_one(self):
         self.repo = repositories.EnvironRepository()
         val = self.repo.find_one('key')
 
         self.assertEqual('value', val)
 
-    @patch.dict('os.environ', MOCK_ENVIRON)
+    @patch.dict('nt.environ', MOCK_ENVIRON)
     def test_find_all(self):
         self.repo = repositories.EnvironRepository()
         data = self.repo.find_all()
         key = 'key'
-        # TODO must work in library not tests (move this if in lib)
-        if sys.platform == 'win32':
-            key = 'KEY'
 
         self.assertIn(key, data.keys())
 
@@ -198,9 +195,7 @@ class TestEnvironRepository(BaseRepositoryTestCase, unittest.TestCase):
 
         self.assertIsNone(val)
 
-    # TODO check if sys.platform can help here for win
-    @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
-    @patch.dict('os.environ', MOCK_ENVIRON_LOWER_CASE)
+    @patch.dict('nt.environ', MOCK_ENVIRON_LOWER_CASE)
     def test_lower_case_sensitivity(self):
         self.repo = repositories.EnvironRepository()
         val = self.repo.find_one('lower_case_key')
@@ -208,9 +203,7 @@ class TestEnvironRepository(BaseRepositoryTestCase, unittest.TestCase):
         self.assertEqual('lower_case_value', val)
         self.assertIsNone(self.repo.find_one('LOWER_CASE_KEY'))
 
-    # TODO check if sys.platform can help here for win
-    @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
-    @patch.dict('os.environ', MOCK_ENVIRON_UPPER_CASE)
+    @patch.dict('nt.environ', MOCK_ENVIRON_UPPER_CASE)
     def test_upper_case_sensitivity(self):
         self.repo = repositories.EnvironRepository()
         val = self.repo.find_one('UPPER_CASE_KEY')
