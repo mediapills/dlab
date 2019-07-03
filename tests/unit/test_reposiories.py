@@ -24,6 +24,7 @@ import argparse
 import sys
 import six
 import unittest
+import sqlite3
 
 from mock import patch
 
@@ -71,6 +72,18 @@ def mock_sqlite3_without_table(func):
         with patch('sqlite3.connect') as con:
             con.return_value.execute.side_effect = exceptions.DLabException(
                 'Table not found.'
+            )
+            return func(*args)
+
+    return wrapper
+
+
+def mock_sqlite3_operational_error(func):
+
+    def wrapper(*args):
+        with patch('sqlite3.connect') as con:
+            con.return_value.execute.side_effect = sqlite3.OperationalError(
+                'Sqlite operational error.'
             )
             return func(*args)
 
@@ -457,6 +470,12 @@ class TestSQLiteRepository(unittest.TestCase):
 
         self.assertEqual('value', val)
 
+    @mock_sqlite3_fetchall()
+    def test_find_one_empty_data(self):
+        data = self.repo.find_one('key')
+
+        self.assertIsNone(data)
+
     @mock_sqlite3_fetchall(data=DATA)
     def test_find_all(self):
         data = self.repo.find_all()
@@ -465,6 +484,11 @@ class TestSQLiteRepository(unittest.TestCase):
 
     @mock_sqlite3_without_table
     def test_table_not_found_exception(self):
+        with self.assertRaises(exceptions.DLabException):
+            self.repo.find_all()
+
+    @mock_sqlite3_operational_error
+    def test_operational_error(self):
         with self.assertRaises(exceptions.DLabException):
             self.repo.find_all()
 
