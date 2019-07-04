@@ -20,19 +20,19 @@
 # ******************************************************************************
 
 from setuptools import setup
-from dlab_core.setup import Director, ParametersBuilder
+from dlab_core.setup import SetupParametersDirector, SetupParametersBuilder
 
 
 def do_setup():
     description = "Self-service, Fail-safe Exploratory Environment for" \
                   "Collaborative Data Science Workflow"
 
-    builder = ParametersBuilder(
+    builder = SetupParametersBuilder(
         'dlab_core',
         description
     )
 
-    director = Director()
+    director = SetupParametersDirector()
     director.build(builder)
     args = director.parameters
 

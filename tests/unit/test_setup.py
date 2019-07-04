@@ -19,11 +19,14 @@
 #
 # ******************************************************************************
 
-from errno import ENOENT
+import sys
 import unittest
+
+from dlab_core.setup import (
+    SetupParametersDirector, SetupParametersBuilder, DLabSetupException)
+from errno import ENOENT
 from mock import patch, mock_open, Mock
 
-from dlab_core.setup import Director, DLabSetupException, ParametersBuilder
 
 LIB_NAME = 'dlab_core.setup.'
 
@@ -33,6 +36,14 @@ FN_ISFILE = LIB_NAME + 'os.path.isfile'
 
 MOCK_NAME = 'dlab_core'
 MOCK_DESCRIPTION_SHORT = 'Test short description ...'
+
+REQUIRED_FIELDS = {
+    'version',
+    'description',
+    'author',
+    'author_email',
+    'url',
+    'packages'}
 
 
 def mock_isfile(result=True):
@@ -48,10 +59,10 @@ def mock_isfile(result=True):
     return decorator
 
 
-class TestParametersBuilder(unittest.TestCase):
+class TestSetupParametersBuilder(unittest.TestCase):
 
     def setUp(self):
-        self.builder = ParametersBuilder(
+        self.builder = SetupParametersBuilder(
             MOCK_NAME,
             MOCK_DESCRIPTION_SHORT
         )
@@ -71,6 +82,7 @@ class TestParametersBuilder(unittest.TestCase):
 
     @mock_isfile()
     @patch(FN_OPEN, mock_open(read_data="foo==1.0.0\nbar>=0.0.0\nbaz"))
+    @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
     def test_set_requirements(self):
         self.builder.set_requirements()
         params = self.builder.parameters
@@ -157,31 +169,23 @@ class TestParametersBuilder(unittest.TestCase):
         with self.assertRaises(DLabSetupException):
             self.builder.set_long_description()
 
+    def test_all_required_exists(self):
+        params = self.builder.parameters
 
-class TestDirector(unittest.TestCase):
+        self.assertTrue(REQUIRED_FIELDS.issubset(params.keys()))
 
-    REQUIRED = {'version',
-                'description',
-                'author',
-                'author_email',
-                'url',
-                'packages'}
 
-    class ParametersBuilderA(ParametersBuilder):
-        def set_requirements(self):
-            self._parameters['install_requires'] = 'foo>=0.0.0'
+class TestSetupParametersDirector(unittest.TestCase):
 
-        def set_version(self):
-            self._parameters['version'] = '0.0.0'
+    def test_all_required_exists(self):
+        builder = SetupParametersBuilder(
+            MOCK_NAME,
+            MOCK_DESCRIPTION_SHORT
+        )
 
-        def set_long_description(self):
-            self._parameters['long_description'] = 'Some text'
+        director = SetupParametersDirector()
+        director.build(builder)
 
-    def test_parameters(self):
-        self._director = Director()
-        builder = self.ParametersBuilderA(MOCK_NAME, MOCK_DESCRIPTION_SHORT)
-        self._director.build(builder)
-        parameters = self._director.parameters  # type: dict
+        params = director.parameters
 
-        self.assertTrue(self.REQUIRED.issubset(parameters.keys()))
-        self.assertEqual(builder.name, MOCK_NAME)
+        self.assertTrue(REQUIRED_FIELDS.issubset(params.keys()))

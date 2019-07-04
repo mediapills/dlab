@@ -31,18 +31,19 @@ stages:
 jobs:
   include:
     - name: "Check Style Guide Enforcement"
+      os: linux
       stage: pre-test
       python: "3.6"
       env: TOXENV=pylint
-    - name: "Test Python27"
+    - name: "Test Python27 (xenial)"
       stage: test
       python: "2.7"
       env: TOXENV=py27
-    - name: "Test Python36"
+    - name: "Test Python36 (xenial)"
       stage: test
       python: "3.6"
       env: TOXENV=py36
-    - name: "Test Python37"
+    - name: "Test Python37 (xenial)"
       stage: test
       python: "3.7"
       env: TOXENV=py37

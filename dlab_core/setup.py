@@ -23,11 +23,12 @@ import abc
 import os
 import six
 import sys
-from setuptools import find_packages
 
 from dlab_core.domain.exceptions import DLabException
+from setuptools import find_packages
 
-""" author of the package email address """
+
+"""Author of the package email address"""
 AUTHOR_EMAIL = 'dev@dlab.apache.org'
 
 """ author of the package """
@@ -103,41 +104,117 @@ class DLabSetupException(DLabException):
     pass
 
 
-class Director:
-    """
-    Construct an parameters dict using the Builder interface.
+@six.add_metaclass(abc.ABCMeta)
+class BaseSetupParametersBuilder:
+    """Abstract interface for creating setup parameters"""
+
+    @abc.abstractmethod
+    def set_packages(self):
+        """Set list of all Python import packages that should be included in
+        the distribution package. Instead of listing each package manually, we
+        can use find_packages() to automatically discover all packages and
+        subpackages. In this case, the list of packages will be example_pkg as
+        that's the only package present.
+
+        :return: None
+        """
+
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def set_requirements(self):
+        """Set libraries list that should be used to specify what a project
+        minimally needs to run correctly. When the project is installed by pip,
+        this is the specification that is used to install its dependencies.
+
+        :return: None
+        """
+
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def set_version(self):
+        """Set package version see PEP 440 for more details on versions
+
+        :return: None
+        """
+
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def set_long_description(self):
+        """Set detailed description of the package. This is shown on the
+        package detail package on the Python Package Index. In this case, the
+        long description is loaded from README.md which is a common pattern.
+
+        :return: None
+        """
+
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def parameters(self):
+        """Get parameters list as dict for setup.py
+
+        :return: dict
+        """
+
+        raise NotImplementedError
+
+
+class SetupParametersDirector:
+    """Construct an parameters dict using the BaseSetupParametersBuilder
+    interface.
     """
 
     def __init__(self):
+        """Director constructor
+        """
         self._builder = None
 
     def build(self, builder):
-        self._builder = builder  # type: ParametersBuilder
+        """Build setup parameters
+
+        :param builder: Parameters builder
+        :type builder: BaseSetupParametersBuilder
+
+        :return: None
+        """
+        self._builder = builder
 
         self._builder.set_packages()
         self._builder.set_requirements()
         self._builder.set_version()
         self._builder.set_long_description()
+
+        # TODO implement me
         # self._builder.set_entry_points()
 
     @property
     def parameters(self):
-        builder = self._builder  # type: ParametersBuilder
+        """Get parameters list as dict for setup.py
+
+        :return: dict
+        """
+
+        builder = self._builder  # type: BaseSetupParametersBuilder
         return builder.parameters
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ParametersBuilder:
-    """
-    Specify an abstract interface for creating parts of a setup parameters dict
+class SetupParametersBuilder(BaseSetupParametersBuilder):
+    """Creating parts of a setup parameters dict see PEP 561 for more details
+    about Distributing and Packaging Type Information
     """
 
     def __init__(self, name, description):
-        """
-        Builder constructor
+        """Builder constructor
 
-        :param name: str Distribution name of your package
-        :param description: str Short, one-sentence summary of the package
+        :param name: Distribution name of your package
+        :type name: str
+
+        :param description: Short, one-sentence summary of the package
+        :type description: str
         """
 
         self._name = name
@@ -150,15 +227,19 @@ class ParametersBuilder:
             'author_email': AUTHOR_EMAIL,
             'license': LICENSE,
             'python_requires': PYTHON_REQUIRES,
-            'long_description_content_type': DESCRIPTION_CONTENT_TYPE
+            'long_description_content_type': DESCRIPTION_CONTENT_TYPE,
+            'packages': None,
+            'install_requires': None,
+            'version': None,
+            'long_description': None,
         }
 
     @property
-    def name(self):
-        return self._name
-
-    @property
     def parameters(self):
+        """Get parameters list as dict for setup.py
+
+        :return: dict
+        """
         return self._parameters
 
     @staticmethod
@@ -166,7 +247,9 @@ class ParametersBuilder:
         """
         Get content by filename
 
-        :param name: str File name
+        :param name: File location
+        :type name: str
+
         :return: str
         """
 
@@ -187,18 +270,25 @@ class ParametersBuilder:
             raise e
 
     def set_packages(self):
-        """
-        Set list of all Python import packages that should be included in the
-        distribution package. Instead of listing each package manually, we can
-        use find_packages() to automatically discover all packages and
+        """Set list of all Python import packages that should be included in
+        the distribution package. Instead of listing each package manually, we
+        can use find_packages() to automatically discover all packages and
         subpackages. In this case, the list of packages will be example_pkg as
         that's the only package present.
 
         :return: None
         """
+
         self._parameters['packages'] = find_packages()
 
     def set_requirements(self):
+        """Set libraries list that should be used to specify what a project
+        minimally needs to run correctly. When the project is installed by pip,
+        this is the specification that is used to install its dependencies.
+
+        :return: None
+        """
+
         content = self._read_file(REQUIREMENTS_FILE)
         self._parameters['install_requires'] = content.splitlines()
 
@@ -207,15 +297,22 @@ class ParametersBuilder:
 
     @property
     def lib_file(self):
+        """Get library file location
+
+        :return: str
+        """
         return self._name + '.py'
 
     @property
     def version_file(self):
+        """Get version file location
+
+        :return: str
+        """
         return os.path.join(self._name, VERSION_FILE)
 
     def set_version(self):
-        """
-        Set package version see PEP 440 for more details on versions
+        """Set package version see PEP 440 for more details on versions
 
         :return: None
         """
@@ -245,10 +342,9 @@ class ParametersBuilder:
             ))
 
     def set_long_description(self):
-        """
-        SET detailed description of the package. This is shown on the package
-        detail package on the Python Package Index. In this case, the long
-        description is loaded from README.md which is a common pattern.
+        """Set detailed description of the package. This is shown on the
+        package detail package on the Python Package Index. In this case, the
+        long description is loaded from README.md which is a common pattern.
 
         :return: None
         """
