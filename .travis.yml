@@ -26,6 +26,7 @@ cache: pip
 stages:
   - pre-test
   - test
+  - post-test
 
 jobs:
   include:
@@ -45,9 +46,20 @@ jobs:
       stage: test
       python: "3.7"
       env: TOXENV=py37
+    - name: "codecov"
+      stage: post-test
+      python: "3.6"
+      env: TOXENV=coverage
+      script: tox; codecov
 
 install:
   - pip install tox
+  - pip install codecov
 
 script:
   tox
+
+#after_success:
+#  - export TOXENV=coverage
+#  - tox
+#  - codecov
