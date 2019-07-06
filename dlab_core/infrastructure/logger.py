@@ -23,96 +23,7 @@ import abc
 import six
 import logging
 
-from dlab_core.domain.logger import BaseLogger
-
-
-@six.add_metaclass(abc.ABCMeta)
-class AbstractHandler:
-    """Abstract Handler implementation."""
-
-    def emit(self, record):
-        """
-        Emit a record. If a formatter is specified, it is used to format the
-        record.
-
-        Args:
-            record (Any):
-        Returns:
-            None
-        """
-
-        raise NotImplementedError
-
-
-@six.add_metaclass(abc.ABCMeta)
-class AbstractLogging:
-    """
-    Abstract Logger implementation. It is interface for Logger Constructor and
-    can be used to decorate existing logger functionality
-    """
-
-    @abc.abstractmethod
-    def log(self, level, msg, *args, **kwargs):
-        """
-        Logs a message with integer level lvl on this logger. The other
-        arguments are interpreted as for debug().
-
-        Args:
-            level (int): Decorated logger
-            msg (str): Logging message
-        Returns:
-            None
-        """
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def add_handler(self, handler):
-        """
-        Add logger handler.
-
-        Args:
-            handler (AbstractHandler): Logger Handler
-        Returns:
-            None
-        """
-
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def handlers(self):
-        """
-        Get log level
-        Returns:
-            int Log level
-        """
-
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def level(self):
-        """
-        Get log level
-        Returns:
-            int Log level
-        """
-
-        raise NotImplementedError
-
-    @level.setter
-    @abc.abstractmethod
-    def level(self, level):
-        """
-        Set log level
-        Args:
-            level (int): Log level
-        Returns:
-            None
-        """
-
-        raise NotImplementedError
+from dlab_core.domain.logger import AbstractLogger, NOTSET
 
 
 class LogLevelTransformer:
@@ -123,6 +34,14 @@ class LogLevelTransformer:
 
     @staticmethod
     def transform(level):
+        """Log level helper validate log level and transform to common format.
+
+        :type level: int
+        :param level: Log level.
+
+        :rtype: int
+        :return: Log level.
+        """
         if isinstance(level, (int, float)) and level >= 100:
             level = int(level / 10)
         elif isinstance(level, str):
@@ -136,136 +55,258 @@ class LogLevelTransformer:
         return level
 
 
-# TODO implement trace_uuid support
-class SysLogFormatter(logging.Formatter):
+@six.add_metaclass(abc.ABCMeta)
+class AbstractHandler:
+    """Abstract Handler implementation."""
+
+    def emit(self, record):
+        """Emit a record. If a formatter is specified, it is used to format the
+        record.
+
+        :param record: Message log or other log format.
+        """
+
+        raise NotImplementedError
+
+
+class SimpleLoggingHandler(logging.Handler):
+    """Custom logger handler implementation.
+
+    :type handler: AbstractHandler
+    :param handler: Logger handler.
+
+    :rtype: int
+    :return: Log level.
     """
-    Log Formatter which formats messages by RFC 3164 - BSD-syslog protocol.
+
+    def __init__(self, handler, level=NOTSET):
+        super(SimpleLoggingHandler, self).__init__(level=level)
+        self._handler = handler
+
+    def emit(self, record):
+        """Emit a record. If a formatter is specified, it is used to format the
+        record.
+
+        :param record: Message log or other log format.
+        """
+
+        self._handler.emit(self.formatter.format(record))
+
+
+@six.add_metaclass(abc.ABCMeta)
+class AbstractLogging:
+    """Wrapper and Aggregator over Logger Handler to control log level can be
+    used to decorate existing logger functionality.
     """
 
-    def __init__(self):
-        log_format = '[%(levelname)s] %(asctime)s - %(message)s'
-        super(SysLogFormatter, self).__init__(
-            fmt=log_format
-        )
+    @property
+    @abc.abstractmethod
+    def level(self):
+        """Log level getter.
 
+        :rtype: int
+        :return: Log level.
+        """
 
-class Logger(BaseLogger):
-    """
-    Logger which work with logging.
+        raise NotImplementedError
 
-    Args:
-        logger (AbstractLogging): Decorated logger
-    """
+    @level.setter
+    @abc.abstractmethod
+    def level(self, level):
+        """Log level setter.
 
-    def __init__(self, logger):
+        :type level: int
+        :param level: Log level.
+        """
 
-        self._logger = logger
+        raise NotImplementedError
 
+    @abc.abstractmethod
     def log(self, level, msg, *args, **kwargs):
         """
         Logs a message with integer level lvl on this logger. The other
         arguments are interpreted as for debug().
 
-        Args:
-            level (int): Decorated logger
-            msg (str): Logging message
-        Returns:
-            None
+        :type level: int
+        :param level: Log level.
+
+        :type msg: str
+        :param msg: Logging message.
         """
 
-        level = LogLevelTransformer.transform(level)
+        raise NotImplementedError
 
-        return self._logger.log(
-            level=level,
-            msg=msg,
-            *args,
-            **kwargs
-        )
+    @abc.abstractmethod
+    def add_handler(self, handler):
+        """Add logger handler.
 
-    def debug(self, msg, *args, **kwargs):
-        return self.log(
-            level=logging.DEBUG,
-            msg=msg,
-            *args,
-            **kwargs
-        )
+        :type handler: AbstractHandler
+        :param handler: Logger Handler to be added.
+        """
 
-    def info(self, msg, *args, **kwargs):
-        return self.log(
-            level=logging.INFO,
-            msg=msg,
-            *args,
-            **kwargs
-        )
+        raise NotImplementedError
 
-    def warn(self, msg, *args, **kwargs):
-        return self.log(
-            level=logging.WARNING,
-            msg=msg,
-            *args,
-            **kwargs
-        )
+    @property
+    @abc.abstractmethod
+    def handlers(self):
+        """Logger Handlers getter.
 
-    def err(self, msg, *args, **kwargs):
-        return self.log(
-            level=logging.ERROR,
-            msg=msg,
-            *args,
-            **kwargs
-        )
+        :rtype: list of AbstractHandler
+        :return: Log Handlers list.
+        """
+
+        raise NotImplementedError
 
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractLoggingBuilder:
-    """Abstract Logger Builder implementation."""
+    """AbstractLogging Builder implementation."""
 
     @abc.abstractmethod
     def add_handlers(self):
+        """Add Logger handlers."""
 
         raise NotImplementedError
 
     @abc.abstractmethod
     def set_log_level(self):
+        """Set Log level to Logger handlers"""
 
         raise NotImplementedError
 
+    @property
     @abc.abstractmethod
-    def get_logger(self):
-        """
-        Get Logger as builder result
+    def logging(self):
+        """Logging getter as builder result
 
-        Returns:
-            AbstractLogging
+        :rtype: AbstractLogging
+        :return: Logging as result of Builder execution.
         """
 
         raise NotImplementedError
+
+
+class LoggerAdapter(AbstractLogger):
+    """The adapter class implements AbstractLogger interface and keeps a
+    reference to an Logging of the class.
+
+    :type core: AbstractLogging
+    :param core: Logger to be Decorated.
+    """
+
+    def __init__(self, core):
+        self._logging = core
+
+    def _log(self, level, msg, *args, **kwargs):
+        """Logs a message with integer level lvl on this logger. The other
+        arguments are interpreted as for debug().
+
+        :type level: int
+        :param level: Log level.
+
+        :type msg: str
+        :param msg: Logging message.
+        """
+
+        return self._logging.log(level=level, msg=msg, *args, **kwargs)
+
+    def debug(self, msg, *args, **kwargs):
+        """Delegate an debug call to the underlying logger.
+
+        :type msg: str
+        :param msg: Logging message.
+        """
+
+        return self._log(level=logging.DEBUG, msg=msg, *args, **kwargs)
+
+    def info(self, msg, *args, **kwargs):
+        """Delegate an info call to the underlying logger.
+
+        :type msg: str
+        :param msg: Logging message.
+        """
+
+        return self._log(level=logging.INFO, msg=msg, *args, **kwargs)
+
+    def warn(self, msg, *args, **kwargs):
+        """Delegate a warning call to the underlying logger.
+
+        :type msg: str
+        :param msg: Logging message.
+        """
+
+        return self._log(level=logging.WARNING, msg=msg, *args, **kwargs)
+
+    def err(self, msg):
+        """Delegate an error call to the underlying logger.
+
+        :type msg: str
+        :param msg: Logging message.
+        """
+
+        return self._log(level=logging.ERROR, msg=msg)
 
 
 class LoggerDirector:
     """Logger Director implementation.
-    Args:
-        builder (AbstractLoggingBuilder): a specified logger builder
+
+    :type builder: AbstractLoggingBuilder
+    :param builder: Logger builder.
     """
 
     def __init__(self, builder):
         self._builder = builder
 
     def build(self):
+        """Build Logging"""
+
         self._builder.set_log_level()
         self._builder.add_handlers()
 
     @property
     def logger(self):
-        logger = Logger(
-            logger=self._builder.get_logger()
+        """Logger getter as result of builder building.
+
+        :rtype: AbstractLogger
+        :return: Logger
+        """
+        logger = LoggerAdapter(
+            self._builder.logging
         )
+
         return logger
+
+
+class StreamHandlerAdapter(AbstractHandler):
+    """ Decorator over StreamHandler
+
+    :type level: int
+    :param level: Log level.
+
+    :type formatter: logging.Formatter
+    :param formatter: Log formatter.
+    """
+
+    def __init__(self, level, formatter):
+        self._handler = logging.StreamHandler()
+        self._handler.setLevel(level)
+        self._handler.setFormatter(formatter)
+
+    def emit(self, record):
+        """Emit a record. If a formatter is specified, it is used to format the
+        record.
+
+        :param record: Message log or other log format.
+        """
+
+        self._handler.emit(record)
 
 
 class StreamLogging(AbstractLogging):
     """Logger which used to log messages.
-    Args:
-        name (str): name of the logger
+
+    :type name: str
+    :param name: Name of the logger
     """
 
     def __init__(self, name):
@@ -273,13 +314,70 @@ class StreamLogging(AbstractLogging):
         self._logger = logging.getLogger(name)
         self._level = logging.NOTSET
 
+    @property
+    def level(self):
+        """Log level getter.
+
+        :rtype: int
+        :return: Log level.
+        """
+
+        return self._level
+
+    @level.setter
+    def level(self, level):
+        """Log level setter.
+
+        :type level: int
+        :param level: Log level.
+        """
+
+        self._level = level
+        self._logger.setLevel(level)
+
+    @staticmethod
+    def _process(msg, kwargs):
+        """Pre process log message.
+
+        :type msg: str
+        :param msg: Logging message.
+
+        :type kwargs: dict
+        :param kwargs: Logging options.
+        """
+        try:
+            extra = kwargs['extra']
+        except KeyError:
+            extra = {}
+
+        kwargs['extra'] = extra
+
+        return msg, kwargs
+
     def log(self, level, msg, *args, **kwargs):
+        """
+        Logs a message with integer level lvl on this logger. The other
+        arguments are interpreted as for debug().
+
+        :type level: int
+        :param level: Log level.
+
+        :type msg: str
+        :param msg: Logging message.
+        """
+
         if self._logger.isEnabledFor(level):
-            msg, kwargs = self._process(msg, kwargs)
+            msg, kwargs = self._process(msg, kwargs, *args, **kwargs)
             level = int(level)
             self._logger.log(level, msg, *args, **kwargs)
 
     def add_handler(self, handler):
+        """Add logger handler.
+
+        :type handler: AbstractHandler
+        :param handler: Logger Handler to be added.
+        """
+
         handler_exits = False
 
         for h in self._logger.handlers:
@@ -292,60 +390,39 @@ class StreamLogging(AbstractLogging):
 
     @property
     def handlers(self):
+        """Logger Handlers getter.
+
+        :rtype: list of AbstractHandler
+        :return: Log Handlers list.
+        """
+
         return self._logger.handlers
 
-    @property
-    def level(self):
-        return self._level
 
-    @level.setter
-    def level(self, level):
-        self._level = level
-        self._logger.setLevel(level)
-
-    @staticmethod
-    def _process(msg, kwargs):
-        try:
-            extra = kwargs['extra']
-        except KeyError:
-            extra = {}
-
-        kwargs['extra'] = extra
-
-        return msg, kwargs
-
-
-class StreamHandlerDecorator(AbstractHandler):
+class SysLogFormatter(logging.Formatter):
+    """Log Formatter which formats messages by RFC 3164 - BSD-syslog protocol.
+    """
 
     def __init__(self):
-        self._handler = logging.StreamHandler()
-
-    def emit(self, record):
-        self._handler.emit(record)
-
-    def set_level(self, level):
-        self._handler.setLevel(level)
-
-    def set_formatter(self, formatter):
-        self._handler.setFormatter(formatter)
+        log_format = '[%(levelname)s] %(asctime)s - %(message)s'
+        super(SysLogFormatter, self).__init__(
+            fmt=log_format
+        )
 
 
 class StreamLogBuilder(AbstractLoggingBuilder):
     """Stream LogBuilder implementation.
-    Args:
-        name (str): name of the logger
-        level (int): log level
+
+    :type name: str
+    :param name: Logger name.
+
+    :type level: int
+    :param level: Log level.
     """
 
     def __init__(self, name, level):
-        self._logger = StreamLogging(name)
+        self._logging = StreamLogging(name)
         self._level = LogLevelTransformer.transform(level)
-
-    def get_logger(self):
-        return self._logger
-
-    def set_log_level(self):
-        self._logger.level = self._level
 
     def add_stream_handler(self):
         """Add Stream handler to logger
@@ -353,28 +430,28 @@ class StreamLogBuilder(AbstractLoggingBuilder):
             None
         """
 
-        formatter = SysLogFormatter()
+        handler = StreamHandlerAdapter(
+            self._level,
+            SysLogFormatter())
 
-        handler = StreamHandlerDecorator()
-        handler.set_level(self._level)
-        handler.set_formatter(formatter)
-        self._logger.add_handler(handler)
+        self._logging.add_handler(handler)
 
     def add_handlers(self):
+        """Add Logger handlers."""
+
         self.add_stream_handler()
 
+    def set_log_level(self):
+        """Set Log level to Logger handlers"""
 
-# TODO Finish this
-# class CustomLoggerHandler(logging.Handler):
-#     """Custom logger handler implementation.
-#     Args:
-#         handler (AbstractHandler): a specified logger handler
-#         level (int): level of logging
-#     """
-#
-#     def __init__(self, handler, level=logging.NOTSET):
-#         super(CustomLoggerHandler, self).__init__(level=level)
-#         self._handler = handler
-#
-#     def emit(self, record):
-#         self._handler.emit(self.formatter.format(record))
+        self._logging.level = self._level
+
+    @property
+    def logging(self):
+        """Logging getter as builder result
+
+        :rtype: AbstractLogging
+        :return: Logging as result of Builder execution.
+        """
+
+        return self._logging

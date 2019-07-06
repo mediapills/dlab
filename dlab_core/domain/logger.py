@@ -32,32 +32,44 @@ NOTSET = 0
 
 
 @six.add_metaclass(abc.ABCMeta)
-class BaseLogger:
+class AbstractLogger:
 
     @abc.abstractmethod
     def debug(self, msg):
+        """Delegate an debug call to the underlying logger.
+
+        :type msg: str
+        :param msg: Logging message.
         """
-        Delegate an debug call to the underlying logger.
-        """
+
         raise NotImplementedError
 
     @abc.abstractmethod
     def info(self, msg):
+        """Delegate an info call to the underlying logger.
+
+        :type msg: str
+        :param msg: Logging message.
         """
-        Delegate an info call to the underlying logger.
-        """
+
         raise NotImplementedError
 
     @abc.abstractmethod
     def warn(self, msg):
+        """Delegate a warning call to the underlying logger.
+
+        :type msg: str
+        :param msg: Logging message.
         """
-        Delegate a warning call to the underlying logger.
-        """
+
         raise NotImplementedError
 
     @abc.abstractmethod
     def err(self, msg):
+        """Delegate an error call to the underlying logger.
+
+        :type msg: str
+        :param msg: Logging message.
         """
-        Delegate an error call to the underlying logger.
-        """
+
         raise NotImplementedError

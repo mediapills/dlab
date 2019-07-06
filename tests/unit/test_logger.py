@@ -25,14 +25,14 @@ import unittest
 
 from dlab_core.domain import logger as val
 from dlab_core.infrastructure import logger
-from mock import MagicMock
+from mock import patch, MagicMock, Mock
 
 
 # TODO implement test for logging without prop_level attribute
 class TestLogLevelTransformer(unittest.TestCase):
 
     def test_level_transformer(self):
-        level = logger.LogLevelTransformer.transform('DEBUG')
+        level = logger.LogLevelTransformer.transform(val.DEBUG)
 
         self.assertEqual(10, level)
 
@@ -42,17 +42,29 @@ class TestLogLevelTransformer(unittest.TestCase):
         self.assertEqual(100, level)
 
 
-class TestLogger(unittest.TestCase):
+class TestSimpleLoggingHandler(unittest.TestCase):
+
+    def test_emit(self):
+        client = MagicMock()
+        handler = logger.SimpleLoggingHandler(client)
+        handler.formatter = MagicMock()
+
+        handler.emit('test')
+
+        client.emit.assert_called()
+
+
+class TestLoggerAdapter(unittest.TestCase):
     TEST_MESSAGE = 'test message'
 
     def setUp(self):
-        self.client = MagicMock()
-        self.logger = logger.Logger(logger=self.client)
+        self.logging = MagicMock()
+        self.logger = logger.LoggerAdapter(self.logging)
 
     def test_debug(self):
         self.logger.debug(self.TEST_MESSAGE)
 
-        self.client.log.assert_called_with(
+        self.logging.log.assert_called_with(
             level=val.DEBUG,
             msg=self.TEST_MESSAGE
         )
@@ -60,7 +72,7 @@ class TestLogger(unittest.TestCase):
     def test_info(self):
         self.logger.info(self.TEST_MESSAGE)
 
-        self.client.log.assert_called_with(
+        self.logging.log.assert_called_with(
             level=val.INFO,
             msg=self.TEST_MESSAGE
         )
@@ -68,7 +80,7 @@ class TestLogger(unittest.TestCase):
     def test_warn(self):
         self.logger.warn(self.TEST_MESSAGE)
 
-        self.client.log.assert_called_with(
+        self.logging.log.assert_called_with(
             level=val.WARNING,
             msg=self.TEST_MESSAGE
         )
@@ -76,10 +88,66 @@ class TestLogger(unittest.TestCase):
     def test_err(self):
         self.logger.err(self.TEST_MESSAGE)
 
-        self.client.log.assert_called_with(
+        self.logging.log.assert_called_with(
             level=val.ERROR,
             msg=self.TEST_MESSAGE
         )
+
+
+# TODO implement TestLoggerDirector tests for full coverage
+class TestLoggerDirector(unittest.TestCase):
+    pass
+
+
+class TestStreamHandlerAdapter(unittest.TestCase):
+
+    def test_constructor(self):
+        formatter = logging.Formatter()
+        handler = logger.StreamHandlerAdapter(
+            level=logging.NOTSET,
+            formatter=formatter)
+
+        self.assertIsInstance(handler._handler, logging.StreamHandler)
+
+
+class TestStreamLogging(unittest.TestCase):
+    TEST_MESSAGE = 'test message'
+
+    def setUp(self):
+        self.logger = logger.StreamLogging('test')
+
+    def test_get_level(self):
+        self.assertEqual(0, self.logger.level)
+
+    def test_set_level(self):
+        self.logger.level = 10
+        self.assertEqual(10, self.logger.level)
+
+    def test_log(self):
+        mck = MagicMock()
+        mck.log.return_value = self.TEST_MESSAGE
+        mck.isEnabledFor.return_value = True
+        mck.hasHandlers.return_value = True
+        logger_mock = mck
+
+        obj = logger.StreamLogging('test')
+        obj._logger = mck
+
+        obj.log(10, self.TEST_MESSAGE)
+
+        logger_mock.log.assert_called_with(
+            10, self.TEST_MESSAGE, extra={})
+
+    def test_handlers(self):
+        formatter = logging.Formatter()
+        handler = logger.StreamHandlerAdapter(val.DEBUG, formatter)
+        self.logger.add_handler(handler)
+
+        self.assertEqual(1, len(self.logger.handlers))
+
+        self.logger.add_handler(handler)
+
+        self.assertEqual(1, len(self.logger.handlers))
 
 
 class TestSysLogFormatter(unittest.TestCase):
@@ -95,48 +163,6 @@ class TestSysLogFormatter(unittest.TestCase):
             formatter.format(record)))
 
 
-# TODO implement LoggerDirector tests
-class TestLoggerDirector(unittest.TestCase):
-    pass
-
-
-class TestStreamLogging(unittest.TestCase):
-    TEST_MESSAGE = 'test message'
-
-    def setUp(self):
-        mck = MagicMock()
-        mck.log.return_value = self.TEST_MESSAGE
-        mck.isEnabledFor.return_value = True
-        mck.hasHandlers.return_value = True
-        self.logger_mock = mck
-
-        self.logger = logger.StreamLogging('test')
-        self.logger._logger = mck
-
-    def test_get_level(self):
-        self.assertEqual(0, self.logger.level)
-
-    def test_set_level(self):
-        self.logger.level = 10
-        self.assertEqual(10, self.logger.level)
-
-    def test_log(self):
-        self.logger.log(10, self.TEST_MESSAGE)
-
-        self.logger_mock.log.assert_called_with(10, self.TEST_MESSAGE, extra={})
-
-    def test_add_handler(self):
-        handler = MagicMock()
-        self.logger.add_handler(handler)
-
-        self.logger_mock.addHandler.assert_called_with(hdlr=handler)
-
-
-# TODO implement StreamHandlerDecorator tests
-class TestStreamHandlerDecorator(unittest.TestCase):
-    pass
-
-
 class TestStreamLogBuilder(unittest.TestCase):
 
     LOG_LEVEL = 20
@@ -150,29 +176,15 @@ class TestStreamLogBuilder(unittest.TestCase):
     def test_get_logger(self):
 
         self.assertIsInstance(
-            self.builder.get_logger(),
+            self.builder.logging,
             logger.AbstractLogging)
 
     def test_set_log_level(self):
         self.builder.set_log_level()
 
-        self.assertEqual(self.builder.get_logger().level, self.LOG_LEVEL)
+        self.assertEqual(self.builder.logging.level, self.LOG_LEVEL)
 
     def test_add_handlers(self):
         self.builder.add_handlers()
 
-        self.assertEqual(len(self.builder.get_logger().handlers), 1)
-
-# TODO implement after dlab_core.infrastructure.logger.CustomLoggerHandler
-# class TestCustomLoggerHandler(unittest.TestCase):
-#
-#     # noinspection PyTypeChecker
-#     def setUp(self):
-#         self.client = MagicMock()
-#         self.handler = CustomLoggerHandler(self.client)
-#         self.handler.formatter = MagicMock()
-#
-#     def test_emit(self):
-#         self.handler.emit('test')
-#
-#         self.client.emit.assert_called()
+        self.assertEqual(len(self.builder.logging.handlers), 1)
