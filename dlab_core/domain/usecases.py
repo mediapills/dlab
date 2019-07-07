@@ -19,12 +19,14 @@
 #
 # ******************************************************************************
 
-
-class DLabException(Exception):
-    """Base class for DLab exceptions."""
-    pass
+import abc
+import six
 
 
-class UseCaseException(DLabException):
-    """DLab Use Case execution exceptions."""
-    pass
+@six.add_metaclass(abc.ABCMeta)
+class BaseUseCase:
+    @abc.abstractmethod
+    def execute(self):
+        """Execute Use Case"""
+
+        raise NotImplementedError
