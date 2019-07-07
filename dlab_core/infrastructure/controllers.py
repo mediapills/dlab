@@ -19,6 +19,20 @@
 #
 # ******************************************************************************
 
-import dlab_core.infrastructure.controllers
-import dlab_core.infrastructure.logger
-import dlab_core.infrastructure.repositories
+import abc
+import six
+
+
+@six.add_metaclass(abc.ABCMeta)
+class BaseController:
+    pass
+
+
+@six.add_metaclass(abc.ABCMeta)
+class BaseAPIController(BaseController):
+    pass
+
+
+@six.add_metaclass(abc.ABCMeta)
+class BaseCLIController(BaseController):
+    pass
