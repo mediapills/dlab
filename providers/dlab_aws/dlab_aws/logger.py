@@ -30,14 +30,17 @@ from dlab_core.infrastructure.logger import (
     LogLevelTransformer)
 
 
-class StreamCloudWatchLog:
+class CloudWatchStreamLogger:
     """Service representing Amazon CloudWatch Logs. New log stream group will
     be created per each lambda execution.
 
-    Args:
-        client: The boto3 client
-        stream_group (str): Group name.
-        name (str): Stream name.
+    :param client: The boto3 client.
+
+    :type stream_group: str
+    :param stream_group: Logger group name.
+
+    :type name: str
+    :param name: Stream name.
     """
 
     def __init__(self, client, stream_group, name=None):
@@ -50,14 +53,13 @@ class StreamCloudWatchLog:
     def create_log_stream(self, name):
         """Creates a log stream for the log group if not exists.
 
-        Args:
-            name (str): Name of the service.
+        :type name: str
+        :param name: Stream name.
 
-        Return:
-            str: Name of stream log.
+        :rtype: str
+        :return: Name of stream log.
 
-        Raises:
-            ClientError: Error during CloudWatch log stream creation.
+        :raises: ClientError
         """
 
         try:
@@ -76,8 +78,8 @@ class StreamCloudWatchLog:
     def _get_stream_name(self):
         """Generate the stream name and create the Stream.
 
-        Returns:
-            str: Name of stream log.
+        :rtype: str
+        :return: Name of stream log.
         """
 
         if not self._log_stream_name:
@@ -87,22 +89,31 @@ class StreamCloudWatchLog:
 
         return self._log_stream_name
 
-    def add(self, msg):
+    @staticmethod
+    def get_now():
+        """Get pre formatted current time.
+
+        :rtype: int
+        :return: Current date.
+        """
+
+        return int(time.time()) * 1000
+
+    def add(self, record):
         """Add message to CloudWatch logs.
 
-        Args:
-            msg (LogMessage): Log message entity.
+        :type record: str
+        :param record: Logging message
 
-        Returns:
-            Response: Response from CloudWatch client
+        :return: Response from CloudWatch client.
         """
 
         kwargs = {
             'logGroupName': self._log_stream_group,
             'logStreamName': self._get_stream_name(),
             'logEvents': [{
-                'message': msg.message,
-                'timestamp': msg.timestamp
+                'message': record,
+                'timestamp': self.get_now()
             }]
         }
 
@@ -118,153 +129,113 @@ class StreamCloudWatchLog:
         return response
 
 
-class AWSLoggingBuilder(AbstractLoggingBuilder):
-    """AWS AbstractLoggingBuilder implementation.
+# TODO implement formatter
+class CloudWatchHandler(AbstractHandler):
+    """CloudWatch logs handler.
 
-    Args:
-        repository (StreamCloudWatchLog): Service representing Amazon
-            CloudWatch Logs.
-        name (str): Logger name.
-        level (int): Level of logging.
+    :type client: StreamCloudWatchLog
+    :param client: Client for Amazon CloudWatch logs.
+
+    :type formatter: logging.Formatter
+    :param formatter: Log formatter.
     """
 
-    def __init__(self, repository, name, level):
-        self._logger = StreamLogging(name)
-        self._level = LogLevelTransformer.transform(level)
-        self._repository = repository
+    # def __init__(self, client, formatter):
+    def __init__(self, client):
+        self._client = client
+        # self._formatter = formatter
 
-    def get_logger(self):
-        """Get builder Logging.
+    def emit(self, message):
+        """Emit a record. If a formatter is specified, it is used to format the
+        record.
 
-        Returns:
-            StreamLogging: AWS Stream Logging.
+        :type message: str
+        :param message: Logging message
+
+        :rtype: Response
+        :return: Response from CloudWatch client.
         """
 
-        return self._logger
+        try:
+            return self._client.add(message)
+        except Exception:
+            return None
+
+
+class StreamHandlerAdapter(AbstractHandler):
+    """ Adapter for StreamHandler
+
+    :type handler: AbstractHandler
+    :param handler: Logger Handler to be added.
+
+    :type level: int
+    :param level: Log level.
+    """
+
+    def __init__(self, handler, level):
+        self._handler = handler
+        self._level = level
+
+    def emit(self, record):
+        """Emit a record. If a formatter is specified, it is used to format the
+        record.
+
+        :param record: Message log or other log format.
+        """
+
+        self._handler.emit(record)
+
+    @property
+    def level(self):
+        return self._level
+
+
+class AWSLoggingBuilder(AbstractLoggingBuilder):
+    """LoggingBuilder implementation for AWS cloud provider.
+
+    :type client: StreamCloudWatchLog
+    :param client: Client for Amazon CloudWatch logs.
+
+    :type name: str
+    :param name: Stream name.
+
+    :type level: int
+    :param level: Log level.
+    """
+
+    def __init__(self, client, name, level):
+        self._logging = StreamLogging(name)
+        self._level = LogLevelTransformer.transform(level)
+        self._client = client
+
+    def add_cw_handler(self):
+        """Add CloudWatch handler to logger."""
+
+        handler = CloudWatchHandler(self._client)
+        self._logging.add_handler(StreamHandlerAdapter(
+            handler,
+            self._level))
+
+    def add_handlers(self):
+        """Add CloudWatch handlers to logger."""
+
+        self.add_cw_handler()
 
     def set_log_level(self):
-        """Get Logger level.
+        """Set Logger level.
 
         Returns:
             int: The logger level.
         """
 
-        self._logger.level = self._level
+        self._logging.level = self._level
 
-    def add_cw_handler(self):
-        """Add CloudWatch handler to logger.
+    @property
+    def logging(self):
+        """Logging getter as builder result
 
-        Returns:
-            None
+        :rtype: AbstractLogging
+        :return: Logging as result of Builder execution.
         """
 
-        formatter = SysLogFormatter()
-
-        handler = CloudWatchHandlerDecorator(self._repository)
-        handler.setLevel(self._level)
-        handler.setFormatter(formatter)
-
-        self._logger.add_handler(handler)
-
-    def add_handlers(self):
-        """Add CloudWatch handlers to logger.
-
-        Returns:
-            None
-        """
-
-        self.add_cw_handler()
-
-
-class CloudWatchHandlerDecorator(AbstractHandler):
-    """Decorator over CloudWatch handler.
-
-    Args:
-        client (StreamCloudWatchLog): service for Amazon CloudWatch logs.
-    """
-
-    def __init__(self, client):
-        self._handler = CloudWatchHandler(
-            client=client
-        )
-
-    def emit(self, record):
-        """Emit a record. If a formatter is specified, it is used to format the
-        record.
-
-        Args:
-            record (str): Logging message.
-
-        Returns:
-            None
-        """
-
-        self._handler.emit(record)
-
-    def set_level(self, level):
-        """Set logging level.
-
-        Args:
-            level (int): Logging level.
-
-        Returns:
-            None
-        """
-
-        self._handler.setLevel(level)
-
-    def set_formatter(self, formatter):
-        """Set logging formatter.
-
-        Args:
-            formatter (SysLogFormatter): Logger formatter.
-
-        Returns:
-             None
-        """
-
-        self._handler.setFormatter(formatter)
-
-
-class CloudWatchHandler(AbstractHandler):
-    """CloudWatch logs handler.
-
-    Args:
-        client (StreamCloudWatchLog): service for Amazon CloudWatch logs.
-    """
-
-    def __init__(self, client):
-        self._client = client
-
-    @staticmethod
-    def get_now():
-        """Get current time.
-
-        Returns:
-            int: Current date.
-        """
-
-        return int(time.time()) * 1000
-
-    def emit(self, record):
-        """Emit a record. If a formatter is specified, it is used to format the
-        record.
-
-        Args:
-            record (str): Logging message.
-
-        Returns:
-            Response: response from CloudWatch client.
-
-        Raises:
-            Exception: Exception occur during CloudWatch message processing.
-        """
-
-        msg = LogMessage()
-        msg.message = record
-        msg.timestamp = self.get_now()
-
-        try:
-            return self._client.add(msg)
-        except Exception:
-            return None
+        return self._logging

@@ -22,31 +22,27 @@
 import boto3
 import unittest
 
-from dlab_core.infrastructure.logger import AbstractLogging
+from dlab_core.infrastructure.logger import AbstractLogging, LoggerDirector
 from dlab_aws.logger import (
-    StreamCloudWatchLog, CloudWatchHandler, AWSLoggingBuilder)
-from mock import MagicMock, Mock
+    CloudWatchStreamLogger, CloudWatchHandler, AWSLoggingBuilder)
+
+from mock import MagicMock
 from moto import mock_logs
 
 GROUP_NAME = 'stream_log_group'
 STREAM_NAME = 'function_name'
 TEST_MESSAGE = 'test message'
-LOG_LEVEL = 10
+LOG_LEVEL = 30
 
 
-class LogMessageMock(MagicMock):
-    message = TEST_MESSAGE
-    timestamp = 1562366459035
-
-
-class TestStreamCloudWatchLog(unittest.TestCase):
+class TestCloudWatchStreamLogger(unittest.TestCase):
     GROUP = 'stream_log_group'
     STREAM_NAME = 'stream_name'
 
     @mock_logs
     def setUp(self):
         self.client = boto3.client('logs', region_name='us-east-1')
-        self.cw_logs = StreamCloudWatchLog(
+        self.cw_logs = CloudWatchStreamLogger(
             client=self.client,
             stream_group=GROUP_NAME,
             name=STREAM_NAME
@@ -66,7 +62,7 @@ class TestStreamCloudWatchLog(unittest.TestCase):
     def test_add_messages(self):
         self.client.create_log_group(logGroupName=GROUP_NAME)
 
-        self.cw_logs.add(LogMessageMock())
+        self.cw_logs.add(TEST_MESSAGE)
 
         response = self.client.get_log_events(
             logGroupName=GROUP_NAME,
@@ -76,10 +72,13 @@ class TestStreamCloudWatchLog(unittest.TestCase):
         self.assertEqual(response['events'][0]['message'], TEST_MESSAGE)
 
         sequence_token = self.cw_logs._upload_sequence_token
-        self.cw_logs.add(LogMessageMock())
+        self.cw_logs.add(TEST_MESSAGE)
 
-        self.assertNotEqual(self.cw_logs._upload_sequence_token, sequence_token)
+        self.assertNotEqual(
+            self.cw_logs._upload_sequence_token,
+            sequence_token)
 
+    # TODO implement test_client_create_log_stream_exception test
     def test_client_create_log_stream_exception(self):
         self.assertTrue(True)
 
@@ -91,14 +90,14 @@ class TestCloudWatchHandler(unittest.TestCase):
         client.put_log_events.return_value = TEST_MESSAGE
 
         self.handler = CloudWatchHandler(
-            client=StreamCloudWatchLog(
+            client=CloudWatchStreamLogger(
                 client=client,
                 stream_group=GROUP_NAME,
                 name=STREAM_NAME
             ))
 
     def test_emit(self):
-        response = self.handler.emit(LogMessageMock())
+        response = self.handler.emit(TEST_MESSAGE)
 
         self.assertEqual(response, TEST_MESSAGE)
 
@@ -106,7 +105,7 @@ class TestCloudWatchHandler(unittest.TestCase):
         self.handler._client.add = MagicMock()
         self.handler._client.add.side_effect = Exception()
 
-        response = self.handler.emit(LogMessageMock())
+        response = self.handler.emit(TEST_MESSAGE)
 
         self.assertIsNone(response)
 
@@ -117,21 +116,25 @@ class TestAWSLoggingBuilder(unittest.TestCase):
         self.builder = AWSLoggingBuilder(
             name='test logger',
             level=LOG_LEVEL,
-            repository=StreamCloudWatchLog(
-                client=boto3.client('logs'),
-                stream_group='test_group',
-                name='service_name'
-            ))
+            client=boto3.client('logs')
+        )
 
     def test_get_logger(self):
-        logger = self.builder.get_logger()
 
-        self.assertIsInstance(logger, AbstractLogging)
+        self.assertIsInstance(self.builder.logging, AbstractLogging)
 
     def test_set_log_level(self):
         self.builder.set_log_level()
 
-        self.assertEqual(self.builder.get_logger().level, LOG_LEVEL)
+        self.assertEqual(self.builder.logging.level, LOG_LEVEL)
 
-    # def test_add_cw_handler(self):
-    #     self.builder.add_cw_handler()
+    def test_add_cw_handlers(self):
+        self.builder.add_handlers()
+
+    def test_level_check(self):
+        director = LoggerDirector(builder=self.builder)
+        director.build()
+        logger = director.logger
+
+        a = logger.err(TEST_MESSAGE)
+        b = 2
