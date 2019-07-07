@@ -345,6 +345,7 @@ class StreamLogging(AbstractLogging):
         :type kwargs: dict
         :param kwargs: Logging options.
         """
+
         try:
             extra = kwargs['extra']
         except KeyError:
@@ -367,7 +368,7 @@ class StreamLogging(AbstractLogging):
         """
 
         if self._logger.isEnabledFor(level):
-            msg, kwargs = self._process(msg, kwargs, *args, **kwargs)
+            msg, kwargs = self._process(msg, kwargs)
             level = int(level)
             self._logger.log(level, msg, *args, **kwargs)
 
@@ -425,10 +426,7 @@ class StreamLogBuilder(AbstractLoggingBuilder):
         self._level = LogLevelTransformer.transform(level)
 
     def add_stream_handler(self):
-        """Add Stream handler to logger
-        Returns:
-            None
-        """
+        """Add Stream handler to logger"""
 
         handler = StreamHandlerAdapter(
             self._level,
