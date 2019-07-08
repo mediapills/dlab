@@ -121,6 +121,8 @@ The description should contain the following headings and the related content:
 # Questions:
 ```
 
-> NOTE: We expect to have one commit per pull request
+> NOTE: To close an issue numbered 123, you must use the phrase "Closes #123" or "Closes: #123" in your pull request description or commit message. Once the branch is merged into the default branch, the issue will close.
 
-> NOTE: After creation PR needs to be tagged regards branch namespace
+> NOTE: We expect to have one commit per pull request.
+
+> NOTE: After creation PR needs to be labeled regards branch namespace.
