@@ -53,6 +53,9 @@ jobs:
       env: TOXENV=coverage
       script: tox; codecov
 
+before_install:
+  sudo rm -f /etc/boto.cfg
+
 install:
   - pip install tox
   - pip install codecov
