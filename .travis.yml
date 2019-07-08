@@ -34,33 +34,28 @@ jobs:
       os: linux
       stage: pre-test
       python: "3.6"
-      env: TOXENV=pylint
+      env: TOXENV=flake8
+      script: tox
     - name: "Test Python27 (xenial)"
       stage: test
       python: "2.7"
       env: TOXENV=py27
+      script: tox
     - name: "Test Python36 (xenial)"
       stage: test
       python: "3.6"
       env: TOXENV=py36
+      script: tox
     - name: "Test Python37 (xenial)"
       stage: test
       python: "3.7"
       env: TOXENV=py37
-    - name: "codecov"
+      script: tox
+    - name: "Publish coverage"
       stage: post-test
       python: "3.6"
-      env: TOXENV=coverage
-      script: tox; codecov
+      script: make coverage
 
 install:
   - pip install tox
   - pip install codecov
-
-script:
-  tox
-
-#after_success:
-#  - export TOXENV=coverage
-#  - tox
-#  - codecov
