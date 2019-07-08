@@ -1,8 +1,8 @@
-
+[![Maintainability](https://api.codeclimate.com/v1/badges/2270e9542f8d3ce871a5/maintainability)](https://codeclimate.com/github/mediapills/dlab/maintainability)
 [![Coverage Status](https://codecov.io/gh/mediapills/dlab/branch/master/graph/badge.svg)](https://codecov.io/gh/mediapills/dlab)
+[![Build Status](https://travis-ci.com/mediapills/dlab.svg?branch=master)](https://travis-ci.com/mediapills/dlab)
 [![Documentation Status](https://readthedocs.org/projects/dlab/badge/?version=latest)](https://dlab.readthedocs.io/en/latest)
 [![License](http://img.shields.io/:license-Apache%202-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
-[![Build Status](https://travis-ci.com/mediapills/dlab.svg?branch=master)](https://travis-ci.com/mediapills/dlab)
 
 Self-service, Fail-safe Exploratory Environment for Collaborative Data Science Workflow 
 
