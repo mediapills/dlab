@@ -23,7 +23,8 @@ import sys
 import unittest
 
 from dlab_core.setup import (
-    SetupParametersDirector, SetupParametersBuilder, DLabSetupException)
+    SetupParametersDirector, SetupParametersBuilder, FileNotFoundException,
+    SetupException)
 from errno import ENOENT
 from mock import patch, mock_open, Mock
 
@@ -95,7 +96,7 @@ class TestSetupParametersBuilder(unittest.TestCase):
 
     @mock_isfile(False)
     def test_no_requirements_file(self):
-        with self.assertRaises(DLabSetupException):
+        with self.assertRaises(FileNotFoundException):
             self.builder.set_requirements()
 
     @mock_isfile()
@@ -109,6 +110,7 @@ class TestSetupParametersBuilder(unittest.TestCase):
 
             self.assertGreater(len(requires), 0)
 
+    @mock_isfile()
     @patch(FN_OPEN, mock_open(read_data='__version__ = "0.0.1"'))
     def test_set_lib_version(self):
         with patch(LIB_NAME + 'os.path') as mock:
@@ -131,7 +133,7 @@ class TestSetupParametersBuilder(unittest.TestCase):
 
     @mock_isfile(False)
     def test_no_version_file(self):
-        with self.assertRaises(DLabSetupException):
+        with self.assertRaises(SetupException):
             self.builder.set_version()
 
     @mock_isfile()
@@ -141,19 +143,19 @@ class TestSetupParametersBuilder(unittest.TestCase):
         'some_file.txt'
     )))
     def test_version_file_read_error(self):
-        with self.assertRaises(DLabSetupException):
+        with self.assertRaises(SetupException):
             self.builder.set_version()
 
-    @patch(FN_OPEN, mock_open(read_data=''))
     @mock_isfile()
+    @patch(FN_OPEN, mock_open(read_data=''))
     def test_no_version_var(self):
-        with self.assertRaises(DLabSetupException):
+        with self.assertRaises(SetupException):
             self.builder.set_version()
 
     @patch(FN_OPEN, mock_open(read_data='file content'))
     @mock_isfile()
     def test_version_not_exec_content(self):
-        with self.assertRaises(DLabSetupException):
+        with self.assertRaises(SetupException):
             self.builder.set_version()
 
     @patch(FN_OPEN, mock_open(read_data='Long description ...'))
@@ -166,7 +168,7 @@ class TestSetupParametersBuilder(unittest.TestCase):
 
     @mock_isfile(False)
     def test_no_long_description_file(self):
-        with self.assertRaises(DLabSetupException):
+        with self.assertRaises(FileNotFoundException):
             self.builder.set_long_description()
 
     def test_all_required_exists(self):
