@@ -318,16 +318,17 @@ class SetupParametersBuilder(BaseSetupParametersBuilder):
         """
 
         _locals = {}
-        content = None
 
-        if os.path.isfile(self.lib_file):
+        try:
             content = self._read_file(self.lib_file)
-
-        if content is None and os.path.isfile(self.version_file):
-            content = self._read_file(self.version_file)
+        except DLabSetupException:
+            content = None
 
         if content is None:
-            raise DLabSetupException('No version or library file')
+            try:
+                content = self._read_file(self.version_file)
+            except DLabSetupException:
+                raise DLabSetupException('No version or library file')
 
         try:
             exec(content, None, _locals)
