@@ -25,10 +25,9 @@ import sys
 import six
 import unittest
 
-from mock import patch
-
-from dlab_core.domain import exceptions
 from dlab_core.infrastructure import repositories
+from dlab_core.infrastructure import repositories as exceptions
+from mock import patch
 
 
 def mock_config_parser(data):
@@ -49,32 +48,6 @@ def mock_config_parser(data):
         return wrapper
 
     return decorator
-
-
-def mock_sqlite3_fetchall(data=()):
-
-    def decorator(func):
-
-        def wrapper(*args):
-            with patch('sqlite3.connect') as con:
-                con.return_value.execute.return_value.fetchall.return_value = data  # noqa: E501
-                return func(*args)
-
-        return wrapper
-
-    return decorator
-
-
-def mock_sqlite3_without_table(func):
-
-    def wrapper(*args):
-        with patch('sqlite3.connect') as con:
-            con.return_value.execute.side_effect = exceptions.DLabException(
-                'Table not found.'
-            )
-            return func(*args)
-
-    return wrapper
 
 
 def mock_isfile_true(func):
@@ -120,7 +93,7 @@ class TestArrayRepository(BaseRepositoryTestCase, unittest.TestCase):
         self.assertEqual(repo.data, {})
 
     def test_constructor_validation(self):
-        with self.assertRaises(exceptions.DLabException):
+        with self.assertRaises(exceptions.RepositoryDataTypeException):
             repositories.ArrayRepository('string')
 
     def test_find_one(self):
@@ -230,7 +203,7 @@ class TestJSONContentRepository(BaseRepositoryTestCase, unittest.TestCase):
         self.assertEqual(repo.content, self.MOCK_CONTENT)
 
     def test_constructor_validation(self):
-        with self.assertRaises(exceptions.DLabException):
+        with self.assertRaises(exceptions.RepositoryDataTypeException):
             repositories.JSONContentRepository({})
 
     def test_find_one(self):
@@ -277,7 +250,7 @@ class TestJSONContentRepository(BaseRepositoryTestCase, unittest.TestCase):
         self.assertEqual({'new_key': 'new_value'}, data)
 
     def test_no_json_object(self):
-        with self.assertRaises(exceptions.DLabException):
+        with self.assertRaises(exceptions.RepositoryJSONContentException):
             repositories.JSONContentRepository('not_json_content')
 
 
@@ -307,7 +280,7 @@ class TestArgumentsRepository(BaseRepositoryTestCase, unittest.TestCase):
         self.assertEqual(repo.arg_parse, parser)
 
     def test_constructor_validation(self):
-        with self.assertRaises(exceptions.DLabException):
+        with self.assertRaises(exceptions.RepositoryDataTypeException):
             repositories.ArgumentsRepository('string')
 
     @patch('sys.argv', MOCK_ARGS)
@@ -326,7 +299,7 @@ class TestArgumentsRepository(BaseRepositoryTestCase, unittest.TestCase):
 
     @patch('sys.argv', MOCK_ARGS)
     def test_find_one_wrong_key(self):
-        with self.assertRaises(exceptions.DLabException):
+        with self.assertRaises(exceptions.RepositoryWrongArgumentException):
             val = self.repo.find_one('wrong_key')
             self.assertIsNone(val)
 
@@ -349,7 +322,7 @@ class TestArgumentsRepository(BaseRepositoryTestCase, unittest.TestCase):
     def test_unrecognized_arguments(self):
         sys.argv.append('argument')
 
-        with self.assertRaises(exceptions.DLabException):
+        with self.assertRaises(exceptions.RepositoryWrongArgumentException):
             self.repo.find_one('option')
 
 
@@ -394,17 +367,17 @@ class TestConfigRepository(BaseRepositoryTestCase, unittest.TestCase):
         self.assertIsNone(val)
 
     def test_file_not_exist(self):
-        file_path = 'new_test.ini'
+        location = 'new_test.ini'
 
-        with self.assertRaises(exceptions.DLabException):
-            self.repo.file_path = file_path
+        with self.assertRaises(exceptions.RepositoryFileNotFoundException):
+            self.repo.location = location
 
     @mock_isfile_true
     def test_change_file(self):
-        file_path = 'new_test.ini'
-        self.repo.file_path = file_path
+        location = 'new_test.ini'
+        self.repo.location = location
 
-        self.assertEqual(file_path, self.repo.file_path)
+        self.assertEqual(location, self.repo.location)
 
     @mock_config_parser(data=MOCK_CONFIG_LOWER_CASE)
     def test_lower_case_sensitivity(self):
@@ -421,75 +394,23 @@ class TestConfigRepository(BaseRepositoryTestCase, unittest.TestCase):
         self.assertIsNone(self.repo.find_one('upper_case_key'))
 
     def test_constructor_exception(self):
-        with self.assertRaises(exceptions.DLabException):
+        with self.assertRaises(exceptions.RepositoryDataTypeException):
             self.repo = repositories.ConfigRepository(None)
 
     @mock_isfile_true
-    def test_file_path_exception(self):
-        with self.assertRaises(exceptions.DLabException):
-            self.repo.file_path = None
-
-
-class TestSQLiteRepository(unittest.TestCase):
-    MOCK_FILE_PATH = 'test.db'
-    DB_TABLE = 'config'
-
-    DATA = (('key', 'value'),)
-    DATA_LOWER_CASE = (('lower_case_key', 'lower_case_value'),)
-    DATA_UPPER_CASE = (('UPPER_CASE_KEY', 'upper_case_value'),)
-
-    @mock_isfile_true
-    def setUp(self):
-        self.repo = repositories.SQLiteRepository(
-            absolute_path=self.MOCK_FILE_PATH,
-            table_name=self.DB_TABLE
-        )
-
-    def test_file_not_exist(self):
-        file_path = 'new_test.ini'
-
-        with self.assertRaises(exceptions.DLabException):
-            self.repo.file_path = file_path
-
-    @mock_sqlite3_fetchall(data=DATA)
-    def test_find_one(self):
-        val = self.repo.find_one('key')
-
-        self.assertEqual('value', val)
-
-    @mock_sqlite3_fetchall(data=DATA)
-    def test_find_all(self):
-        data = self.repo.find_all()
-
-        self.assertEqual({'key': 'value'}, data)
-
-    @mock_sqlite3_without_table
-    def test_table_not_found_exception(self):
-        with self.assertRaises(exceptions.DLabException):
-            self.repo.find_all()
-
-    def test_constructor_wrong_file_type_exception(self):
-        with self.assertRaises(exceptions.DLabException):
-            self.repo = repositories.SQLiteRepository(
-                absolute_path=None,
-                table_name=self.DB_TABLE
-            )
-
-    # TODO: check wrong table name
-    # def test_constructor_wrong_table_type_exception(self):
-    #     with self.assertRaises(exceptions.DLabException):
-    #         self.repo = repositories.SQLiteRepository(
-    #             absolute_path=self.MOCK_FILE_PATH,
-    #             table_name=None
-    #         )
-
-    @mock_isfile_true
-    def test_file_path_exception(self):
-        with self.assertRaises(exceptions.DLabException):
-            self.repo.file_path = None
+    def test_location_exception(self):
+        with self.assertRaises(exceptions.RepositoryDataTypeException):
+            self.repo.location = None
 
 
 class TestChainOfRepositories(BaseRepositoryTestCase, unittest.TestCase):
+
+    def setUp(self):
+        arr = repositories.ArrayRepository()
+        arr.append('key', 'value')
+
+        self.repo = repositories.ChainOfRepositories()
+        self.repo.register(arr)
 
     def test_constructor(self):
         arr = repositories.ArrayRepository()
@@ -498,15 +419,8 @@ class TestChainOfRepositories(BaseRepositoryTestCase, unittest.TestCase):
         self.assertEqual(repo._repos[0], arr)
 
     def test_constructor_validation(self):
-        with self.assertRaises(exceptions.DLabException):
+        with self.assertRaises(exceptions.RepositoryDataTypeException):
             repositories.ChainOfRepositories('string')
-
-    def setUp(self):
-        arr = repositories.ArrayRepository()
-        arr.append('key', 'value')
-
-        self.repo = repositories.ChainOfRepositories()
-        self.repo.register(arr)
 
     def test_find_one(self):
         val = self.repo.find_one('key')
@@ -542,5 +456,5 @@ class TestChainOfRepositories(BaseRepositoryTestCase, unittest.TestCase):
         self.assertIsNone(self.repo.find_one('upper_case_key'))
 
     def test_register_validation(self):
-        with self.assertRaises(exceptions.DLabException):
+        with self.assertRaises(exceptions.RepositoryDataTypeException):
             self.repo.register('str')

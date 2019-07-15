@@ -22,70 +22,17 @@
 import abc
 import six
 
+from dlab_core.domain.exceptions import DLabException
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseEntity:
+
+class EntityException(DLabException):
+    """Base class for Entity exceptions."""
+
     pass
 
 
-class LogMessage(BaseEntity):
-    """Log message entity."""
+@six.add_metaclass(abc.ABCMeta)
+class BaseEntity:
+    """Base class for Entities."""
 
-    def __init__(self):
-        self._message = None
-        self._timestamp = None
-        self._trace_uuid = None
-
-    @property
-    def message(self):
-        """Get log message
-        Returns:
-            str: string representation of log
-        """
-        return self._message
-
-    @message.setter
-    def message(self, message):
-        """Set log message
-        Args:
-            :param str message: log message
-        Returns:
-            None
-        """
-        self._message = message
-
-    @property
-    def timestamp(self):
-        """Get timestamp
-        Returns:
-            int: timestamp
-        """
-        return self._timestamp
-
-    @timestamp.setter
-    def timestamp(self, timestamp):
-        """Set timestamp
-        Args:
-            :param int timestamp: timestamp
-        Returns:
-            None
-        """
-        self._timestamp = timestamp
-
-    @property
-    def trace_uuid(self):
-        """Get Trace ID
-        Returns:
-            str: trace_uuid
-        """
-        return self._trace_uuid
-
-    @trace_uuid.setter
-    def trace_uuid(self, trace_uuid):
-        """Set Trace ID
-        Args:
-            :param str trace_uuid: Trace ID
-        Returns:
-            None
-        """
-        self._trace_uuid = trace_uuid
+    pass

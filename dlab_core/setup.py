@@ -24,7 +24,6 @@ import os
 import six
 import sys
 
-
 from setuptools import find_packages
 
 

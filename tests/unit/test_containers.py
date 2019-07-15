@@ -22,7 +22,8 @@
 import unittest
 
 from dlab_core.infrastructure.containers import (
-    Container, FrozenServiceException, ExpectedCallableException)
+    ContainerFrozenServiceException, ContainerExpectedCallableException,
+    ContainerTypeException, ContainerKeyException, Container)
 
 
 def func_mock(c):
@@ -40,7 +41,7 @@ class TestContainer(unittest.TestCase):
         self.assertEqual('val', b['key'])
 
     def test_constructor_error(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ContainerTypeException):
             Container('test')
 
     def test_string(self):
@@ -72,7 +73,7 @@ class TestContainer(unittest.TestCase):
         self.assertEqual('value', self.c[param])
 
     def test_unavailable(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ContainerKeyException):
             self.c['unavailable']
 
     def test_len(self):
@@ -89,7 +90,7 @@ class TestContainer(unittest.TestCase):
         self.assertFalse('param' in self.c.keys())
 
     def test_delete_unavailable(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ContainerKeyException):
             del self.c['param']
 
     def test_repr(self):
@@ -120,7 +121,7 @@ class TestContainer(unittest.TestCase):
         self.c['param'] = lambda c: 'value'
         self.c['param']
 
-        with self.assertRaises(FrozenServiceException):
+        with self.assertRaises(ContainerFrozenServiceException):
             self.c['param'] = 'value'
 
     def test_frozen_delete(self):
@@ -139,7 +140,7 @@ class TestContainer(unittest.TestCase):
         self.assertEqual(func_mock, self.c.raw('param'))
 
     def test_raw_key_exception(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ContainerKeyException):
             self.c.raw('param')
 
     def test_raw_is_set(self):
@@ -159,7 +160,7 @@ class TestContainer(unittest.TestCase):
         self.assertFalse('param' in self.c._raw.keys())
 
     def test_non_callable_protected(self):
-        with self.assertRaises(ExpectedCallableException):
+        with self.assertRaises(ContainerExpectedCallableException):
             self.c.protect('value')
 
     def test_callable_protected(self):

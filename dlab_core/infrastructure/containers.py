@@ -21,37 +21,52 @@
 
 from dlab_core.domain.exceptions import DLabException
 
+LC_ERR_CANNOT_OVERRIDE_FROZEN = 'Cannot override frozen service "{key}".'
 
-class FrozenServiceException(DLabException):
+
+class ContainerException(DLabException):
+    """Base Container Exceptions. Raised during container execution."""
+
+    pass
+
+
+class ContainerTypeException(ContainerException):
+    """Raised when try to assign wrong data type."""
+
+    pass
+
+
+class ContainerFrozenServiceException(ContainerException):
     """Raised when try to access a key that is represent frozen data in
     a dictionary (dict).
     """
 
     def __init__(self, key):
-        super(FrozenServiceException, self).__init__(
-            'Cannot override frozen service "{}".'.format(key)
+        super(ContainerFrozenServiceException, self).__init__(
+            LC_ERR_CANNOT_OVERRIDE_FROZEN.format(key=key)
         )
 
 
-class KeyException(KeyError):
-    """Raised when try to access a key that isn't in a dictionary (dict).
-    """
+class ContainerKeyException(ContainerException):
+    """Raised when try to access a key that isn't in a dictionary (dict)."""
 
-    def __init__(self, key):
-        super(KeyException, self).__init__(key)
-
-
-class ExpectedCallableException(DLabException):
     pass
 
 
-# TODO implement all magic methods
+class ContainerExpectedCallableException(ContainerException):
+    """Raised when trying to call non callable object."""
+
+    pass
+
+
 class Container:
-    """Instantiates the container.
-    Objects and parameters can be passed as argument to the constructor.
+    """Instantiates the container. Objects and parameters can be passed as
+    argument to the constructor.
 
     :type args: dict
     :param args: The parameters or objects.
+
+    :raise ContainerTypeException: Handle wrong input data type.
     """
 
     def __init__(self, args=None):
@@ -63,7 +78,7 @@ class Container:
         if args is None:
             args = {}
         elif not isinstance(args, dict):
-            raise TypeError(type(args))
+            raise ContainerTypeException(type(args))
 
         for key in args.keys():
             self[key] = args[key]
@@ -78,11 +93,12 @@ class Container:
 
         :param value: The value or a closure of the parameter.
 
-        :raise FrozenServiceException: Prevent override of a frozen service.
+        :raise ContainerFrozenServiceException: Prevent override of a frozen
+        data.
         """
 
         if key in self._frozen:
-            raise FrozenServiceException(key)
+            raise ContainerFrozenServiceException(key)
 
         self._data[key] = value
 
@@ -94,11 +110,12 @@ class Container:
 
         :return: The value of the parameter or an object.
 
-        :raise KeyException: When try to access a key that isn't in a dict.
+        :raise ContainerKeyException: When try to access a key that isn't in a
+        dict.
         """
 
         if key not in self._data:
-            raise KeyException(key)
+            raise ContainerKeyException(key)
 
         raw = self._data[key]
 
@@ -141,11 +158,12 @@ class Container:
         :type key: string
         :param key: The unique identifier for the parameter or object.
 
-        :raise KeyException: When try to access a key that isn't in a dict.
+        :raise ContainerKeyException: When try to access a key that isn't in a
+        dict.
         """
 
         if key not in self._data.keys():
-            raise KeyException(key)
+            raise ContainerKeyException(key)
 
         raw = self._data[key]
         del self._data[key]
@@ -158,20 +176,6 @@ class Container:
 
         if raw in self._protected:
             self._protected.remove(raw)
-
-    def __repr__(self):
-        """returns the object representation.
-
-        :rtype: str
-        :return: Object representation.
-        """
-
-        return repr({
-            'data': self._data,
-            'frozen': self._frozen,
-            'raw': self._raw,
-            'protected': self._protected
-        })
 
     def clear(self):
         """Remove all items from container.
@@ -200,11 +204,12 @@ class Container:
 
         :return: The value of the parameter or the closure defining an object:
 
-        :raise: UnknownIdentifierException
+        :raise ContainerKeyException: When try to access a key that isn't in a
+        dict.
         """
 
         if key not in self._data.keys():
-            raise KeyException(key)
+            raise ContainerKeyException(key)
 
         if key in self._raw:
             return self._raw[key]
@@ -221,11 +226,12 @@ class Container:
         :rtype: func
         :return: The passed callable.
 
-        :raise: ExpectedCallableException
+        :raise ContainerExpectedCallableException: When trying to call non
+        callable object.
         """
 
         if not callable(func):
-            raise ExpectedCallableException(func)
+            raise ContainerExpectedCallableException(func)
 
         self._protected.add(func)
 
@@ -240,7 +246,7 @@ class Container:
         :rtype function
         :return: The passed callable
 
-        :raise: ExpectedCallableException
+        :raise ExpectedCallableException:
         """
 
         raise NotImplementedError
@@ -252,16 +258,16 @@ class Container:
         :type key: string
         :param key: The unique identifier for the parameter or object.
 
-        :rtype: func
-        :return: The passed callable.
+        :type func: callable
+        :param func: The passed callable.
 
-        :rtype: function
+        :rtype: callable
         :return The wrapped callable.
 
-        :raise: UnknownIdentifierException
-        :raise: FrozenServiceException
-        :raise: InvalidServiceIdentifierException
-        :raise: ExpectedCallableException
+        :raise ContainerKeyException:
+        :raise ContainerFrozenServiceException:
+        :raise InvalidServiceIdentifierException
+        :raise ContainerExpectedCallableException:
         """
 
         raise NotImplementedError
