@@ -22,6 +22,8 @@
 import abc
 import six
 
+from dlab_core.domain.exceptions import DLabException
+
 CRITICAL = 50
 ERROR = 40
 WARNING = 30
@@ -31,8 +33,15 @@ DEBUG = 10
 NOTSET = 0
 
 
+class LoggerException(DLabException):
+    """Base class for Logger execution exceptions."""
+
+    pass
+
+
 @six.add_metaclass(abc.ABCMeta)
 class AbstractLogger:
+    """Base class for Loggers."""
 
     @abc.abstractmethod
     def debug(self, msg):

@@ -22,11 +22,21 @@
 import abc
 import six
 
+from dlab_core.domain.exceptions import DLabException
+
+
+class UseCaseException(DLabException):
+    """Base class for UseCase execution exceptions."""
+
+    pass
+
 
 @six.add_metaclass(abc.ABCMeta)
 class BaseUseCase:
+    """Base class for UseCases."""
+
     @abc.abstractmethod
     def execute(self):
-        """Execute Use Case"""
+        """Execute Use Case. Main business logic for exact use case."""
 
         raise NotImplementedError

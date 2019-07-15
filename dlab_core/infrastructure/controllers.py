@@ -22,17 +22,31 @@
 import abc
 import six
 
+from dlab_core.domain.exceptions import DLabException
+
+
+class ControllerException(DLabException):
+    """Base Controller Exceptions. Raised during controller execution."""
+
+    pass
+
 
 @six.add_metaclass(abc.ABCMeta)
 class BaseController:
+    """Base Controller class."""
+
     pass
 
 
 @six.add_metaclass(abc.ABCMeta)
 class BaseAPIController(BaseController):
+    """Base APIController class."""
+
     pass
 
 
 @six.add_metaclass(abc.ABCMeta)
 class BaseCLIController(BaseController):
+    """Base CLIController class."""
+
     pass

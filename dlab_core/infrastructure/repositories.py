@@ -19,21 +19,21 @@
 #
 # ******************************************************************************
 
-# TODO add comments for all classes, properties and methods
-
 import abc
 import argparse
 import json
 import os
 import six
-import sqlite3
 import sys
 
 from contextlib import contextmanager
 from copy import deepcopy
+from dlab_core.domain.repositories import BaseRepository, RepositoryException
 
-from dlab_core.domain.exceptions import DLabException
-from dlab_core.domain.repositories import BaseRepository
+LC_ERR_WRONG_ARGUMENTS = 'Unrecognized arguments'
+LC_ERR_INVALID_DATA_TYPE = 'Invalid context type, should be instance of {name}'
+LC_ERR_NO_FILE = 'No such file or directory: "{location}".'
+LC_ERR_NOT_JSON_CONTENT = 'No JSON object could be decoded'
 
 # TODO remove condition after Python 2.7 retirement
 if six.PY2:
@@ -44,22 +44,88 @@ else:
     from configparser import ConfigParser
 
 
+class RepositoryDataTypeException(RepositoryException):
+    """Raised when try to assign wrong data type.
+
+    :type name: str
+    :param name: Type name.
+    """
+
+    def __init__(self, name):
+        super(RepositoryDataTypeException, self).__init__(
+            LC_ERR_INVALID_DATA_TYPE.format(name=name)
+        )
+
+
+class RepositoryFileNotFoundException(RepositoryException):
+    """Raised when try to read unavailable file.
+
+    :type key: str
+    :param key: File location
+    """
+
+    def __init__(self, key):
+        super(RepositoryFileNotFoundException, self).__init__(
+            LC_ERR_NO_FILE.format(location=key)
+        )
+
+
+class RepositoryJSONContentException(RepositoryException):
+    """Raised during non JSON content serialization."""
+
+    def __init__(self):
+        super(RepositoryJSONContentException, self).__init__(
+            LC_ERR_NOT_JSON_CONTENT
+        )
+
+
+class RepositoryWrongArgumentException(RepositoryException):
+    """Raised during non JSON content serialization."""
+
+    def __init__(self):
+        super(RepositoryWrongArgumentException, self).__init__(
+            LC_ERR_WRONG_ARGUMENTS
+        )
+
+
 @six.add_metaclass(abc.ABCMeta)
 class DictRepository(BaseRepository):
-
-    LC_INVALID_CONTEXT_TYPE = 'Invalid context type, should be instance of {}'
+    """Dictionary repository. Can be used as a base for repositories data based
+    on dict.
+    """
 
     def __init__(self):
         self._data = {}
 
     @property
     def data(self):
+        """Repository data getter.
+
+        :rtype: dict of Tuple
+        :return: Repository data.
+        """
+
         return self._data
 
     def find_one(self, key):
+        """Find one record in storage.
+
+        :type key: str
+        :param key: Record unique identifier.
+
+        :rtype: dict
+        :return: Record data.
+        """
+
         return self.data.get(key)
 
     def find_all(self):
+        """Finds all entities in the repository.
+
+        :rtype: list of dict
+        :return: All records from data storage.
+        """
+
         return self.data
 
 
@@ -68,49 +134,84 @@ class BaseLazyLoadRepository(DictRepository):
 
     @property
     def data(self):
+        """Repository data getter.
+
+        :rtype: list of dict
+        :return: Repository data.
+        """
+
         if not self._data:
             self._load_data()
+
         return self._data
 
     @abc.abstractmethod
     def _load_data(self):
+        """Load data from data source.
+
+        :rtype: list of dict
+        :return: Repository data.
+        """
+
         raise NotImplementedError
 
 
 @six.add_metaclass(abc.ABCMeta)
 class BaseFileRepository(DictRepository):
-    # FIXME: Rename error message
-    LC_NO_FILE = 'There is no file with path "{file_path}"'
+    """Repository based on file data.
 
-    def __init__(self, absolute_path):
+    :type location: str
+    :param location: Data source file location.
+    """
+
+    def __init__(self, location):
         super(BaseFileRepository, self).__init__()
-        self._file_path = None
-        self.file_path = absolute_path
+        self._location = None
+        self.location = location
 
     @classmethod
-    def _validate(cls, file_path):
-        if not isinstance(file_path, str):
-            raise DLabException(
-                cls.LC_INVALID_CONTEXT_TYPE.format(str.__name__)
-            )
+    def _validate(cls, location):
+        """Validate file location.
 
-        if not os.path.isfile(file_path):
-            raise DLabException(
-                cls.LC_NO_FILE.format(file_path=file_path)
-            )
+        :raise RepositoryDataTypeException:
+        :raise RepositoryFileNotFoundException:
+        """
+
+        if not isinstance(location, str):
+            raise RepositoryDataTypeException(str.__name__)
+
+        if not os.path.isfile(location):
+            raise RepositoryFileNotFoundException(location)
 
     @property
-    def file_path(self):
-        return self._file_path
+    def location(self):
+        """File location getter.
 
-    @file_path.setter
-    def file_path(self, file_path):
-        self._validate(file_path)
-        self._file_path = file_path
+        :rtype: str
+        :return: File location.
+        """
+
+        return self._location
+
+    @location.setter
+    def location(self, location):
+        """File location setter.
+
+        :type location: str
+        :param location: File location.
+        """
+
+        self._validate(location)
+        self._location = location
         self._data = {}
 
 
 class ArrayRepository(DictRepository):
+    """Repository based on dict data.
+
+    :type data: dict
+    :param data: Repository data.
+    """
 
     def __init__(self, data=None):
         super(ArrayRepository, self).__init__()
@@ -119,31 +220,58 @@ class ArrayRepository(DictRepository):
             self._data = data
 
     def append(self, key, value):
+        """Add new element into data set.
+
+        :type key: str
+        :param key: Record UUID.
+
+        :param value: Record value.
+        """
         self._data[key] = value
 
-    def _validate(self, data):
+    @staticmethod
+    def _validate(data):
+        """Data source validator.
+
+        :param data: Data for validation.
+
+        :raise RepositoryDataTypeException:
+        """
+
         if not isinstance(data, dict):
-            raise DLabException(
-                self.LC_INVALID_CONTEXT_TYPE.format(str.__name__)
-            )
+            raise RepositoryDataTypeException(str.__name__)
 
 
 # FIXME: there can be problems with find_all method for win32 platform
 class EnvironRepository(DictRepository):
+    """Repository based on os.environ data."""
 
     def __init__(self):
         super(EnvironRepository, self).__init__()
         self._data.update(os.environ)
 
     def find_one(self, key):
+        """Find one record in storage.
+
+        :type key: str
+        :param key: Record unique identifier.
+
+        :rtype: dict
+        :return: Record data.
+        """
+
         if sys.platform == 'win32':
             key = key.upper()  # pragma: no cover
+
         return super(EnvironRepository, self).find_one(key)
 
 
 class JSONContentRepository(DictRepository):
+    """Repository based on JSON data.
 
-    LC_NOT_JSON_CONTENT = 'No JSON object could be decoded'
+    :type content: str
+    :param content: JSON content for data source.
+    """
 
     def __init__(self, content=None):
         super(JSONContentRepository, self).__init__()
@@ -151,52 +279,78 @@ class JSONContentRepository(DictRepository):
 
     @property
     def content(self):
+        """Content getter.
+
+        :rtype: str
+        :returns: JSON data content.
+        """
 
         return self._content
 
     @content.setter
     def content(self, content):
+        """Content setter.
+
+        :type content: str
+        :param content: JSON data content.
+
+        :raise RepositoryDataTypeException:
+        :raise RepositoryJSONContentException:
+        """
         if not isinstance(content, str):
-            raise DLabException(
-                self.LC_INVALID_CONTEXT_TYPE.format(str.__name__)
-            )
+            raise RepositoryDataTypeException(str.__name__)
 
         try:
             json_data = json.loads(content)
             self._data = deepcopy(json_data)
         except ValueError:
-            raise DLabException(self.LC_NOT_JSON_CONTENT)
+            raise RepositoryJSONContentException()
 
         self._content = content
 
 
 class ArgumentsRepository(BaseLazyLoadRepository):
+    """ Repository based on CLI arguments as data source.
 
-    LC_ERR_WRONG_ARGUMENTS = 'Unrecognized arguments'
+    :type arg_parse: argparse.ArgumentParser
+    :param arg_parse: Argument Parser.
+    """
 
     def __init__(self, arg_parse=None):
         super(ArgumentsRepository, self).__init__()
-        if arg_parse is None:
-            self.arg_parse = argparse.ArgumentParser()
-        else:
-            self.arg_parse = arg_parse
+
+        self.arg_parse = arg_parse or argparse.ArgumentParser()
 
     @property
     def arg_parse(self):
+        """Argument parser getter.
+
+        :rtype: argparse.ArgumentParser
+        :returns: Argument Parser.
+        """
+
         return self._arg_parse
 
     @arg_parse.setter
     def arg_parse(self, arg_parse):
+        """Argument parser setter.
+
+        :type arg_parse: argparse.ArgumentParser
+        :param arg_parse: Argument Parser.
+
+        :raise RepositoryDataTypeException:
+        """
+
         if not isinstance(arg_parse, argparse.ArgumentParser):
-            raise DLabException(
-                self.LC_INVALID_CONTEXT_TYPE.format(str.__name__)
-            )
+            raise RepositoryDataTypeException(str.__name__)
 
         self._arg_parse = arg_parse
 
     @staticmethod
     @contextmanager
     def _silence_stderr():
+        """Turn off stderr."""
+
         new_target = open(os.devnull, "w")
         old_target = sys.stderr
         sys.stderr = new_target
@@ -206,95 +360,75 @@ class ArgumentsRepository(BaseLazyLoadRepository):
             sys.stderr = old_target
 
     def _load_data(self):
+        """Load data from data source.
+
+        :rtype: list of dict
+        :return: Repository data.
+
+        :raise RepositoryWrongArgumentException:
+        """
+
         try:
             with self._silence_stderr():
                 args = self._arg_parse.parse_args()
         except SystemExit:
-            raise DLabException(self.LC_ERR_WRONG_ARGUMENTS)
+            raise RepositoryWrongArgumentException()
 
         for key, val in vars(args).items():
             self._data[key] = val
 
     def add_argument(self, *args, **kwargs):
+        """Add argument parser argument."""
+
         self._arg_parse.add_argument(*args, **kwargs)
         self._data = {}
 
 
 class ConfigRepository(BaseFileRepository, BaseLazyLoadRepository):
+    """Repository based on file data.
+
+    :type location: str
+    :param location: Data source file location.
+    """
+
     VARIABLE_TEMPLATE = "{0}_{1}"
 
-    def __init__(self, absolute_path):
-        super(ConfigRepository, self).__init__(absolute_path)
+    def __init__(self, location):
+        super(ConfigRepository, self).__init__(location)
 
     def _load_data(self):
+        """Load data from data source.
+
+        :rtype: list of dict
+        :return: Repository data.
+        """
+
         config = ConfigParser()
-        config.read(self.file_path)
+        config.read(self.location)
         for section in config.sections():
             for option in config.options(section):
                 var = self.VARIABLE_TEMPLATE.format(section, option)
-                if var not in self._data.keys():
+                if var not in self._data:
                     self._data[var] = config.get(section, option)
 
 
-class SQLiteRepository(BaseFileRepository):
-
-    ALL_QUERY_TEMPLATE = 'SELECT {key}, {value} FROM {table}'
-    ONE_QUERY_TEMPLATE = ALL_QUERY_TEMPLATE + ' where {key}=?'
-
-    LC_READING_ERROR = 'Error while data reading with message "{msg}".'
-
-    def __init__(self, absolute_path, table_name, key_field_name='key',
-                 value_field_name='value'):
-        super(SQLiteRepository, self).__init__(absolute_path)
-
-        # TODO: add validation table, key and value needs to be string
-        self._table_name = table_name
-        self._key_field_name = key_field_name
-        self._value_field_name = value_field_name
-
-        self.__connection = None
-
-        settings = dict(
-            table=self._table_name,
-            key=self._key_field_name,
-            value=self._value_field_name,
-        )
-        self.__select_one_query = self.ONE_QUERY_TEMPLATE.format(**settings)
-        self.__select_all_query = self.ALL_QUERY_TEMPLATE.format(**settings)
-
-    @property
-    def connection(self):
-        if not self.__connection:
-            self.__connection = sqlite3.connect(self.file_path)
-        return self.__connection
-
-    def _execute(self, query, *args):
-        try:
-            return self.connection.execute(query, args).fetchall()
-        except sqlite3.OperationalError as e:
-            raise DLabException(str(e))
-
-    def find_one(self, key):
-        data = self._execute(self.__select_one_query, key)
-
-        for row in data:
-            return row[1]
-        return None
-
-    def find_all(self):
-        data = self._execute(self.__select_all_query)
-
-        return {row[0]: row[1] for row in data}
-
-
 class ChainOfRepositories(DictRepository):
+    """List of repositories executed one by one till data will be found.
+
+    :type repos: list of BaseRepository.
+    :param repos: List of repositories executed in chain.
+
+    :raise RepositoryDataTypeException:
+    """
+
     def __init__(self, repos=()):
         super(ChainOfRepositories, self).__init__()
 
         if not isinstance(repos, list) and not isinstance(repos, tuple):
-            raise DLabException(self.LC_INVALID_CONTEXT_TYPE.format(
-                "{} or {}".format(list.__name__, tuple.__name__)
-            ))
+            raise RepositoryDataTypeException("{} or {}".format(
+                list.__name__,
+                tuple.__name__)
+            )
 
         self._repos = []
 
@@ -302,14 +436,29 @@ class ChainOfRepositories(DictRepository):
             self.register(repo)
 
     def register(self, repo):
+        """Register new repository in chain.
+
+        :type repo: BaseRepository
+        :param repo: Repository.
+
+        :raise RepositoryDataTypeException:
+        """
+
         if not issubclass(type(repo), DictRepository):
-            raise DLabException(
-                self.LC_INVALID_CONTEXT_TYPE.format(DictRepository.__name__)
-            )
+            raise RepositoryDataTypeException(DictRepository.__name__)
 
         self._repos.append(repo)
 
     def find_one(self, key):
+        """Find one record in storage.
+
+        :type key: str
+        :param key: Record unique identifier.
+
+        :rtype: dict
+        :return: Record data.
+        """
+
         for repo in self._repos:
             value = repo.find_one(key)
             if value is not None:
@@ -318,6 +467,12 @@ class ChainOfRepositories(DictRepository):
         return None
 
     def find_all(self):
+        """Finds all entities in the repository.
+
+        :rtype: list of dict
+        :return: All records from data storage.
+        """
+
         data = {}
 
         if len(self._repos):

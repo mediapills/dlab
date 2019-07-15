@@ -22,9 +22,5 @@
 
 class DLabException(Exception):
     """Base class for DLab exceptions."""
-    pass
 
-
-class UseCaseException(DLabException):
-    """DLab Use Case execution exceptions."""
     pass
