@@ -25,10 +25,10 @@ import sys
 import six
 import unittest
 
-from mock import patch
-
 from dlab_core.domain import exceptions
 from dlab_core.infrastructure import repositories
+from mock import patch
+from sqlite3 import OperationalError
 
 
 def mock_config_parser(data):
@@ -394,17 +394,17 @@ class TestConfigRepository(BaseRepositoryTestCase, unittest.TestCase):
         self.assertIsNone(val)
 
     def test_file_not_exist(self):
-        file_path = 'new_test.ini'
+        location = 'new_test.ini'
 
         with self.assertRaises(exceptions.DLabException):
-            self.repo.file_path = file_path
+            self.repo.location = location
 
     @mock_isfile_true
     def test_change_file(self):
-        file_path = 'new_test.ini'
-        self.repo.file_path = file_path
+        location = 'new_test.ini'
+        self.repo.location = location
 
-        self.assertEqual(file_path, self.repo.file_path)
+        self.assertEqual(location, self.repo.location)
 
     @mock_config_parser(data=MOCK_CONFIG_LOWER_CASE)
     def test_lower_case_sensitivity(self):
@@ -425,13 +425,13 @@ class TestConfigRepository(BaseRepositoryTestCase, unittest.TestCase):
             self.repo = repositories.ConfigRepository(None)
 
     @mock_isfile_true
-    def test_file_path_exception(self):
+    def test_location_exception(self):
         with self.assertRaises(exceptions.DLabException):
-            self.repo.file_path = None
+            self.repo.location = None
 
 
 class TestSQLiteRepository(unittest.TestCase):
-    MOCK_FILE_PATH = 'test.db'
+    LOCATION = 'test.db'
     DB_TABLE = 'config'
 
     DATA = (('key', 'value'),)
@@ -441,15 +441,15 @@ class TestSQLiteRepository(unittest.TestCase):
     @mock_isfile_true
     def setUp(self):
         self.repo = repositories.SQLiteRepository(
-            absolute_path=self.MOCK_FILE_PATH,
+            location=self.LOCATION,
             table_name=self.DB_TABLE
         )
 
     def test_file_not_exist(self):
-        file_path = 'new_test.ini'
+        location = 'new_test.ini'
 
         with self.assertRaises(exceptions.DLabException):
-            self.repo.file_path = file_path
+            self.repo.location = location
 
     @mock_sqlite3_fetchall(data=DATA)
     def test_find_one(self):
@@ -471,9 +471,15 @@ class TestSQLiteRepository(unittest.TestCase):
     def test_constructor_wrong_file_type_exception(self):
         with self.assertRaises(exceptions.DLabException):
             self.repo = repositories.SQLiteRepository(
-                absolute_path=None,
+                location=None,
                 table_name=self.DB_TABLE
             )
+
+    @mock_sqlite3_fetchall()
+    def test_find_one_empty_data(self):
+        data = self.repo.find_one('key')
+
+        self.assertIsNone(data)
 
     # TODO: check wrong table name
     # def test_constructor_wrong_table_type_exception(self):
@@ -484,9 +490,18 @@ class TestSQLiteRepository(unittest.TestCase):
     #         )
 
     @mock_isfile_true
-    def test_file_path_exception(self):
+    def test_location_exception(self):
         with self.assertRaises(exceptions.DLabException):
-            self.repo.file_path = None
+            self.repo.location = None
+
+    def test_operational_error(self):
+        with patch('sqlite3.connect') as con:
+            con.return_value.execute.side_effect = OperationalError(
+                'Sqlite operational error.'
+            )
+
+            with self.assertRaises(exceptions.DLabException):
+                self.repo.find_all()
 
 
 class TestChainOfRepositories(BaseRepositoryTestCase, unittest.TestCase):

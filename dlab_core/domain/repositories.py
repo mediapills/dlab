@@ -28,8 +28,23 @@ class BaseRepository:
 
     @abc.abstractmethod
     def find_one(self, key):
+        """Find one record in storage.
+
+        :type key: str
+        :param key: Record unique identifier.
+
+        :rtype: dict
+        :return: Record data.
+        """
+
         raise NotImplementedError
 
     @abc.abstractmethod
     def find_all(self):
+        """Finds all entities in the repository.
+
+        :rtype: list of dict
+        :return: All records from data storage.
+        """
+
         raise NotImplementedError
