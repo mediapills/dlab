@@ -357,6 +357,7 @@ class ArgumentsRepository(BaseLazyLoadRepository):
         try:
             yield new_target
         finally:
+            sys.stderr.close()
             sys.stderr = old_target
 
     def _load_data(self):
@@ -408,8 +409,8 @@ class ConfigRepository(BaseFileRepository, BaseLazyLoadRepository):
         for section in config.sections():
             for option in config.options(section):
                 var = self.VARIABLE_TEMPLATE.format(section, option)
-                if var not in self._data:
-                    self._data[var] = config.get(section, option)
+                self._data[var] = self._data.get(var,
+                                                 config.get(section, option))
 
 
 class ChainOfRepositories(DictRepository):

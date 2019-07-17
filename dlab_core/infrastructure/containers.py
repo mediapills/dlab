@@ -80,7 +80,7 @@ class Container:
         elif not isinstance(args, dict):
             raise ContainerTypeException(type(args))
 
-        for key in args.keys():
+        for key in args:
             self[key] = args[key]
 
     def __setitem__(self, key, value):
@@ -208,7 +208,7 @@ class Container:
         dict.
         """
 
-        if key not in self._data.keys():
+        if key not in self._data:
             raise ContainerKeyException(key)
 
         if key in self._raw:

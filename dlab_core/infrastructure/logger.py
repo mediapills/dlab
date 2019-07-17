@@ -344,12 +344,8 @@ class StreamLogging(AbstractLogging):
         :param kwargs: Logging options.
         """
 
-        try:
-            extra = kwargs['extra']
-        except KeyError:
-            extra = {}
-
-        kwargs['extra'] = extra
+        if 'extra' not in kwargs:
+            kwargs['extra'] = {}
 
         return msg, kwargs
 
