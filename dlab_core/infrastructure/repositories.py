@@ -409,7 +409,8 @@ class ConfigRepository(BaseFileRepository, BaseLazyLoadRepository):
         for section in config.sections():
             for option in config.options(section):
                 var = self.VARIABLE_TEMPLATE.format(section, option)
-                self._data[var] = self._data.get(var, config.get(section, option))
+                self._data[var] = self._data.get(var,
+                                                 config.get(section, option))
 
 
 class ChainOfRepositories(DictRepository):
