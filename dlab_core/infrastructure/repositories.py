@@ -185,7 +185,7 @@ class ArrayRepository(DictRepository):
             self._data = data
 
     def append(self, key, value):
-        """Add new element in data set.
+        """Add new element into data set.
 
         :type key: str
         :param key: Record UUID.
@@ -288,10 +288,7 @@ class ArgumentsRepository(BaseLazyLoadRepository):
 
     def __init__(self, arg_parse=None):
         super(ArgumentsRepository, self).__init__()
-        if arg_parse is None:
-            self.arg_parse = argparse.ArgumentParser()
-        else:
-            self.arg_parse = arg_parse
+        self.arg_parse = arg_parse or argparse.ArgumentParser()
 
     @property
     def arg_parse(self):
@@ -380,7 +377,7 @@ class ConfigRepository(BaseFileRepository, BaseLazyLoadRepository):
         for section in config.sections():
             for option in config.options(section):
                 var = self.VARIABLE_TEMPLATE.format(section, option)
-                if var not in self._data.keys():
+                if var not in self._data:
                     self._data[var] = config.get(section, option)
 
 
@@ -413,11 +410,11 @@ class SQLiteRepository(BaseFileRepository):
 
         self.__connection = None
 
-        settings = dict(
-            table=self._table_name,
-            key=self._key_field_name,
-            value=self._value_field_name,
-        )
+        settings = {
+            'table': self._table_name,
+            'key': self._key_field_name,
+            'value': self._value_field_name,
+        }
         self.__select_one_query = self.ONE_QUERY_TEMPLATE.format(**settings)
         self.__select_all_query = self.ALL_QUERY_TEMPLATE.format(**settings)
 
@@ -462,17 +459,17 @@ class SQLiteRepository(BaseFileRepository):
     def find_all(self):
         """Finds all entities in the repository.
 
-        :rtype: list of dict
+        :rtype: dict
         :return: All records from data storage.
         """
 
         data = self._execute(self.__select_all_query)
 
-        return {row[0]: row[1] for row in data}
+        return dict(data)
 
 
 class ChainOfRepositories(DictRepository):
-    """List of repositeries executed one by one till data will be found.
+    """List of repositories executed one by one till data will be found.
 
     :type repos: list of BaseRepository.
     :param repos: List of repositories executed in chain.
@@ -483,7 +480,7 @@ class ChainOfRepositories(DictRepository):
     def __init__(self, repos=()):
         super(ChainOfRepositories, self).__init__()
 
-        if not isinstance(repos, list) and not isinstance(repos, tuple):
+        if not isinstance(repos, (list, tuple)):
             raise RepositoryException(self.LC_INVALID_CONTEXT_TYPE.format(
                 "{} or {}".format(list.__name__, tuple.__name__)
             ))
