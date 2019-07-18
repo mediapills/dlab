@@ -178,3 +178,30 @@ class TestContainer(unittest.TestCase):
         del self.c['param']
 
         self.assertFalse(func_mock in self.c._protected)
+
+    def test_extend(self):
+
+        def func(message, c):
+            return 'Extended ' + message
+
+        self.c['param'] = func_mock
+
+        self.c.extend('param', func)
+
+        self.assertEqual('Extended value', self.c['param'])
+
+    def test_extend_non_callable(self):
+        self.c['param'] = func_mock
+
+        with self.assertRaises(ContainerExpectedCallableException):
+            self.c.extend('param', 'test')
+
+    def test_extend_frozen(self):
+        def func(message, c):
+            return 'Extended ' + message
+
+        self.c['param'] = lambda c: 'value'
+        self.c['param']
+
+        with self.assertRaises(ContainerFrozenServiceException):
+            self.c.extend('param', func)
