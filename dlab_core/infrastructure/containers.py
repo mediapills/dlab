@@ -264,10 +264,16 @@ class Container:
         :rtype: callable
         :return The wrapped callable.
 
-        :raise ContainerKeyException:
         :raise ContainerFrozenServiceException:
-        :raise InvalidServiceIdentifierException
         :raise ContainerExpectedCallableException:
         """
 
-        raise NotImplementedError
+        if not callable(func):
+            raise ContainerExpectedCallableException(func)
+
+        if key in self._frozen:
+            raise ContainerFrozenServiceException(key)
+
+        factory = self.raw(key)
+
+        self[key] = lambda c: func(factory(c), c)
