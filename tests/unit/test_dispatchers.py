@@ -21,7 +21,7 @@
 
 import unittest
 
-from dlab_core.infrastructure import dispatchers
+from dlab_core import dispatchers
 from mock import MagicMock
 
 

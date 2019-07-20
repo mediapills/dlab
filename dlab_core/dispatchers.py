@@ -59,7 +59,7 @@ class EventDispatcher:
         :param name: The name of the event to dispatch.
 
         :rtype set
-        :return List of all event listeners selected by event name.
+        :return: List of all event listeners selected by event name.
         """
 
         if name not in self._listeners:
@@ -74,7 +74,8 @@ class EventDispatcher:
         :param name: The name of the event to dispatch.
 
         :rtype: bool
-        :return True if the specified event has any listeners, False otherwise.
+        :return: True if the specified event has any listeners,
+        False otherwise.
         """
 
         return name in self._listeners

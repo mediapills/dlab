@@ -21,7 +21,7 @@
 
 import unittest
 
-from dlab_core.infrastructure.containers import (
+from dlab_core.containers import (
     ContainerFrozenServiceException, ContainerExpectedCallableException,
     ContainerTypeException, ContainerKeyException, Container)
 
