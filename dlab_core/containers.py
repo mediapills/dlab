@@ -89,6 +89,7 @@ class Container:
         function names (strings) are callable (creating a function with the
         same name as an existing parameter would break your container).
 
+        :type key: str
         :param key: The unique identifier for the parameter or object.
 
         :param value: The value or a closure of the parameter.

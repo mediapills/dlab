@@ -23,5 +23,6 @@ import dlab_core.domain
 import dlab_core.infrastructure
 import dlab_core.containers
 import dlab_core.dispatchers
-import dlab_core.hooks
+import dlab_core.plugins
+import dlab_core.registry
 import dlab_core.setup
