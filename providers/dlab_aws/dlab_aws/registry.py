@@ -19,18 +19,15 @@
 #
 # ******************************************************************************
 
-from setuptools import setup, find_packages
+from dlab_core.registry import extend_context, CONTAINER_PARAM_PLUGINS
 
-setup(
-    name='dlab_aws',
-    version='0.0.1',
-    author='Apache Software Foundation',
-    author_email='dev@dlab.apache.org',
-    url='http://dlab.apache.org/',
-    description='This a provider to DLab that adds AWS support.',
-    packages=find_packages(),
-    entry_points={
-        "dlab.plugin": [
-            "aws = dlab_aws.registry:bootstrap",
-        ]}
-)
+"""Plugin public name."""
+PLUGIN_PREFIX = "aws"
+
+
+def bootstrap():
+    """Bootstrap AWS Plugin"""
+
+    extend_context(
+        CONTAINER_PARAM_PLUGINS,
+        lambda p, c: dict(p, **{PLUGIN_PREFIX: 'dlab_aws.registry:bootstrap'}))
