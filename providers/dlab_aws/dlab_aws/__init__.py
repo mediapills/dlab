@@ -19,18 +19,4 @@
 #
 # ******************************************************************************
 
-from setuptools import setup, find_packages
-
-setup(
-    name='dlab_aws',
-    version='0.0.1',
-    author='Apache Software Foundation',
-    author_email='dev@dlab.apache.org',
-    url='http://dlab.apache.org/',
-    description='This a provider to DLab that adds AWS support.',
-    packages=find_packages(),
-    entry_points={
-        "dlab.plugin": [
-            "aws = dlab_aws.registry:bootstrap",
-        ]}
-)
+import dlab_aws.registry
