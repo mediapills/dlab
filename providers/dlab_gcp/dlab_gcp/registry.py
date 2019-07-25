@@ -19,18 +19,15 @@
 #
 # ******************************************************************************
 
-from setuptools import setup, find_packages
+from dlab_core.registry import extend_context, CONTAINER_PARAM_PLUGINS
 
-setup(
-    name='dlab_gcp',
-    version='0.0.1',
-    author='Apache Software Foundation',
-    author_email='dev@dlab.apache.org',
-    url='http://dlab.apache.org/',
-    description='This a provider to DLab that adds GCP support.',
-    packages=find_packages(),
-    entry_points={
-        "dlab.plugin": [
-            "gcp = dlab_gcp.registry:bootstrap",
-        ]}
-)
+"""Plugin public name."""
+PLUGIN_PREFIX = "gcp"
+
+
+def bootstrap():
+    """Bootstrap GCP Plugin"""
+
+    extend_context(
+        CONTAINER_PARAM_PLUGINS,
+        lambda p, c: dict(p, **{PLUGIN_PREFIX: 'dlab_gcp.registry:bootstrap'}))
