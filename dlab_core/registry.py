@@ -19,8 +19,14 @@
 #
 # ******************************************************************************
 
+import pkg_resources
+
 from dlab_core.containers import Container
+from dlab_core.domain.exceptions import DLabException
 from dlab_core.dispatchers import EventDispatcher
+
+
+LC_ERR_PLUGIN_LOADED = 'Plugin "{name}" already loaded.'
 
 """entry_points group name for plugins in setup.py"""
 ENTRY_POINTS_GROUP_NAME = 'dlab.plugin'
@@ -36,6 +42,10 @@ context = Container({
     CONTAINER_PARAM_EVENT_DISPATCHER: lambda c: EventDispatcher(),
     CONTAINER_PARAM_PLUGINS: lambda c: {},
 })
+
+
+class RegistryLoadException(DLabException):
+    pass
 
 
 def register_context(key, value):
@@ -125,10 +135,23 @@ def add_hook(name, call):
 
 def load_plugins():
     """ Load external plugins."""
-    try:
-        from pkg_resources import iter_entry_points
-    except ImportError:
-        return
-    for plugin in iter_entry_points(group=ENTRY_POINTS_GROUP_NAME):
-        func = plugin.load()
-        func()
+
+    for ep in pkg_resources.iter_entry_points(group=ENTRY_POINTS_GROUP_NAME):
+        get_plugins = context.raw(CONTAINER_PARAM_PLUGINS)
+        plugins = get_plugins(context)
+
+        if ep.name in plugins:
+            raise RegistryLoadException(
+                LC_ERR_PLUGIN_LOADED.format(name=ep.name))
+
+        extend_context(
+            CONTAINER_PARAM_PLUGINS,
+            lambda p, c, name=ep.name, module=ep.module_name: dict(
+                p, **{name: {'bootstrap': module}}))
+
+        func = ep.load()
+
+        try:
+            func()
+        except TypeError as e:
+            raise RegistryLoadException(e)
