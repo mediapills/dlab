@@ -25,7 +25,8 @@ import random
 
 from dlab_core.registry import (
     context, register_context, extend_context, freeze_context, load_plugins,
-    add_hook, do_action, CONTAINER_PARAM_EVENT_DISPATCHER)
+    add_hook, do_action, CONTAINER_PARAM_EVENT_DISPATCHER,
+    CONTAINER_PARAM_PLUGINS, RegistryLoadException)
 from mock import patch, MagicMock
 
 dispatcher = context.raw(CONTAINER_PARAM_EVENT_DISPATCHER)
@@ -37,6 +38,7 @@ class TestFunctions(unittest.TestCase):
         # TODO implementation needs to be done in ContextBuilder
         context.clear()
         context[CONTAINER_PARAM_EVENT_DISPATCHER] = dispatcher
+        context[CONTAINER_PARAM_PLUGINS] = lambda c: {}
 
     def test_register_context(self):
         register_context('param', lambda c: 'value')
@@ -117,20 +119,34 @@ class TestFunctions(unittest.TestCase):
 
     def test_load_plugins(self):
         ep = bootstrap = MagicMock()
-        ep.load = MagicMock(return_value=bootstrap)
+        ep.name = 'test'
+        ep.module_name = 'bootstrap'
+        ep.load.return_value = bootstrap
 
-        with patch(
-                'pkg_resources.iter_entry_points',
-                return_value=[ep]):
+        with patch('pkg_resources.iter_entry_points', return_value=[ep]):
             load_plugins()
 
         bootstrap.assert_called()
 
-    def test_load_plugin_exception(self):
-        ep = bootstrap = MagicMock()
-        ep.load = MagicMock(return_value=bootstrap)
+    def test_load_plugin_type_error(self):
+        ep = MagicMock()
+        ep.name = 'test'
+        ep.module_name = 'bootstrap'
+        ep.load.return_value = None
 
-        with patch.dict(sys.modules, {'pkg_resources': None}):
+        with patch('pkg_resources.iter_entry_points', return_value=[ep]):
+            with self.assertRaises(RegistryLoadException):
+                load_plugins()
+
+    def test_load_plugin_twice_exception(self):
+        ep = MagicMock()
+        ep.name = 'test'
+        ep.module_name = 'bootstrap'
+        ep.load.return_value = lambda: None
+
+        with patch('pkg_resources.iter_entry_points', return_value=[ep]):
+
             load_plugins()
 
-        bootstrap.assert_not_called()
+            with self.assertRaises(RegistryLoadException):
+                load_plugins()
