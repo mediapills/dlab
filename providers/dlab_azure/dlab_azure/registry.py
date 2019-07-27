@@ -19,17 +19,11 @@
 #
 # ******************************************************************************
 
-from dlab_core.registry import extend_context, CONTAINER_PARAM_PLUGINS
-
 """Plugin public name."""
 PLUGIN_PREFIX = "azure"
 
 
 def bootstrap():
-    """Bootstrap AWS Plugin"""
+    """Bootstrap Azure Plugin"""
 
-    extend_context(
-        CONTAINER_PARAM_PLUGINS,
-        lambda p, c: dict(p, **{
-            PLUGIN_PREFIX: 'dlab_azure.registry:bootstrap'
-        }))
+    pass

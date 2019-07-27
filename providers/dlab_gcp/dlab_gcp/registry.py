@@ -19,8 +19,6 @@
 #
 # ******************************************************************************
 
-from dlab_core.registry import extend_context, CONTAINER_PARAM_PLUGINS
-
 """Plugin public name."""
 PLUGIN_PREFIX = "gcp"
 
@@ -28,6 +26,4 @@ PLUGIN_PREFIX = "gcp"
 def bootstrap():
     """Bootstrap GCP Plugin"""
 
-    extend_context(
-        CONTAINER_PARAM_PLUGINS,
-        lambda p, c: dict(p, **{PLUGIN_PREFIX: 'dlab_gcp.registry:bootstrap'}))
+    pass
