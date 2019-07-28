@@ -26,6 +26,11 @@ from dlab_core.domain.exceptions import DLabException
 from dlab_core.dispatchers import EventDispatcher
 
 
+__all__ = ['add_hook', 'do_action', 'load_plugins', 'load_context',
+           'reload_context', 'extend_context', 'freeze_context',
+           'get_resource', 'register_context']
+
+
 LC_ERR_PLUGIN_LOADED = 'Plugin "{name}" already loaded.'
 
 """entry_points group name for plugins in setup.py"""
@@ -37,11 +42,7 @@ CONTAINER_PARAM_EVENT_DISPATCHER = 'event_dispatcher'
 """Container parameter name for plugins list in global scope."""
 CONTAINER_PARAM_PLUGINS = 'plugins'
 
-
-context = Container({
-    CONTAINER_PARAM_EVENT_DISPATCHER: lambda c: EventDispatcher(),
-    CONTAINER_PARAM_PLUGINS: lambda c: {},
-})
+context = Container()
 
 
 class RegistryLoadException(DLabException):
@@ -98,6 +99,35 @@ def freeze_context(key, call):
     register_context(key, call)
 
 
+def get_resource(key):
+    """Returns the context resource at the specified index.
+
+    :type key: string
+    :param key: The unique identifier for the parameter or object.
+
+    :return: Resource parameter or an object.
+    """
+
+    return context[key]
+
+
+def load_context():
+    """Initial Load base context resources."""
+
+    register_context(
+        CONTAINER_PARAM_EVENT_DISPATCHER, lambda c: EventDispatcher())
+
+    register_context(
+        CONTAINER_PARAM_PLUGINS, lambda c: {})
+
+
+def reload_context():
+    """Reload base context resources."""
+
+    context.clear()
+    load_context()
+
+
 def do_action(name):
     """This function invokes all functions attached to hook action.
     Hooks needs to have next naming convention <verb>.<noun>
@@ -108,7 +138,9 @@ def do_action(name):
 
     def wrapper(func):
         def wrapped(*args, **kwargs):
-            context[CONTAINER_PARAM_EVENT_DISPATCHER].dispatch(name)
+            dispatcher = get_resource(CONTAINER_PARAM_EVENT_DISPATCHER)
+            dispatcher.dispatch(name)
+
             return func(*args, **kwargs)
         return wrapped
     return wrapper

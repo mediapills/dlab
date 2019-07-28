@@ -19,37 +19,36 @@
 #
 # ******************************************************************************
 
-import sys
 import unittest
 import random
 
 from dlab_core.registry import (
-    context, register_context, extend_context, freeze_context, load_plugins,
-    add_hook, do_action, CONTAINER_PARAM_EVENT_DISPATCHER,
-    CONTAINER_PARAM_PLUGINS, RegistryLoadException)
+    register_context, extend_context, freeze_context, load_plugins,
+    do_action, add_hook, get_resource, RegistryLoadException, reload_context)
+
 from mock import patch, MagicMock
 
-dispatcher = context.raw(CONTAINER_PARAM_EVENT_DISPATCHER)
+
+class EntryPointMock(MagicMock):
+    name = 'test'
+    module_name = 'bootstrap'
 
 
 class TestFunctions(unittest.TestCase):
 
     def setUp(self):
-        # TODO implementation needs to be done in ContextBuilder
-        context.clear()
-        context[CONTAINER_PARAM_EVENT_DISPATCHER] = dispatcher
-        context[CONTAINER_PARAM_PLUGINS] = lambda c: {}
+        reload_context()
 
     def test_register_context(self):
         register_context('param', lambda c: 'value')
 
-        self.assertEqual('value', context['param'])
+        self.assertEqual('value', get_resource('param'))
 
     def test_extend_context(self):
         register_context('param', lambda c: 'value')
         extend_context('param', lambda v, c: 'extended_' + v)
 
-        self.assertEqual('extended_value', context['param'])
+        self.assertEqual('extended_value', get_resource('param'))
 
     def test_freeze_context(self):
         def test():
@@ -57,26 +56,18 @@ class TestFunctions(unittest.TestCase):
 
         freeze_context('random', test)
 
-        a = context['random']
-        b = context['random']
+        a = get_resource('random')
+        b = get_resource('random')
 
         self.assertNotEqual(a(), b())
 
-    def test_add_hook(self):
-        name = 'init.param'
-        add_hook(
-            name, lambda: register_context('param', lambda c: 'value'))
-
-        self.assertTrue(
-            context[CONTAINER_PARAM_EVENT_DISPATCHER].has_listeners(name))
-
     def test_function_call(self):
-        @do_action('hook_name')
+        @do_action('action.name')
         def test():
             pass
 
         func = MagicMock()
-        add_hook('hook_name', func)
+        add_hook('action.name', func)
 
         func.assert_not_called()
 
@@ -86,12 +77,12 @@ class TestFunctions(unittest.TestCase):
 
     def test_instance_method_call(self):
         class Test:
-            @do_action('hook_name')
+            @do_action('action.name')
             def test(self):
                 pass
 
         func = MagicMock()
-        add_hook('hook_name', func)
+        add_hook('action.name', func)
         t = Test()
 
         func.assert_not_called()
@@ -118,10 +109,8 @@ class TestFunctions(unittest.TestCase):
         func.assert_called()
 
     def test_load_plugins(self):
-        ep = bootstrap = MagicMock()
-        ep.name = 'test'
-        ep.module_name = 'bootstrap'
-        ep.load.return_value = bootstrap
+        bootstrap = MagicMock()
+        ep = EntryPointMock(**{'load.return_value': bootstrap})
 
         with patch('pkg_resources.iter_entry_points', return_value=[ep]):
             load_plugins()
@@ -129,24 +118,15 @@ class TestFunctions(unittest.TestCase):
         bootstrap.assert_called()
 
     def test_load_plugin_type_error(self):
-        ep = MagicMock()
-        ep.name = 'test'
-        ep.module_name = 'bootstrap'
-        ep.load.return_value = None
+        ep = EntryPointMock(**{'load.return_value': None})
 
         with patch('pkg_resources.iter_entry_points', return_value=[ep]):
             with self.assertRaises(RegistryLoadException):
                 load_plugins()
 
     def test_load_plugin_twice_exception(self):
-        ep = MagicMock()
-        ep.name = 'test'
-        ep.module_name = 'bootstrap'
-        ep.load.return_value = lambda: None
+        ep = EntryPointMock(**{'load.return_value': lambda: None})
 
-        with patch('pkg_resources.iter_entry_points', return_value=[ep]):
-
-            load_plugins()
-
+        with patch('pkg_resources.iter_entry_points', return_value=[ep, ep]):
             with self.assertRaises(RegistryLoadException):
                 load_plugins()
