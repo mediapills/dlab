@@ -43,14 +43,12 @@ class LogLevelTransformer:
         :return: Log level.
         """
         if isinstance(level, (int, float)) and level >= 100:
-            level = int(level / 10)
-        elif isinstance(level, str):
-            prop_level = level.upper()
+            return int(level / 10)
 
-            if hasattr(logging, prop_level):
-                level = getattr(logging, prop_level)
-            else:
-                level = logging.NOTSET  # pragma: no cover
+        if isinstance(level, str):
+            level = level.upper()
+            return (getattr(logging, level) if hasattr(logging, level)
+                    else logging.NOTSET)  # pragma: no cover
 
         return level
 
@@ -346,12 +344,8 @@ class StreamLogging(AbstractLogging):
         :param kwargs: Logging options.
         """
 
-        try:
-            extra = kwargs['extra']
-        except KeyError:
-            extra = {}
-
-        kwargs['extra'] = extra
+        if 'extra' not in kwargs:
+            kwargs['extra'] = {}
 
         return msg, kwargs
 

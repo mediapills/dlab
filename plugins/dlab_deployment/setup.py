@@ -22,15 +22,15 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='dlab_azure',
+    name='dlab_deployment',
     version='0.0.1',
     author='Apache Software Foundation',
     author_email='dev@dlab.apache.org',
     url='http://dlab.apache.org/',
-    description='This a provider to DLab that adds Azure support.',
+    description='This is a DLab plugin that implements deployment flows.',
     packages=find_packages(),
     entry_points={
         "dlab.plugin": [
-            "aws = dlab_azure.registry:bootstrap",
+            "deployment = dlab_deployment.registry:bootstrap",
         ]}
 )

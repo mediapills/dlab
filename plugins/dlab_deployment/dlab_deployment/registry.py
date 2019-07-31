@@ -19,18 +19,9 @@
 #
 # ******************************************************************************
 
-from setuptools import setup, find_packages
+"""Plugin public name."""
+PLUGIN_PREFIX = "deployment"
 
-setup(
-    name='dlab_azure',
-    version='0.0.1',
-    author='Apache Software Foundation',
-    author_email='dev@dlab.apache.org',
-    url='http://dlab.apache.org/',
-    description='This a provider to DLab that adds Azure support.',
-    packages=find_packages(),
-    entry_points={
-        "dlab.plugin": [
-            "aws = dlab_azure.registry:bootstrap",
-        ]}
-)
+
+def bootstrap():
+    """Bootstrap Deployment Plugin"""

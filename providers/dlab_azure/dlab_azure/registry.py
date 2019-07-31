@@ -18,3 +18,12 @@
 # under the License.
 #
 # ******************************************************************************
+
+"""Plugin public name."""
+PLUGIN_PREFIX = "azure"
+
+
+def bootstrap():
+    """Bootstrap Azure Plugin"""
+
+    pass

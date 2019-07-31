@@ -80,7 +80,7 @@ class Container:
         elif not isinstance(args, dict):
             raise ContainerTypeException(type(args))
 
-        for key in args.keys():
+        for key in args:
             self[key] = args[key]
 
     def __setitem__(self, key, value):
@@ -89,6 +89,7 @@ class Container:
         function names (strings) are callable (creating a function with the
         same name as an existing parameter would break your container).
 
+        :type key: str
         :param key: The unique identifier for the parameter or object.
 
         :param value: The value or a closure of the parameter.
@@ -110,8 +111,7 @@ class Container:
 
         :return: The value of the parameter or an object.
 
-        :raise ContainerKeyException: When try to access a key that isn't in a
-        dict.
+        :raise ContainerKeyException: Do not allow to get out of scope element.
         """
 
         if key not in self._data:
@@ -138,7 +138,7 @@ class Container:
         """Return set-like object providing a view on container keys.
 
         :rtype: set
-        :return: Container keys.
+        :return: Container keys list.
         """
 
         return self._data.keys()
@@ -147,7 +147,7 @@ class Container:
         """Count elements of an object.
 
         :rtype: int
-        :return The custom count as an integer.
+        :return: The custom count as an integer.
         """
 
         return len(self._data)
@@ -158,8 +158,7 @@ class Container:
         :type key: string
         :param key: The unique identifier for the parameter or object.
 
-        :raise ContainerKeyException: When try to access a key that isn't in a
-        dict.
+        :raise ContainerKeyException: Do not allow to get out of scope element.
         """
 
         if key not in self._data.keys():
@@ -204,11 +203,10 @@ class Container:
 
         :return: The value of the parameter or the closure defining an object:
 
-        :raise ContainerKeyException: When try to access a key that isn't in a
-        dict.
+        :raise ContainerKeyException: Do not allow to get out of scope element.
         """
 
-        if key not in self._data.keys():
+        if key not in self._data:
             raise ContainerKeyException(key)
 
         if key in self._raw:
@@ -216,58 +214,67 @@ class Container:
 
         return self._data[key]
 
-    def protect(self, func):
+    def protect(self, call):
         """Protects a callable from being interpreted as a service. This is
         useful when you want to store a callable as a parameter.
 
-        :type func: function
-        :param func: A callable to protect from being evaluated.
+        :type call: function
+        :param call: A callable to protect from being evaluated.
 
-        :rtype: func
+        :rtype: callable
         :return: The passed callable.
 
-        :raise ContainerExpectedCallableException: When trying to call non
+        :raise ContainerExpectedCallableException: Protect from call non
         callable object.
         """
 
-        if not callable(func):
-            raise ContainerExpectedCallableException(func)
+        if not callable(call):
+            raise ContainerExpectedCallableException(call)
 
-        self._protected.add(func)
+        self._protected.add(call)
 
-        return func
+        return call
 
-    def factory(self, func):
+    def factory(self, call):
         """Marks a callable as being a factory service.
 
-        :type func: function
-        :param func: A service definition to be used as a factory.
+        :type call: function
+        :param call: A service definition to be used as a factory.
 
-        :rtype function
+        :rtype callable
         :return: The passed callable
 
-        :raise ExpectedCallableException:
+        :raise ContainerExpectedCallableException: Protect from call non
+        callable object.
         """
 
         raise NotImplementedError
 
-    def extend(self, key, func):
+    def extend(self, key, call):
         """Extends an object definition. Useful when you want to extend an
         existing object definition, without necessarily loading that object.
 
         :type key: string
         :param key: The unique identifier for the parameter or object.
 
-        :type func: callable
-        :param func: The passed callable.
+        :type call: callable
+        :param call: The passed callable.
 
         :rtype: callable
-        :return The wrapped callable.
+        :return: The wrapped callable.
 
-        :raise ContainerKeyException:
-        :raise ContainerFrozenServiceException:
-        :raise InvalidServiceIdentifierException
-        :raise ContainerExpectedCallableException:
+        :raise ContainerFrozenServiceException: Prevent extend of a frozen
+        data.
+        :raise ContainerExpectedCallableException: Protect from call non
+        callable object.
         """
 
-        raise NotImplementedError
+        if not callable(call):
+            raise ContainerExpectedCallableException(call)
+
+        if key in self._frozen:
+            raise ContainerFrozenServiceException(key)
+
+        factory = self.raw(key)
+
+        self[key] = lambda c: call(factory(c), c)
