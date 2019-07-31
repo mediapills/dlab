@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # *****************************************************************************
 #
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -19,26 +21,17 @@
 #
 # ******************************************************************************
 
-from setuptools import setup
-from dlab_core.setup import SetupParametersDirector, SetupParametersBuilder
+import dlab_core
+import sys
+import os
+
+if os.environ.get('LC_CTYPE', '') == 'UTF-8':
+    os.environ['LC_CTYPE'] = 'en_US.UTF-8'
 
 
-def do_setup():
-    description = "Self-service, Fail-safe Exploratory Environment for" \
-                  "Collaborative Data Science Workflow"
-
-    builder = SetupParametersBuilder(
-        'dlab_core',
-        description
-    )
-
-    director = SetupParametersDirector()
-    director.build(builder)
-    args = director.parameters
-
-    args['scripts'] = ['bin/dlab']
-    setup(**args)
+def main():
+    return dlab_core.clidriver.main()
 
 
-if __name__ == "__main__":
-    do_setup()
+if __name__ == '__main__':
+    sys.exit(main())

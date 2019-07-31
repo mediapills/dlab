@@ -25,7 +25,7 @@ import unittest
 
 from dlab_core.domain import logger as val
 from dlab_core.infrastructure import logger
-from mock import patch, MagicMock, Mock
+from mock import MagicMock
 
 
 # TODO implement test for logging without prop_level attribute

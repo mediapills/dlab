@@ -163,7 +163,7 @@ class TestEnvironRepository(BaseRepositoryTestCase, unittest.TestCase):
         if sys.platform == 'win32':
             key = 'KEY'
 
-        self.assertIn(key, data.keys())
+        self.assertIn(key, data)
 
     def test_find_one_wrong_key(self):
         self.repo = repositories.EnvironRepository()

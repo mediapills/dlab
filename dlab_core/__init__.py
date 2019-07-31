@@ -21,6 +21,7 @@
 
 import dlab_core.domain
 import dlab_core.infrastructure
+import dlab_core.clidriver
 import dlab_core.containers
 import dlab_core.dispatchers
 import dlab_core.registry

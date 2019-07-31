@@ -19,26 +19,30 @@
 #
 # ******************************************************************************
 
-from setuptools import setup
-from dlab_core.setup import SetupParametersDirector, SetupParametersBuilder
+import unittest
 
 
-def do_setup():
-    description = "Self-service, Fail-safe Exploratory Environment for" \
-                  "Collaborative Data Science Workflow"
-
-    builder = SetupParametersBuilder(
-        'dlab_core',
-        description
-    )
-
-    director = SetupParametersDirector()
-    director.build(builder)
-    args = director.parameters
-
-    args['scripts'] = ['bin/dlab']
-    setup(**args)
+from dlab_core.domain.exceptions import DLabException
+from dlab_core.clidriver import CLIDriver, main
+from mock import patch
 
 
-if __name__ == "__main__":
-    do_setup()
+class TestCLIDriver(unittest.TestCase):
+
+    def test_keyboard_interrupt(self):
+        with patch.object(
+                CLIDriver, 'execute',
+                side_effect=lambda: (_ for _ in ()).throw(KeyboardInterrupt)):
+            self.assertEqual(130, main())
+
+    def test_dlab_exception(self):
+        with patch.object(
+                CLIDriver, 'execute',
+                side_effect=lambda: (_ for _ in ()).throw(DLabException)):
+            self.assertEqual(255, main())
+
+    def test_exception(self):
+        with patch.object(
+                CLIDriver, 'execute',
+                side_effect=lambda: (_ for _ in ()).throw(Exception)):
+            self.assertEqual(255, main())

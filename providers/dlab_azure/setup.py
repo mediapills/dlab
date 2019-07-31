@@ -31,6 +31,6 @@ setup(
     packages=find_packages(),
     entry_points={
         "dlab.plugin": [
-            "aws = dlab_azure.registry:bootstrap",
+            "azure = dlab_azure.registry:bootstrap",
         ]}
 )
