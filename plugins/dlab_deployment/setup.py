@@ -19,18 +19,29 @@
 #
 # ******************************************************************************
 
-from setuptools import setup, find_packages
+from setuptools import setup
+from dlab_core.setup import SetupParametersDirector, SetupParametersBuilder
 
-setup(
-    name='dlab_deployment',
-    version='0.0.1',
-    author='Apache Software Foundation',
-    author_email='dev@dlab.apache.org',
-    url='http://dlab.apache.org/',
-    description='This is a DLab plugin that implements deployment flows.',
-    packages=find_packages(),
-    entry_points={
-        "dlab.plugin": [
+
+def do_setup():
+    description = 'This is a DLab plugin that implements deployment flows.'
+
+    builder = SetupParametersBuilder(
+        'dlab_deployment',
+        description
+    )
+    builder.set_entry_points(
+        {"dlab.plugin": [
             "deployment = dlab_deployment.registry:bootstrap",
-        ]}
-)
+        ]
+        }
+    )
+    director = SetupParametersDirector()
+    director.build(builder)
+    args = director.parameters
+
+    setup(**args)
+
+
+if __name__ == "__main__":
+    do_setup()

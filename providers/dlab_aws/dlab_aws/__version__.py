@@ -18,29 +18,5 @@
 # under the License.
 #
 # ******************************************************************************
-
-from setuptools import setup
-from dlab_core.setup import SetupParametersDirector, SetupParametersBuilder
-
-
-def do_setup():
-    description = 'This a provider to DLab that adds Azure support.'
-
-    builder = SetupParametersBuilder(
-        'dlab_azure',
-        description
-    )
-    builder.set_entry_points({
-        "dlab.plugin": [
-            "azure = dlab_azure.registry:bootstrap",
-        ],
-    })
-    director = SetupParametersDirector()
-    director.build(builder)
-    args = director.parameters
-
-    setup(**args)
-
-
-if __name__ == "__main__":
-    do_setup()
+__version_info__ = (0, 0, 1)
+__version__ = ".".join(map(str, __version_info__))

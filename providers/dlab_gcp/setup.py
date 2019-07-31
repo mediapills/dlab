@@ -19,18 +19,28 @@
 #
 # ******************************************************************************
 
-from setuptools import setup, find_packages
+from setuptools import setup
+from dlab_core.setup import SetupParametersDirector, SetupParametersBuilder
 
-setup(
-    name='dlab_gcp',
-    version='0.0.1',
-    author='Apache Software Foundation',
-    author_email='dev@dlab.apache.org',
-    url='http://dlab.apache.org/',
-    description='This a provider to DLab that adds GCP support.',
-    packages=find_packages(),
-    entry_points={
+
+def do_setup():
+    description = 'This a provider to DLab that adds GCP support.'
+
+    builder = SetupParametersBuilder(
+        'dlab_gcp',
+        description
+    )
+    builder.set_entry_points({
         "dlab.plugin": [
             "gcp = dlab_gcp.registry:bootstrap",
-        ]}
-)
+        ],
+    })
+    director = SetupParametersDirector()
+    director.build(builder)
+    args = director.parameters
+
+    setup(**args)
+
+
+if __name__ == "__main__":
+    do_setup()

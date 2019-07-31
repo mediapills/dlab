@@ -349,7 +349,7 @@ class SetupParametersBuilder(BaseSetupParametersBuilder):
         content = self._read_file(README_FILE)
         self._parameters['long_description'] = content
 
-    def set_entry_points(self):
+    def set_entry_points(self,  entry_points):
         """
         A dictionary mapping entry point group names to strings or lists of
         strings defining the entry points. Entry points are used to support
@@ -360,4 +360,4 @@ class SetupParametersBuilder(BaseSetupParametersBuilder):
 
         :return: None
         """
-        raise NotImplementedError
+        self._parameters['entry_points'] = entry_points
