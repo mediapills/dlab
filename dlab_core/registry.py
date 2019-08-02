@@ -21,14 +21,14 @@
 
 import pkg_resources
 
-from dlab_core.containers import Container
+from dlab_core.containers import Container, ContainerKeyException
 from dlab_core.domain.exceptions import DLabException
 from dlab_core.dispatchers import EventDispatcher
 
 
 __all__ = ['add_hook', 'do_action', 'load_plugins', 'load_context',
            'reload_context', 'extend_context', 'freeze_context',
-           'get_resource', 'register_context']
+           'get_resource', 'register_context', 'RegistryLoadException']
 
 
 LC_ERR_PLUGIN_LOADED = 'Plugin "{name}" already loaded.'
@@ -117,9 +117,6 @@ def load_context():
     register_context(
         CONTAINER_PARAM_EVENT_DISPATCHER, lambda c: EventDispatcher())
 
-    register_context(
-        CONTAINER_PARAM_PLUGINS, lambda c: {})
-
 
 def reload_context():
     """Reload base context resources."""
@@ -168,22 +165,44 @@ def add_hook(name, call):
 def load_plugins():
     """ Load external plugins."""
 
+    try:
+        context.raw(CONTAINER_PARAM_PLUGINS)
+        raise RuntimeError()
+    except ContainerKeyException:
+        register_context(
+            CONTAINER_PARAM_PLUGINS, lambda c: {})
+
+    load_context()
+
     for ep in pkg_resources.iter_entry_points(group=ENTRY_POINTS_GROUP_NAME):
-        get_plugins = context.raw(CONTAINER_PARAM_PLUGINS)
-        plugins = get_plugins(context)
+        load_entry_point(ep)
 
-        if ep.name in plugins:
-            raise RegistryLoadException(
-                LC_ERR_PLUGIN_LOADED.format(name=ep.name))
+    return context
 
-        extend_context(
-            CONTAINER_PARAM_PLUGINS,
-            lambda p, c, name=ep.name, module=ep.module_name: dict(
-                p, **{name: {'bootstrap': module}}))
 
-        func = ep.load()
+def load_entry_point(ep):
+    """ Load EntryPoint
 
-        try:
-            func()
-        except TypeError as e:
-            raise RegistryLoadException(e)
+    :type ep: EntryPoint
+    :param ep: Setup EntryPoint.
+
+    :raises RegistryLoadException:
+    """
+    get_plugins = context.raw(CONTAINER_PARAM_PLUGINS)
+    plugins = get_plugins(context)
+
+    if ep.name in plugins:
+        raise RegistryLoadException(
+            LC_ERR_PLUGIN_LOADED.format(name=ep.name))
+
+    extend_context(
+        CONTAINER_PARAM_PLUGINS,
+        lambda p, c, name=ep.name, module=ep.module_name: dict(
+            p, **{name: {'bootstrap': module}}))
+
+    func = ep.load()
+
+    try:
+        func()
+    except TypeError as e:
+        raise RegistryLoadException(e)

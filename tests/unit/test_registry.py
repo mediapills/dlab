@@ -24,7 +24,8 @@ import random
 
 from dlab_core.registry import (
     register_context, extend_context, freeze_context, load_plugins,
-    do_action, add_hook, get_resource, RegistryLoadException, reload_context)
+    do_action, add_hook, get_resource, RegistryLoadException, reload_context,
+    CONTAINER_PARAM_PLUGINS)
 
 from mock import patch, MagicMock
 
@@ -124,9 +125,26 @@ class TestFunctions(unittest.TestCase):
             with self.assertRaises(RegistryLoadException):
                 load_plugins()
 
-    def test_load_plugin_twice_exception(self):
+    def test_load_same_plugin_twice(self):
+        ep = EntryPointMock(**{'load.return_value': lambda: None})
+
+        with patch('pkg_resources.iter_entry_points', return_value=[ep]):
+            load_plugins()
+
+            with self.assertRaises(RuntimeError):
+                load_plugins()
+
+    def test_load_same_plugin_twice_exception(self):
         ep = EntryPointMock(**{'load.return_value': lambda: None})
 
         with patch('pkg_resources.iter_entry_points', return_value=[ep, ep]):
             with self.assertRaises(RegistryLoadException):
                 load_plugins()
+
+    def test_load_repo_plugins(self):
+        load_plugins()
+        plugins = get_resource(CONTAINER_PARAM_PLUGINS)
+
+        self.assertIn('aws', plugins.keys())
+        self.assertIn('azure', plugins.keys())
+        self.assertIn('gcp', plugins.keys())
