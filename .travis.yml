@@ -34,7 +34,7 @@ jobs:
       os: linux
       stage: pre-test
       python: "3.6"
-      env: TOXENV=flake8
+      env: TOXENV=linter
       script: tox
     - name: "Test Python27 (xenial)"
       stage: test

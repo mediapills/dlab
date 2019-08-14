@@ -14,3 +14,6 @@ clean:
 coverage:
 	tox -e coverage
 	codecov
+
+sphinx:
+	tox -e docs
