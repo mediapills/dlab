@@ -20,8 +20,9 @@ Folder structure options and naming conventions for software projects
     │ ├── __init__.py           # define bound to names in the dlab_core package namespace
     │ ├── __version__.py        # define version of current distributive 
     │ └── setup.py              # helper for setuptools
-    ├── providers               # * dlab_core infrastructure providers
-    │ ├── dlab_aws              # dlab_core package represent AWS cloud infrastructure managers
+    ├── plugins                 # * dlab_core infrastructure plugins
+    │ ├── dlab_deployment       # dlab_deployment package
+    │ ├── dlab_aws              # dlab_aws package represent AWS cloud infrastructure managers
     │ ├── dlab_azure            # dlab_azure package represent Azure cloud infrastructure managers
     │ ├── dlab_gcp              # dlab_gcp package represent GCP cloud infrastructure managers
     │ └── ...                   # ...

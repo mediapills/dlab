@@ -18,37 +18,6 @@
 # under the License.
 #
 # ******************************************************************************
-from setuptools import setup
-from dlab_core.setup import SetupParametersBuilder, SetupParametersDirector
 
-""" Distribution name of package"""
-NAME = 'dlab_deployment'
-
-"""Short summary of the package"""
-DESCRIPTION = 'This is a DLab plugin that implements deployment flows.'
-
-
-class DeploySetupParametersBuilder(SetupParametersBuilder):
-
-    @property
-    def entry_points(self):
-        deploy_entry_points = {
-            "dlab.plugin": [
-                "deployment = dlab_deployment.registry:bootstrap",
-            ],
-        }
-        return dict(super(DeploySetupParametersBuilder, self).entry_points,
-                    **deploy_entry_points)
-
-
-def do_setup():
-    builder = DeploySetupParametersBuilder(NAME, DESCRIPTION)
-    director = SetupParametersDirector()
-    director.build(builder)
-    args = director.parameters
-
-    setup(**args)
-
-
-if __name__ == "__main__":
-    do_setup()
+__version_info__ = (0, 0, 1)
+__version__ = ".".join(map(str, __version_info__))

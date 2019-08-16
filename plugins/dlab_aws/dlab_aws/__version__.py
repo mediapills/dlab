@@ -19,18 +19,5 @@
 #
 # ******************************************************************************
 
-from setuptools import setup, find_packages
-
-setup(
-    name='dlab_azure',
-    version='0.0.1',
-    author='Apache Software Foundation',
-    author_email='dev@dlab.apache.org',
-    url='http://dlab.apache.org/',
-    description='This a provider to DLab that adds Azure support.',
-    packages=find_packages(),
-    entry_points={
-        "dlab.plugin": [
-            "azure = dlab_azure.registry:bootstrap",
-        ]}
-)
+__version_info__ = (0, 0, 1)
+__version__ = ".".join(map(str, __version_info__))

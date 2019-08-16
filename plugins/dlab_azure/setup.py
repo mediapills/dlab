@@ -18,19 +18,38 @@
 # under the License.
 #
 # ******************************************************************************
+from setuptools import setup
+from dlab_core.setup import SetupParametersBuilder, SetupParametersDirector
 
-from setuptools import setup, find_packages
+""" Distribution name of package"""
+NAME = 'dlab_azure'
 
-setup(
-    name='dlab_gcp',
-    version='0.0.1',
-    author='Apache Software Foundation',
-    author_email='dev@dlab.apache.org',
-    url='http://dlab.apache.org/',
-    description='This a provider to DLab that adds GCP support.',
-    packages=find_packages(),
-    entry_points={
-        "dlab.plugin": [
-            "gcp = dlab_gcp.registry:bootstrap",
-        ]}
-)
+"""Short summary of the package"""
+DESCRIPTION = 'This a provider to DLab that adds Azure support.'
+
+
+class AzureSetupParametersBuilder(SetupParametersBuilder):
+
+    @property
+    def entry_points(self):
+        azure_entry_points = {
+            "dlab.plugin": [
+                "azure = dlab_azure.registry:bootstrap",
+            ],
+        }
+
+        return dict(super(AzureSetupParametersBuilder, self).entry_points,
+                    **azure_entry_points)
+
+
+def do_setup():
+    builder = AzureSetupParametersBuilder(NAME, DESCRIPTION)
+    director = SetupParametersDirector()
+    director.build(builder)
+    args = director.parameters
+
+    setup(**args)
+
+
+if __name__ == "__main__":
+    do_setup()
