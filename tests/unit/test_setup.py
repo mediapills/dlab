@@ -176,6 +176,31 @@ class TestSetupParametersBuilder(unittest.TestCase):
 
         self.assertTrue(REQUIRED_FIELDS.issubset(params.keys()))
 
+    # @mock_isfile()
+    # @patch(FN_OPEN, mock_open(read_data='__version__ = "0.0.1"'))
+    def test_entry_points(self):
+
+        entry_point = {
+            'dlab.plugin': [
+                "custom = dlab_test.registry:bootstrap",
+            ],
+        }
+
+        class CustomClass(SetupParametersBuilder):
+            def entry_points(self):
+                return entry_point
+
+        builder = CustomClass(
+            MOCK_NAME,
+            MOCK_DESCRIPTION_SHORT
+        )
+
+        builder.set_entry_points()
+
+        entry_points = builder.parameters['entry_points']
+
+        self.assertEqual(entry_point, entry_points())
+
 
 class TestSetupParametersDirector(unittest.TestCase):
 

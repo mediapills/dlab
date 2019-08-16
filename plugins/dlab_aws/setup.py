@@ -18,19 +18,37 @@
 # under the License.
 #
 # ******************************************************************************
+from setuptools import setup
+from dlab_core.setup import SetupParametersBuilder, SetupParametersDirector
 
-from setuptools import setup, find_packages
+""" Distribution name of package"""
+NAME = 'dlab_aws'
 
-setup(
-    name='dlab_aws',
-    version='0.0.1',
-    author='Apache Software Foundation',
-    author_email='dev@dlab.apache.org',
-    url='http://dlab.apache.org/',
-    description='This a provider to DLab that adds AWS support.',
-    packages=find_packages(),
-    entry_points={
-        "dlab.plugin": [
-            "aws = dlab_aws.registry:bootstrap",
-        ]}
-)
+"""Short summary of the package"""
+DESCRIPTION = 'This a provider to DLab that adds AWS support.'
+
+
+class AWSSetupParametersBuilder(SetupParametersBuilder):
+
+    @property
+    def entry_points(self):
+        aws_entry_points = {
+            "dlab.plugin": [
+                "aws = dlab_aws.registry:bootstrap",
+            ],
+        }
+
+        return dict(super(AWSSetupParametersBuilder, self).entry_points,
+                    **aws_entry_points)
+
+
+def do_setup():
+    builder = AWSSetupParametersBuilder(NAME, DESCRIPTION)
+    director = SetupParametersDirector()
+    director.build(builder)
+    args = director.parameters
+    setup(**args)
+
+
+if __name__ == "__main__":
+    do_setup()

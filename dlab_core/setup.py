@@ -19,13 +19,10 @@
 #
 # ******************************************************************************
 
-import abc
 import os
-import six
 import sys
 
 from setuptools import find_packages
-
 
 """Author of the package email address"""
 AUTHOR_EMAIL = 'dev@dlab.apache.org'
@@ -108,65 +105,6 @@ class FileNotFoundException(IOError):
     pass
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseSetupParametersBuilder:
-    """Abstract interface for creating setup parameters"""
-
-    @abc.abstractmethod
-    def set_packages(self):
-        """Set list of all Python import packages that should be included in
-        the distribution package. Instead of listing each package manually, we
-        can use find_packages() to automatically discover all packages and
-        subpackages. In this case, the list of packages will be example_pkg as
-        that's the only package present.
-
-        :return: None
-        """
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def set_requirements(self):
-        """Set libraries list that should be used to specify what a project
-        minimally needs to run correctly. When the project is installed by pip,
-        this is the specification that is used to install its dependencies.
-
-        :return: None
-        """
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def set_version(self):
-        """Set package version see PEP 440 for more details on versions.
-
-        :return: None
-        """
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def set_long_description(self):
-        """Set detailed description of the package. This is shown on the
-        package detail package on the Python Package Index. In this case, the
-        long description is loaded from README.md which is a common pattern.
-
-        :return: None
-        """
-
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def parameters(self):
-        """Get parameters list as dict for setup.py
-
-        :return: dict
-        """
-
-        raise NotImplementedError
-
-
 class SetupParametersDirector:
     """Construct an parameters dict using the BaseSetupParametersBuilder
     interface.
@@ -191,6 +129,7 @@ class SetupParametersDirector:
         self._builder.set_requirements()
         self._builder.set_version()
         self._builder.set_long_description()
+        self._builder.set_entry_points()
 
     @property
     def parameters(self):
@@ -199,11 +138,11 @@ class SetupParametersDirector:
         :return: dict
         """
 
-        builder = self._builder  # type: BaseSetupParametersBuilder
+        builder = self._builder  # type: SetupParametersBuilder
         return builder.parameters
 
 
-class SetupParametersBuilder(BaseSetupParametersBuilder):
+class SetupParametersBuilder(object):
     """Creating parts of a setup parameters dict see PEP 561 for more details
     about Distributing and Packaging Type Information
     """
@@ -220,7 +159,7 @@ class SetupParametersBuilder(BaseSetupParametersBuilder):
 
         self._name = name
         self._parameters = {
-            'name': self._name,
+            'name': name,
             'description': description,
             'classifiers': CLASSIFIERS,
             'url': URL,
@@ -234,6 +173,14 @@ class SetupParametersBuilder(BaseSetupParametersBuilder):
             'version': None,
             'long_description': None,
         }
+
+    @property
+    def entry_points(self):
+        """Get setup entry points
+
+        :return: dict
+        """
+        return {}
 
     @property
     def parameters(self):
@@ -360,4 +307,5 @@ class SetupParametersBuilder(BaseSetupParametersBuilder):
 
         :return: None
         """
-        raise NotImplementedError
+        if self.entry_points:
+            self._parameters['entry_points'] = self.entry_points

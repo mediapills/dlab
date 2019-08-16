@@ -22,27 +22,27 @@ from setuptools import setup
 from dlab_core.setup import SetupParametersBuilder, SetupParametersDirector
 
 """ Distribution name of package"""
-NAME = 'dlab_deployment'
+NAME = 'dlab_gcp'
 
 """Short summary of the package"""
-DESCRIPTION = 'This is a DLab plugin that implements deployment flows.'
+DESCRIPTION = 'This a provider to DLab that adds GCP support.'
 
 
-class DeploySetupParametersBuilder(SetupParametersBuilder):
+class GCPSetupParametersBuilder(SetupParametersBuilder):
 
     @property
     def entry_points(self):
-        deploy_entry_points = {
+        gcp_entry_points = {
             "dlab.plugin": [
-                "deployment = dlab_deployment.registry:bootstrap",
+                "gcp = dlab_gcp.registry:bootstrap",
             ],
         }
-        return dict(super(DeploySetupParametersBuilder, self).entry_points,
-                    **deploy_entry_points)
+        return dict(super(GCPSetupParametersBuilder, self).entry_points,
+                    **gcp_entry_points)
 
 
 def do_setup():
-    builder = DeploySetupParametersBuilder(NAME, DESCRIPTION)
+    builder = GCPSetupParametersBuilder(NAME, DESCRIPTION)
     director = SetupParametersDirector()
     director.build(builder)
     args = director.parameters

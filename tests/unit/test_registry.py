@@ -140,11 +140,3 @@ class TestFunctions(unittest.TestCase):
         with patch('pkg_resources.iter_entry_points', return_value=[ep, ep]):
             with self.assertRaises(RegistryLoadException):
                 load_plugins()
-
-    def test_load_repo_plugins(self):
-        load_plugins()
-        plugins = get_resource(CONTAINER_PARAM_PLUGINS)
-
-        self.assertIn('aws', plugins.keys())
-        self.assertIn('azure', plugins.keys())
-        self.assertIn('gcp', plugins.keys())
