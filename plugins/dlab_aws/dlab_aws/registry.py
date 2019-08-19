@@ -46,4 +46,5 @@ class AWSCliHandler(BaseCliHandler):
 
 def bootstrap():
     """Bootstrap AWS Plugin"""
-    register_context('aws.deploy.cli.parser', lambda c: AWSCliHandler().execute)
+    register_context('aws.deploy.cli.parser',
+                     lambda c: AWSCliHandler().execute)
