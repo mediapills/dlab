@@ -54,7 +54,8 @@ class BaseCLITest(unittest.TestCase):
             self._process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
+                universal_newlines=True
             )
 
     @property
@@ -76,7 +77,53 @@ class BaseCLITest(unittest.TestCase):
 class TestDLab(BaseCLITest):
 
     def test_cmd_help(self):
+        self.options = ['-h']
         out, err, exitcode = self.capture()
+        self.assertEqual('usage: dlab deploy\n', out)
+        self.assertEqual(0, exitcode)
 
-        self.assertEqual(b'', err)
+    def test_cmd_err_usage(self):
+        out, err, exitcode = self.capture()
+        self.assertEqual('usage: dlab deploy\n', err)
+        self.assertEqual(1, exitcode)
+
+
+class TestDLabDeploy(BaseCLITest):
+
+    def test_cmd_help(self):
+        self.options = ['deploy', '-h']
+        out, err, exitcode = self.capture()
+        expected_output = 'usage: dlab deploy [\'aws\', \'gcp\', \'azure\']\n'
+        self.assertEqual(expected_output, out)
+        self.assertEqual(0, exitcode)
+
+    def test_cmd_err_usage(self):
+        self.options = ['deploy']
+        out, err, exitcode = self.capture()
+        expected_err = 'usage: dlab deploy [\'aws\', \'gcp\', \'azure\']\n'
+        self.assertEqual(expected_err, err)
+        self.assertEqual(1, exitcode)
+
+
+class TestDLabDeployAWS(BaseCLITest):
+
+    def test_cmd_help(self):
+        self.options = ['deploy', 'aws', '-h']
+        out, err, exitcode = self.capture()
+        expected_output = 'usage: dlab deploy aws [\'endpoint\', \'k8s\']\n'
+        self.assertEqual(expected_output, out)
+        self.assertEqual(0, exitcode)
+
+    def test_cmd_err_usage(self):
+        self.options = ['deploy', 'aws', 'not_existed_target']
+        out, err, exitcode = self.capture()
+        expected_err = 'usage: dlab deploy aws [\'endpoint\', \'k8s\']\n'
+        self.assertEqual(expected_err, err)
+        self.assertEqual(1, exitcode)
+
+    def test_correct_cmd(self):
+        self.options = ['deploy', 'aws', 'k8s']
+        out, err, exitcode = self.capture()
+        self.assertEqual('Success\n', out)
+        self.assertEqual('', err)
         self.assertEqual(0, exitcode)

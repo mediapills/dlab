@@ -18,12 +18,32 @@
 # under the License.
 #
 # ******************************************************************************
+import sys
+
+from dlab_core.clidriver import BaseCliHandler
+from dlab_core.registry import register_context
 
 """Plugin public name."""
 PLUGIN_PREFIX = "aws"
 
 
+class AWSCliHandler(BaseCliHandler):
+
+    def parse_args(self):
+        available_targets = ['endpoint', 'k8s']
+        usage = 'usage: dlab deploy aws {}\n'.format(available_targets)
+        target = len(sys.argv) > 3 and sys.argv[3]
+
+        if target in self.HELP_OPTIONS:
+            sys.stdout.write(usage)
+            exit(0)
+
+        if not target or target not in available_targets:
+            sys.stderr.write(usage)
+            exit(1)
+        sys.stdout.write('Success\n')
+
+
 def bootstrap():
     """Bootstrap AWS Plugin"""
-
-    pass
+    register_context('aws.deploy.cli.parser', lambda c: AWSCliHandler().execute)

@@ -18,10 +18,39 @@
 # under the License.
 #
 # ******************************************************************************
+import sys
+
+from dlab_core.clidriver import BaseCliHandler
+from dlab_core.registry import (
+    register_context, get_resource, CONTAINER_PARAM_PLUGINS)
 
 """Plugin public name."""
 PLUGIN_PREFIX = "deployment"
 
 
+class DeployCliHandler(BaseCliHandler):
+    @property
+    def next_handler(self):
+        return '{}.deploy.cli.parser'.format(sys.argv[2])
+
+    def parse_args(self):
+        providers = ['aws', 'gcp', 'azure']
+        usage_template = 'usage: dlab deploy {}\n'
+        plugins = get_resource(CONTAINER_PARAM_PLUGINS).keys()
+        available_providers = [provider for provider in providers
+                               if provider in plugins]
+        usage = usage_template.format(available_providers)
+        provider = len(sys.argv) > 2 and sys.argv[2]
+
+        if provider in self.HELP_OPTIONS:
+            sys.stdout.write(usage)
+            exit(0)
+
+        if not provider or provider not in providers:
+            sys.stderr.write(usage)
+            exit(1)
+
+
 def bootstrap():
     """Bootstrap Deployment Plugin"""
+    register_context('deploy.cli.parser', lambda x: DeployCliHandler().execute)

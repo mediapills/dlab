@@ -18,40 +18,35 @@
 # under the License.
 #
 # ******************************************************************************
-
 import signal
+import sys
 
 from dlab_core.domain.exceptions import DLabException
-from dlab_core.registry import load_plugins
+from dlab_core.registry import load_plugins, get_resource
 
 
-def main():
-    driver = create_clidriver()
-    rc = driver.main()
-    return rc
+class BaseCliHandler(object):
+    HELP_OPTIONS = ('-h', '--help')
 
+    def __init__(self, next_handler=None):
+        self._next_handler = next_handler
 
-def create_clidriver():
-    """ CLIDriver Builder.
+    @property
+    def next_handler(self):
+        return self._next_handler
 
-    :rtype: CLIDriver
-    :return: CLIDriver instance.
-    """
+    @next_handler.setter
+    def next_handler(self, handler):
+        self._next_handler = handler
 
-    return CLIDriver()
+    def parse_args(self):
+        raise NotImplementedError
 
-
-class CLIDriver(object):
-
-    def __init__(self):
-        """CLIDriver constructor."""
-        pass
-
-    def main(self):
-        """Manage main CLI execution flow."""
-
+    def execute(self):
         try:
-            self.execute()
+            self.parse_args()
+            if self.next_handler is not None:
+                get_resource(self.next_handler)()
         except KeyboardInterrupt:
             # Shell standard for signals that terminate
             # the process is to return 128 + signum, in this case
@@ -64,8 +59,26 @@ class CLIDriver(object):
             # Exception caught in main()"
             return 255
 
-    @staticmethod
-    def execute():
-        # TODO Finish implementation
-        # context = load_plugins()
-        load_plugins()
+
+class DeployCliHandler(BaseCliHandler):
+    @property
+    def next_handler(self):
+        return 'deploy.cli.parser'
+
+    def parse_args(self):
+        usage = 'usage: dlab deploy\n'
+        action = len(sys.argv) > 1 and sys.argv[1]
+
+        if action in self.HELP_OPTIONS:
+            sys.stdout.write(usage)
+            exit(0)
+
+        if not action or action != 'deploy':
+            sys.stderr.write(usage)
+            exit(1)
+
+
+def main():
+    load_plugins()
+    driver = DeployCliHandler()
+    driver.execute()

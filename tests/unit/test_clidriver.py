@@ -21,9 +21,8 @@
 
 import unittest
 
-
 from dlab_core.domain.exceptions import DLabException
-from dlab_core.clidriver import CLIDriver, main
+from dlab_core.clidriver import BaseCliHandler
 from mock import patch
 
 
@@ -31,18 +30,15 @@ class TestCLIDriver(unittest.TestCase):
 
     def test_keyboard_interrupt(self):
         with patch.object(
-                CLIDriver, 'execute',
-                side_effect=lambda: (_ for _ in ()).throw(KeyboardInterrupt)):
-            self.assertEqual(130, main())
+                BaseCliHandler, 'parse_args', side_effect=KeyboardInterrupt):
+            self.assertEqual(130, BaseCliHandler().execute())
 
     def test_dlab_exception(self):
         with patch.object(
-                CLIDriver, 'execute',
-                side_effect=lambda: (_ for _ in ()).throw(DLabException)):
-            self.assertEqual(255, main())
+                BaseCliHandler, 'parse_args', side_effect=DLabException):
+            self.assertEqual(255, BaseCliHandler().execute())
 
     def test_exception(self):
         with patch.object(
-                CLIDriver, 'execute',
-                side_effect=lambda: (_ for _ in ()).throw(Exception)):
-            self.assertEqual(255, main())
+                BaseCliHandler, 'parse_args', side_effect=Exception):
+            self.assertEqual(255, BaseCliHandler().execute())

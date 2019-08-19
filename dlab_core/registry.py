@@ -28,7 +28,8 @@ from dlab_core.dispatchers import EventDispatcher
 
 __all__ = ['add_hook', 'do_action', 'load_plugins', 'load_context',
            'reload_context', 'extend_context', 'freeze_context',
-           'get_resource', 'register_context', 'RegistryLoadException']
+           'get_resource', 'register_context', 'RegistryLoadException',
+           'CONTAINER_PARAM_PLUGINS']
 
 
 LC_ERR_PLUGIN_LOADED = 'Plugin "{name}" already loaded.'
