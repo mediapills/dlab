@@ -24,12 +24,12 @@ import pkg_resources
 from dlab_core.containers import Container, ContainerKeyException
 from dlab_core.domain.exceptions import DLabException
 from dlab_core.dispatchers import EventDispatcher
-
+from dlab_core.routing import CLIRouter
 
 __all__ = ['add_hook', 'do_action', 'load_plugins', 'load_context',
            'reload_context', 'extend_context', 'freeze_context',
-           'get_resource', 'register_context', 'RegistryLoadException']
-
+           'get_resource', 'register_context', 'RegistryLoadException',
+           'CONTAINER_PARAM_CORE_CLI_ROUTERS']
 
 LC_ERR_PLUGIN_LOADED = 'Plugin "{name}" already loaded.'
 
@@ -38,6 +38,9 @@ ENTRY_POINTS_GROUP_NAME = 'dlab.plugin'
 
 """Container parameter name for event dispatcher in global scope."""
 CONTAINER_PARAM_EVENT_DISPATCHER = 'event_dispatcher'
+
+"""Container parameter name for event dispatcher in global scope."""
+CONTAINER_PARAM_CORE_CLI_ROUTERS = 'core.cli_router'
 
 """Container parameter name for plugins list in global scope."""
 CONTAINER_PARAM_PLUGINS = 'plugins'
@@ -116,6 +119,8 @@ def load_context():
 
     register_context(
         CONTAINER_PARAM_EVENT_DISPATCHER, lambda c: EventDispatcher())
+    register_context(
+        CONTAINER_PARAM_CORE_CLI_ROUTERS, lambda c: CLIRouter())
 
 
 def reload_context():
@@ -139,7 +144,9 @@ def do_action(name):
             dispatcher.dispatch(name)
 
             return func(*args, **kwargs)
+
         return wrapped
+
     return wrapper
 
 
