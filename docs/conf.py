@@ -47,7 +47,7 @@ autodoc_default_options = {
 
 autoapi_add_toctree_entry = False
 
-autoapi_dirs = ['../dlab_core', '../plugins', '../providers']
+autoapi_dirs = ['../dlab_core', '../plugins']
 
 html_show_sourcelink = False
 
