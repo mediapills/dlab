@@ -32,12 +32,7 @@ class AzureSetupParametersBuilder(SetupParametersBuilder):
 
     @property
     def entry_points(self):
-        azure_entry_points = {
-            "dlab.plugin": [
-                "azure = dlab_azure.registry:bootstrap",
-            ],
-        }
-
+        azure_entry_points = {}
         return dict(super(AzureSetupParametersBuilder, self).entry_points,
                     **azure_entry_points)
 

@@ -19,6 +19,7 @@
 #
 # ******************************************************************************
 from setuptools import setup
+
 from dlab_core.setup import SetupParametersBuilder, SetupParametersDirector
 
 """ Distribution name of package"""
@@ -33,8 +34,11 @@ class DeploySetupParametersBuilder(SetupParametersBuilder):
     @property
     def entry_points(self):
         deploy_entry_points = {
-            "dlab.plugin": [
-                "deployment = dlab_deployment.registry:bootstrap",
+            "dlab.plugin.cli": [
+                "deployment = dlab_deployment.plugins:DeploymentCLIPlugin",
+            ],
+            "dlab.plugin.api": [
+                "deployment = dlab_deployment.plugins:DeploymentAPIPlugin",
             ],
         }
         return dict(super(DeploySetupParametersBuilder, self).entry_points,

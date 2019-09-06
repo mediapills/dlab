@@ -54,7 +54,8 @@ class BaseCLITest(unittest.TestCase):
             self._process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
+                universal_newlines=True
             )
 
     @property
@@ -77,6 +78,5 @@ class TestDLab(BaseCLITest):
 
     def test_cmd_help(self):
         out, err, exitcode = self.capture()
-
-        self.assertEqual(b'', err)
+        self.assertEqual('', err)
         self.assertEqual(0, exitcode)

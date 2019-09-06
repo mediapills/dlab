@@ -19,11 +19,15 @@
 #
 # ******************************************************************************
 
-"""Plugin public name."""
-PLUGIN_PREFIX = "azure"
+from dlab_deployment.plugins import BaseDeploymentCLIPlugin
+
+from dlab_core.cli import normalize_routes
+from dlab_aws.cli import DEPLOY_ROUTES
 
 
-def bootstrap():
-    """Bootstrap Azure Plugin"""
+class AWSCLIPlugin(BaseDeploymentCLIPlugin):
 
-    pass
+    @property
+    @normalize_routes
+    def base_routes(self):
+        return DEPLOY_ROUTES

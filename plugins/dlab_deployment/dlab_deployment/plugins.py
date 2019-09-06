@@ -19,11 +19,30 @@
 #
 # ******************************************************************************
 
-"""Plugin public name."""
-PLUGIN_PREFIX = "aws"
+import abc
+import six
+
+from dlab_core.plugins import BaseAPIPlugin, BaseCLIPlugin
+
+"""deploy entry_points group name for plugins in setup.py"""
+DEPLOY_ENTRY_POINTS_GROUP_NAME = 'dlab.deployment.plugin.cli'
 
 
-def bootstrap():
-    """Bootstrap AWS Plugin"""
+@six.add_metaclass(abc.ABCMeta)
+class BaseDeploymentCLIPlugin(BaseCLIPlugin):
+    pass
 
+
+class DeploymentCLIPlugin(BaseDeploymentCLIPlugin):
+
+    @property
+    def ep_group(self):
+        return DEPLOY_ENTRY_POINTS_GROUP_NAME
+
+    @property
+    def base_routes(self):
+        return []
+
+
+class DeploymentAPIPlugin(BaseAPIPlugin):
     pass

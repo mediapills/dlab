@@ -20,9 +20,11 @@
 # ******************************************************************************
 
 import signal
+import sys
 
 from dlab_core.domain.exceptions import DLabException
-from dlab_core.registry import load_plugins
+from dlab_core.plugins import CLIPlugin
+from dlab_core.routing import CLIRouter
 
 
 def main():
@@ -64,8 +66,10 @@ class CLIDriver(object):
             # Exception caught in main()"
             return 255
 
-    @staticmethod
-    def execute():
-        # TODO Finish implementation
-        # context = load_plugins()
-        load_plugins()
+    @classmethod
+    def execute(cls):
+        router = CLIRouter(CLIPlugin().routes)
+        routes = router.match(sys.argv)
+
+        if routes:
+            routes[0].invoke()

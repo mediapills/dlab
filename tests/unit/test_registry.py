@@ -19,20 +19,14 @@
 #
 # ******************************************************************************
 
-import unittest
 import random
+import unittest
+
+from mock import MagicMock
 
 from dlab_core.registry import (
-    register_context, extend_context, freeze_context, load_plugins,
-    do_action, add_hook, get_resource, RegistryLoadException, reload_context,
-    CONTAINER_PARAM_PLUGINS)
-
-from mock import patch, MagicMock
-
-
-class EntryPointMock(MagicMock):
-    name = 'test'
-    module_name = 'bootstrap'
+    add_hook, do_action, extend_context, freeze_context, get_resource,
+    register_context, reload_context)
 
 
 class TestFunctions(unittest.TestCase):
@@ -108,35 +102,3 @@ class TestFunctions(unittest.TestCase):
         Test.test()
 
         func.assert_called()
-
-    def test_load_plugins(self):
-        bootstrap = MagicMock()
-        ep = EntryPointMock(**{'load.return_value': bootstrap})
-
-        with patch('pkg_resources.iter_entry_points', return_value=[ep]):
-            load_plugins()
-
-        bootstrap.assert_called()
-
-    def test_load_plugin_type_error(self):
-        ep = EntryPointMock(**{'load.return_value': None})
-
-        with patch('pkg_resources.iter_entry_points', return_value=[ep]):
-            with self.assertRaises(RegistryLoadException):
-                load_plugins()
-
-    def test_load_same_plugin_twice(self):
-        ep = EntryPointMock(**{'load.return_value': lambda: None})
-
-        with patch('pkg_resources.iter_entry_points', return_value=[ep]):
-            load_plugins()
-
-            with self.assertRaises(RuntimeError):
-                load_plugins()
-
-    def test_load_same_plugin_twice_exception(self):
-        ep = EntryPointMock(**{'load.return_value': lambda: None})
-
-        with patch('pkg_resources.iter_entry_points', return_value=[ep, ep]):
-            with self.assertRaises(RegistryLoadException):
-                load_plugins()
