@@ -17,24 +17,64 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# ******************************************************************************
+# *****************************************************************************
+import subprocess
+import sys
 
 from dlab_core.infrastructure.controllers import BaseCLIController
+from dlab_core.providers import TerraformProvider
 
 
 class BaseDeploymentCLIController(BaseCLIController):
-    @staticmethod
-    def deploy_ssn():
-        raise NotImplementedError
-
-    @staticmethod
-    def destroy_ssn():
-        raise NotImplementedError
 
     @classmethod
-    def deploy_endpoint(cls):
-        raise NotImplementedError
+    def deploy(cls, provider):
+        """Init, validate, apply terraform, run deploy script
+        :type provider: BaseSourceProvider
+        :param provider: Source provider
+        """
+        tf_provider = TerraformProvider(
+            lambda c: cls.console_execute(c, provider.terraform_location))
+        arguments = provider.parse_args()
+        tf_provider.initialize()
+        tf_provider.validate()
+        tf_provider.apply(arguments['tf_args'], arguments['tf_vars'])
+        provider.deploy()
 
     @classmethod
-    def destroy_endpoint(cls):
-        raise NotImplementedError
+    def destroy(cls, provider):
+        """Init, validate, destroy terraform
+        :type provider: BaseSourceProvider
+        :param provider: Source provider
+        """
+        tf_provider = TerraformProvider(
+            lambda c: cls.console_execute(c, provider.terraform_location))
+        arguments = provider.parse_args()
+        tf_provider.initialize()
+        tf_provider.validate()
+        tf_provider.destroy(arguments['tf_args'], arguments['tf_vars'])
+
+    @staticmethod
+    def console_execute(command, location):
+        """Execute command from certain location
+        :type command: str
+        :param command: console command
+        :type location: str
+        :param location: path to terraform files
+
+        :rtype str
+        :return: execution output
+        """
+        lines = []
+        process = subprocess.Popen(
+            command, shell=True, cwd=location, universal_newlines=True,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        while True:
+            line = process.stdout.readline()
+            lines.append(line)
+            # TODO: Add logging
+            if line == '' and process.poll() is not None:
+                break
+            if 'error' in line.lower():
+                sys.exit(0)
+        return ''.join(lines)
