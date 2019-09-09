@@ -19,9 +19,29 @@
 #
 # ******************************************************************************
 
-"""Plugin public name."""
-PLUGIN_PREFIX = "deployment"
+from dlab_core.routing import CLIRoute
 
 
-def bootstrap():
-    """Bootstrap Deployment Plugin"""
+def normalize_routes(func):
+    """Normalize human readable constants from cli.py for
+    dlab_core.plugins.BaseCLIPlugin.base_routes
+
+    :param func: Decorated function.
+
+    :return: callable
+    """
+
+    def wrapper(*args, **kwargs):
+
+        result = func(*args, **kwargs)
+
+        return [CLIRoute(
+            route['func'],
+            {k: v for k, v in enumerate(route['args']) if v is not None}
+        ) for route in result]
+
+    return wrapper
+
+
+def show_help():
+    pass

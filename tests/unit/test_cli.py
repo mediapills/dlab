@@ -19,11 +19,22 @@
 #
 # ******************************************************************************
 
-"""Plugin public name."""
-PLUGIN_PREFIX = "gcp"
+import unittest
+from dlab_core.cli import normalize_routes
 
 
-def bootstrap():
-    """Bootstrap GCP Plugin"""
+class TestPlugins(unittest.TestCase):
 
-    pass
+    def test_normalize_routes(self):
+
+        @normalize_routes
+        def func():
+            return [{
+                'func': lambda: None,
+                'args': ['a', 'b']
+            }]
+
+        routes = func()
+
+        self.assertEqual(1, len(routes))
+        self.assertDictEqual({0: 'a', 1: 'b'}, routes[0].arguments)

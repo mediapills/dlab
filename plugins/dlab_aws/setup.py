@@ -33,8 +33,8 @@ class AWSSetupParametersBuilder(SetupParametersBuilder):
     @property
     def entry_points(self):
         aws_entry_points = {
-            "dlab.plugin": [
-                "aws = dlab_aws.registry:bootstrap",
+            "dlab.deployment.plugin.cli": [
+                "aws = dlab_aws.plugins:AWSCLIPlugin",
             ],
         }
 

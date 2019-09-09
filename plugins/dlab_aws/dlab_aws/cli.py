@@ -18,33 +18,25 @@
 # under the License.
 #
 # ******************************************************************************
-from setuptools import setup
-from dlab_core.setup import SetupParametersBuilder, SetupParametersDirector
 
-""" Distribution name of package"""
-NAME = 'dlab_gcp'
+from dlab_aws.infrastructure.controllers.deployment import AWSCLIController
 
-"""Short summary of the package"""
-DESCRIPTION = 'This a provider to DLab that adds GCP support.'
+COMPONENT_SSN = 'ssn'
+COMPONENT_ENDPOINT = 'endpoint'
 
+ACTION_DEPLOY = 'deploy'
+ACTION_DESTROY = 'destroy'
 
-class GCPSetupParametersBuilder(SetupParametersBuilder):
-
-    @property
-    def entry_points(self):
-        gcp_entry_points = {}
-        return dict(super(GCPSetupParametersBuilder, self).entry_points,
-                    **gcp_entry_points)
-
-
-def do_setup():
-    builder = GCPSetupParametersBuilder(NAME, DESCRIPTION)
-    director = SetupParametersDirector()
-    director.build(builder)
-    args = director.parameters
-
-    setup(**args)
-
-
-if __name__ == "__main__":
-    do_setup()
+DEPLOY_ROUTES = [{
+    'func': AWSCLIController.deploy_ssn,
+    'args': [None, COMPONENT_SSN, ACTION_DEPLOY]
+}, {
+    'func': AWSCLIController.destroy_ssn,
+    'args': [None, COMPONENT_SSN, ACTION_DESTROY]
+}, {
+    'func': AWSCLIController.deploy_endpoint,
+    'args': [None, COMPONENT_ENDPOINT, ACTION_DEPLOY]
+}, {
+    'func': AWSCLIController.destroy_endpoint,
+    'args': [None, COMPONENT_ENDPOINT, ACTION_DESTROY]
+}]

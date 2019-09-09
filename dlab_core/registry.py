@@ -19,31 +19,22 @@
 #
 # ******************************************************************************
 
-import pkg_resources
-
-from dlab_core.containers import Container, ContainerKeyException
-from dlab_core.domain.exceptions import DLabException
+from dlab_core.containers import Container
 from dlab_core.dispatchers import EventDispatcher
-from dlab_core.routing import CLIRouter
+from dlab_core.domain.exceptions import DLabException
 
-__all__ = ['add_hook', 'do_action', 'load_plugins', 'load_context',
+__all__ = ['add_hook', 'do_action', 'load_context',
            'reload_context', 'extend_context', 'freeze_context',
            'get_resource', 'register_context', 'RegistryLoadException',
            'CONTAINER_PARAM_CORE_CLI_ROUTERS']
 
 LC_ERR_PLUGIN_LOADED = 'Plugin "{name}" already loaded.'
 
-"""entry_points group name for plugins in setup.py"""
-ENTRY_POINTS_GROUP_NAME = 'dlab.plugin'
-
 """Container parameter name for event dispatcher in global scope."""
 CONTAINER_PARAM_EVENT_DISPATCHER = 'event_dispatcher'
 
 """Container parameter name for event dispatcher in global scope."""
 CONTAINER_PARAM_CORE_CLI_ROUTERS = 'core.cli_router'
-
-"""Container parameter name for plugins list in global scope."""
-CONTAINER_PARAM_PLUGINS = 'plugins'
 
 context = Container()
 
@@ -110,17 +101,13 @@ def get_resource(key):
 
     :return: Resource parameter or an object.
     """
-
     return context[key]
 
 
 def load_context():
     """Initial Load base context resources."""
-
     register_context(
         CONTAINER_PARAM_EVENT_DISPATCHER, lambda c: EventDispatcher())
-    register_context(
-        CONTAINER_PARAM_CORE_CLI_ROUTERS, lambda c: CLIRouter())
 
 
 def reload_context():
@@ -167,49 +154,3 @@ def add_hook(name, call):
     """
 
     context[CONTAINER_PARAM_EVENT_DISPATCHER].add_listener(name, call)
-
-
-def load_plugins():
-    """ Load external plugins."""
-
-    try:
-        context.raw(CONTAINER_PARAM_PLUGINS)
-        raise RuntimeError()
-    except ContainerKeyException:
-        register_context(
-            CONTAINER_PARAM_PLUGINS, lambda c: {})
-
-    load_context()
-
-    for ep in pkg_resources.iter_entry_points(group=ENTRY_POINTS_GROUP_NAME):
-        load_entry_point(ep)
-
-    return context
-
-
-def load_entry_point(ep):
-    """ Load EntryPoint
-
-    :type ep: EntryPoint
-    :param ep: Setup EntryPoint.
-
-    :raises RegistryLoadException:
-    """
-    get_plugins = context.raw(CONTAINER_PARAM_PLUGINS)
-    plugins = get_plugins(context)
-
-    if ep.name in plugins:
-        raise RegistryLoadException(
-            LC_ERR_PLUGIN_LOADED.format(name=ep.name))
-
-    extend_context(
-        CONTAINER_PARAM_PLUGINS,
-        lambda p, c, name=ep.name, module=ep.module_name: dict(
-            p, **{name: {'bootstrap': module}}))
-
-    func = ep.load()
-
-    try:
-        func()
-    except TypeError as e:
-        raise RegistryLoadException(e)
