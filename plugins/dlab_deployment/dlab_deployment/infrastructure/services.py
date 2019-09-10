@@ -19,82 +19,60 @@
 #
 # *****************************************************************************
 import abc
-import subprocess
-import sys
-
 import six
-
-from dlab_core.providers import TerraformProvider
 
 
 @six.add_metaclass(abc.ABCMeta)
 class BaseDeploymentService(object):
 
     @abc.abstractmethod
-    def deploy(self, provider):
+    def deploy(self, iac_provider, source_provider):
         """
-        :type provider: BaseSourceProvider
-        :param provider: Source provider
+        :type iac_provider: BaseIACProvider
+        :param iac_provider: Infrastructure as code provider
+        :type source_provider: BaseSourceProvider
+        :param source_provider: Source provider
         """
         pass
 
     @abc.abstractmethod
-    def destroy(self, provider):
+    def destroy(self, iac_provider, source_provider):
         """
-        :type provider: BaseSourceProvider
-        :param provider: Source provider
+        :type iac_provider: BaseIACProvider
+        :param iac_provider: Infrastructure as code provider
+        :type source_provider: BaseSourceProvider
+        :param source_provider: Source provider
         """
         pass
 
 
-class TerraformDeploymentService(BaseDeploymentService):
+class DeploymentService(BaseDeploymentService):
 
-    def deploy(self, provider):
-        """Init, validate, apply terraform, run deploy script
-        :type provider: BaseSourceProvider
-        :param provider: Source provider
-               """
-        tf_provider = TerraformProvider(
-            lambda c: self.console_execute(c, provider.terraform_location))
-        arguments = provider.parse_args()
-        tf_provider.initialize()
-        tf_provider.validate()
-        tf_provider.apply(arguments['tf_args'], arguments['tf_vars'])
-        provider.deploy()
-
-    def destroy(self, provider):
-        """Init, validate, destroy terraform
-        :type provider: BaseSourceProvider
-        :param provider: Source provider
-                """
-        tf_provider = TerraformProvider(
-            lambda c: self.console_execute(c, provider.terraform_location))
-        arguments = provider.parse_args()
-        tf_provider.initialize()
-        tf_provider.validate()
-        tf_provider.destroy(arguments['tf_args'], arguments['tf_vars'])
-
-    @staticmethod
-    def console_execute(command, location):
-        """Execute command from certain location
-        :type command: str
-        :param command: console command
-        :type location: str
-        :param location: path to terraform files
-
-        :rtype str
-        :return: execution output
+    @classmethod
+    def deploy(cls, iac_provider, source_provider):
         """
-        lines = []
-        process = subprocess.Popen(
-            command, shell=True, cwd=location, universal_newlines=True,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        while True:
-            line = process.stdout.readline()
-            lines.append(line)
-            # TODO: Add logging
-            if line == '' and process.poll() is not None:
-                break
-            if 'error' in line.lower():
-                sys.exit(0)
-        return ''.join(lines)
+        :type iac_provider: BaseIACProvider
+        :param iac_provider: Infrastructure as code provider
+        :type source_provider: BaseSourceProvider
+        :param source_provider: Source provider
+        """
+        arguments = source_provider.parse_args()
+        iac_provider.initialize()
+        iac_provider.validate()
+        iac_provider.apply(arguments)
+        source_provider.deploy()
+
+    @classmethod
+    def destroy(cls, iac_provider, source_provider):
+        """
+        :type iac_provider: BaseIACProvider
+        :param iac_provider: Infrastructure as code provider
+        :type source_provider: BaseSourceProvider
+        :param source_provider: Source provider
+        """
+        arguments = source_provider.parse_args()
+        iac_provider.initialize()
+        iac_provider.validate()
+        iac_provider.destroy(arguments)
+        source_provider.deploy()
+

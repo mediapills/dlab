@@ -45,11 +45,11 @@ class BaseIACProvider(object):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def apply(self):
+    def apply(self, arguments={}):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def destroy(self):
+    def destroy(self, arguments={}):
         raise NotImplementedError
 
 
@@ -68,7 +68,7 @@ class TerraformProvider(BaseIACProvider):
         self._console_executor = executor
 
     @staticmethod
-    def extract_args(cli_args):
+    def extract_args(cli_args={}):
         args = []
         for key, value in cli_args.items():
             if not value:
@@ -128,33 +128,27 @@ class TerraformProvider(BaseIACProvider):
         if success_message not in result:
             raise TerraformProviderError(result)
 
-    def apply(self, tf_params={}, tf_vars={}):
+    def apply(self, arguments={}):
         """Apply terraform
 
-        :type tf_params: dict
-        :param tf_params: dict of tf params
-
-        :type tf_vars: dict
-        :param tf_vars: dict of tf variables
+        :type arguments: dict
+        :param arguments: dict of tf params
         """
 
-        vars_str = self.get_tf_var_string(tf_vars)
-        params_str = self.get_tf_args_string(tf_params)
+        vars_str = self.get_tf_var_string(arguments.get('tf_args'))
+        params_str = self.get_tf_args_string(arguments.get('tf_vars'))
         command = TERRAFORM_APPLY.format(params_str, vars_str)
         self._console_executor(command)
 
-    def destroy(self, tf_params={}, tf_vars={}):
+    def destroy(self, arguments={}):
         """Destroy terraform
 
-        :type tf_params: dict
-        :param tf_params: dict of tf params
-
-        :type tf_vars: dict
-        :param tf_vars: dict of tf variables
+        :type arguments: dict
+        :param arguments: dict of tf params
         """
 
-        vars_str = self.get_tf_var_string(tf_vars)
-        params_str = self.get_tf_args_string(tf_params)
+        vars_str = self.get_tf_var_string(arguments.get('tf_args'))
+        params_str = self.get_tf_args_string(arguments.get('tf_vars'))
         command = TERRAFORM_DESTROY.format(params_str, vars_str)
         self._console_executor(command)
 
