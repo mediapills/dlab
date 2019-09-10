@@ -18,63 +18,30 @@
 # under the License.
 #
 # *****************************************************************************
-import subprocess
-import sys
 
 from dlab_core.infrastructure.controllers import BaseCLIController
-from dlab_core.providers import TerraformProvider
 
 
 class BaseDeploymentCLIController(BaseCLIController):
 
     @classmethod
-    def deploy(cls, provider):
-        """Init, validate, apply terraform, run deploy script
+    def deploy(cls, provider, service):
+        """
         :type provider: BaseSourceProvider
         :param provider: Source provider
+
+        :type service: BaseDeploymentService
+        :type service: deployment service
         """
-        tf_provider = TerraformProvider(
-            lambda c: cls.console_execute(c, provider.terraform_location))
-        arguments = provider.parse_args()
-        tf_provider.initialize()
-        tf_provider.validate()
-        tf_provider.apply(arguments['tf_args'], arguments['tf_vars'])
-        provider.deploy()
+        service.deploy(provider)
 
     @classmethod
-    def destroy(cls, provider):
-        """Init, validate, destroy terraform
+    def destroy(cls, provider, service):
+        """
         :type provider: BaseSourceProvider
         :param provider: Source provider
-        """
-        tf_provider = TerraformProvider(
-            lambda c: cls.console_execute(c, provider.terraform_location))
-        arguments = provider.parse_args()
-        tf_provider.initialize()
-        tf_provider.validate()
-        tf_provider.destroy(arguments['tf_args'], arguments['tf_vars'])
 
-    @staticmethod
-    def console_execute(command, location):
-        """Execute command from certain location
-        :type command: str
-        :param command: console command
-        :type location: str
-        :param location: path to terraform files
-
-        :rtype str
-        :return: execution output
+        :type service: BaseDeploymentService
+        :type service: deployment service
         """
-        lines = []
-        process = subprocess.Popen(
-            command, shell=True, cwd=location, universal_newlines=True,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        while True:
-            line = process.stdout.readline()
-            lines.append(line)
-            # TODO: Add logging
-            if line == '' and process.poll() is not None:
-                break
-            if 'error' in line.lower():
-                sys.exit(0)
-        return ''.join(lines)
+        service.destroy(provider)
