@@ -34,7 +34,7 @@ TERRAFORM_DESTROY = 'terraform destroy -auto-approve {} {}'
 
 
 @six.add_metaclass(abc.ABCMeta)
-class BaseIACProver(object):
+class BaseIACProvider(object):
 
     @abc.abstractmethod
     def initialize(self):
@@ -60,7 +60,7 @@ class TerraformProviderError(DLabException):
     pass
 
 
-class TerraformProvider(BaseIACProver):
+class TerraformProvider(BaseIACProvider):
     def __init__(self, executor):
         """
         :param executor: console executor (local console or remote fabric)
