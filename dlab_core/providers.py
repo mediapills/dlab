@@ -33,6 +33,26 @@ TERRAFORM_APPLY = 'terraform apply -auto-approve {} {}'
 TERRAFORM_DESTROY = 'terraform destroy -auto-approve {} {}'
 
 
+@six.add_metaclass(abc.ABCMeta)
+class BaseIACProver(object):
+
+    @abc.abstractmethod
+    def initialize(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def validate(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def apply(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def destroy(self):
+        raise NotImplementedError
+
+
 class TerraformProviderError(DLabException):
     """
     Raises errors while terraform provision
@@ -40,7 +60,7 @@ class TerraformProviderError(DLabException):
     pass
 
 
-class TerraformProvider(object):
+class TerraformProvider(BaseIACProver):
     def __init__(self, executor):
         """
         :param executor: console executor (local console or remote fabric)
