@@ -32,10 +32,18 @@ class BaseDeploymentService(object):
 
     @abc.abstractmethod
     def deploy(self, provider):
+        """
+        :type provider: BaseSourceProvider
+        :param provider: Source provider
+        """
         pass
 
     @abc.abstractmethod
     def destroy(self, provider):
+        """
+        :type provider: BaseSourceProvider
+        :param provider: Source provider
+        """
         pass
 
 
