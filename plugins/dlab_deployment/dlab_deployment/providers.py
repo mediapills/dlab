@@ -18,23 +18,24 @@
 # under the License.
 #
 # ******************************************************************************
+import abc
 
-from dlab_core.infrastructure.controllers import BaseCLIController
+import six
+
+from dlab_core.providers import BaseProvider
 
 
-class BaseDeploymentCLIController(BaseCLIController):
-    @classmethod
-    def deploy_ssn(cls):
-        raise NotImplementedError
+@six.add_metaclass(abc.ABCMeta)
+class BaseDeploymentProvider(BaseProvider):
 
-    @classmethod
-    def destroy_ssn(cls):
-        raise NotImplementedError
+    def configure(self):
+        """Configure instance"""
+        pass
 
-    @classmethod
-    def deploy_endpoint(cls):
-        raise NotImplementedError
 
-    @classmethod
-    def destroy_endpoint(cls):
-        raise NotImplementedError
+class SSNDeploymentProvider(BaseDeploymentProvider):
+    pass
+
+
+class EndpointDeploymentProvider(BaseDeploymentProvider):
+    pass

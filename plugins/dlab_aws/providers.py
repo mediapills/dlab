@@ -17,24 +17,20 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
 # ******************************************************************************
+from dlab_core.providers import BaseProvider
+from dlab_deployment.providers import (
+    SSNDeploymentProvider, EndpointDeploymentProvider)
 
-from dlab_core.infrastructure.controllers import BaseCLIController
+
+class BaseAWSDeployment(BaseProvider):
+    pass
 
 
-class BaseDeploymentCLIController(BaseCLIController):
-    @classmethod
-    def deploy_ssn(cls):
-        raise NotImplementedError
+class AWSSSNDeployment(SSNDeploymentProvider, BaseAWSDeployment):
+    pass
 
-    @classmethod
-    def destroy_ssn(cls):
-        raise NotImplementedError
 
-    @classmethod
-    def deploy_endpoint(cls):
-        raise NotImplementedError
-
-    @classmethod
-    def destroy_endpoint(cls):
-        raise NotImplementedError
+class AWSEndpointDeployment(EndpointDeploymentProvider, BaseAWSDeployment):
+    pass

@@ -17,24 +17,46 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# ******************************************************************************
+# *****************************************************************************
+import abc
 
-from dlab_core.infrastructure.controllers import BaseCLIController
+import six
 
 
-class BaseDeploymentCLIController(BaseCLIController):
-    @classmethod
-    def deploy_ssn(cls):
+@six.add_metaclass(abc.ABCMeta)
+class BaseProvider(object):
+    pass
+
+
+@six.add_metaclass(abc.ABCMeta)
+class BaseIACProvider(BaseProvider):
+
+    @abc.abstractmethod
+    def initialize(self):
+        """
+        Initialize provider
+        """
         raise NotImplementedError
 
-    @classmethod
-    def destroy_ssn(cls):
+    @abc.abstractmethod
+    def validate(self):
+        """
+        Validate source
+        """
         raise NotImplementedError
 
-    @classmethod
-    def deploy_endpoint(cls):
+    @abc.abstractmethod
+    def apply(self, arguments={}):
+        """
+        :type arguments: dict
+        :param arguments: command line arguments
+        """
         raise NotImplementedError
 
-    @classmethod
-    def destroy_endpoint(cls):
+    @abc.abstractmethod
+    def destroy(self, arguments={}):
+        """
+        :type arguments: dict
+        :param arguments: command line arguments
+        """
         raise NotImplementedError

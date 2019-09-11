@@ -24,12 +24,12 @@ from dlab_deployment.infrastructure.controllers import (
 
 
 class AWSCLIController(BaseDeploymentCLIController):
-    @staticmethod
-    def deploy_ssn():
+    @classmethod
+    def deploy_ssn(cls):
         pass
 
-    @staticmethod
-    def destroy_ssn():
+    @classmethod
+    def destroy_ssn(cls):
         pass
 
     @classmethod

@@ -17,24 +17,21 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# ******************************************************************************
+# *****************************************************************************
+from dlab_deployment.domain.usecases import DeployUseCase, DestroyUseCase
 
-from dlab_core.infrastructure.controllers import BaseCLIController
+
+class SSNDeployUseCase(DeployUseCase):
+    pass
 
 
-class BaseDeploymentCLIController(BaseCLIController):
-    @classmethod
-    def deploy_ssn(cls):
-        raise NotImplementedError
+class SSNDestroyUseCase(DestroyUseCase):
+    pass
 
-    @classmethod
-    def destroy_ssn(cls):
-        raise NotImplementedError
 
-    @classmethod
-    def deploy_endpoint(cls):
-        raise NotImplementedError
+class EndpointDeployUseCase(DeployUseCase):
+    pass
 
-    @classmethod
-    def destroy_endpoint(cls):
-        raise NotImplementedError
+
+class EndpointDestroyUseCase(DestroyUseCase):
+    pass

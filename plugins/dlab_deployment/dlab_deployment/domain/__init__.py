@@ -17,24 +17,4 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# ******************************************************************************
-
-from dlab_core.infrastructure.controllers import BaseCLIController
-
-
-class BaseDeploymentCLIController(BaseCLIController):
-    @classmethod
-    def deploy_ssn(cls):
-        raise NotImplementedError
-
-    @classmethod
-    def destroy_ssn(cls):
-        raise NotImplementedError
-
-    @classmethod
-    def deploy_endpoint(cls):
-        raise NotImplementedError
-
-    @classmethod
-    def destroy_endpoint(cls):
-        raise NotImplementedError
+# *****************************************************************************
