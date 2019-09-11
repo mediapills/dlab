@@ -17,20 +17,4 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-# ******************************************************************************
-from dlab_core.providers import BaseProvider
-from dlab_deployment.providers import (
-    SSNDeploymentProvider, EndpointDeploymentProvider)
-
-
-class BaseAWSDeployment(BaseProvider):
-    pass
-
-
-class AWSSSNDeployment(SSNDeploymentProvider, BaseAWSDeployment):
-    pass
-
-
-class AWSEndpointDeployment(EndpointDeploymentProvider, BaseAWSDeployment):
-    pass
+# *****************************************************************************
