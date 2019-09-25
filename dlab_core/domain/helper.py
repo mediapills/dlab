@@ -18,29 +18,21 @@
 # under the License.
 #
 # *****************************************************************************
+from dlab_core.domain.exceptions import DLabException
 
-import abc
+LC_ERR_INVALID_PARAMETER_TYPE = (
+    'Invalid parameter {} of type {}, should be {}')
 
-import six
 
+def validate_property_type(exp_type):
+    def validate(fn):
+        def wrapper(*args, **kwargs):
+            argument = args[1]
+            if not isinstance(argument, exp_type):
+                raise DLabException(LC_ERR_INVALID_PARAMETER_TYPE.format(
+                    argument, type(argument).__name__, exp_type.__name__))
+            return fn(*args, **kwargs)
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseIaCServiceProvider(object):
+        return wrapper
 
-    @abc.abstractmethod
-    def provision(self):
-        """Provision infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def destroy(self):
-        """Destroy infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def output(self):
-        """Get provision output"""
-
-        raise NotImplementedError
+    return validate
