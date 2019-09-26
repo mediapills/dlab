@@ -86,8 +86,7 @@ class LocalCommandExecutor(BaseCommandExecutor):
         :return execution result
         """
 
-        command = 'sudo {}'.format(command)
-        return self.run(command)
+        raise NotImplementedError
 
     @contextmanager
     def cd(self, path):
@@ -117,19 +116,19 @@ class ParamikoCommandExecutor(BaseCommandExecutor):
         """
 
         self.current_dir = None
-        self.connection = (host, name, identity_file)
+        self._connection = None
+        self.host = host
+        self.name = name
+        self.identity_file = identity_file
 
     @property
     def connection(self):
+        if not self._connection:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            self._connection = ssh.connect(self.host, username=self.name,
+                                           key_filename=self.identity_file)
         return self._connection
-
-    @connection.setter
-    def connection(self, val):
-        host, name, identity_file = val
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self._connection = ssh.connect(
-            host, username=name, key_filename=identity_file)
 
     @property
     def current_dir(self):
