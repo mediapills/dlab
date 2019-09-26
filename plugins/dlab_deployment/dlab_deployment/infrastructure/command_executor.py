@@ -74,7 +74,7 @@ class LocalCommandExecutor(BaseCommandExecutor):
         while process.poll() is None:
             line = process.stdout.readline()
             lines.append(line)
-            # ToDo: Add logging
+            # TODO: Add logging
 
         return ' '.join(lines)
 
@@ -96,9 +96,10 @@ class LocalCommandExecutor(BaseCommandExecutor):
         :param path: directory location
         """
 
-        current_dir = os.path.dirname(os.path.abspath(__file__))
+        current_dir = os.getcwd()
         try:
             os.chdir(path)
+            yield
         finally:
             os.chdir(current_dir)
 
@@ -116,10 +117,27 @@ class ParamikoCommandExecutor(BaseCommandExecutor):
         """
 
         self.current_dir = None
+        self.connection = (host, name, identity_file)
+
+    @property
+    def connection(self):
+        return self._connection
+
+    @connection.setter
+    def connection(self, val):
+        host, name, identity_file = val
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.connection = ssh.connect(
+        self._connection = ssh.connect(
             host, username=name, key_filename=identity_file)
+
+    @property
+    def current_dir(self):
+        return self._current_dir
+
+    @current_dir.setter
+    def current_dir(self, val):
+        self._current_dir = val
 
     def run(self, command):
         """Run cli command
@@ -141,7 +159,6 @@ class ParamikoCommandExecutor(BaseCommandExecutor):
         :rtype: str
         :return execution result
          """
-
         command = 'sudo {}'.format(command)
         return self.run(command)
 
@@ -149,5 +166,6 @@ class ParamikoCommandExecutor(BaseCommandExecutor):
     def cd(self, path):
         try:
             self.current_dir = path
+            yield
         finally:
             self.current_dir = None

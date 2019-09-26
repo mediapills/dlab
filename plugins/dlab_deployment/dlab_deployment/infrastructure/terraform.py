@@ -179,7 +179,7 @@ class Terraform(object):
         """Extract terraform output"""
 
         command = self.build_tf_command(TERRAFORM_OUTPUT_COMMAND)
-        with self._command_executor.cd(self.tf_path):
+        with self.command_executor.cd(self.tf_path):
             return self.command_executor.run(command)
 
     def build_tf_command(self, command):
