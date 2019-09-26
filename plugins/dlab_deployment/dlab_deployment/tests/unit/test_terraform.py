@@ -62,7 +62,7 @@ class TestTerraform(unittest.TestCase):
         self.command_executor_mock.run.assert_called()
         args, kwargs = self.command_executor_mock.run.call_args
         actual_args = [i for arg in args for i in arg.split()]
-        self.assertListEqual(actual_args, expected_args)
+        self.assertEqual(sorted(actual_args), sorted(expected_args))
 
     def test_destroy(self):
         expected_args = ['terraform', 'destroy', '-no-color', '-auto-approve',
@@ -72,7 +72,7 @@ class TestTerraform(unittest.TestCase):
         self.command_executor_mock.run.assert_called()
         args, kwargs = self.command_executor_mock.run.call_args
         actual_args = [i for arg in args for i in arg.split()]
-        self.assertListEqual(actual_args, expected_args)
+        self.assertEqual(sorted(actual_args), sorted(expected_args))
 
     def test_wrong_parameters_type(self):
         with self.assertRaises(DLabException):
