@@ -21,7 +21,7 @@
 
 import unittest
 
-from mock import MagicMock, patch
+from mock import patch, MagicMock
 
 from dlab_deployment.infrastructure.service_providers import (
     TerraformServiceProvider)
@@ -30,10 +30,10 @@ from dlab_deployment.infrastructure.service_providers import (
 class TestTerraformServiceProviders(unittest.TestCase):
 
     def setUp(self):
-        with patch.object(TerraformServiceProvider, '__init__') as mock:
-            mock.return_value = None
+        tf = 'dlab_deployment.infrastructure.service_providers.Terraform'
+        with patch(tf) as mock:
+            mock.return_value = MagicMock()
             self.provider = TerraformServiceProvider(None)
-            self.provider.terraform = MagicMock()
 
     def test_provision(self):
         self.provider.provision()

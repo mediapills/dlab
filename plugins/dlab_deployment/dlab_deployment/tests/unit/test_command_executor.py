@@ -18,68 +18,62 @@
 # under the License.
 #
 # *****************************************************************************
-import os
-import random
-import string
 import unittest
 
-from mock import patch, PropertyMock, MagicMock
+from mock import patch, MagicMock, PropertyMock
 
 from dlab_deployment.infrastructure.command_executor import (
     LocalCommandExecutor, ParamikoCommandExecutor)
 
-COMMAND = 'ls'
+PARAMIKO_CLIENT_CONNECT = 'paramiko.SSHClient.connect'
 
 
 class TestLocalCommandExecutor(unittest.TestCase):
-    def test_run(self):
+
+    @patch('os.chdir')
+    def test_cd(self, mock):
         executor = LocalCommandExecutor()
-        dir_content = executor.run(COMMAND)
-        for file in os.listdir():
-            self.assertIn(file, dir_content)
-
-    def test_cd(self):
-        executor = LocalCommandExecutor()
-        cd_dir = ''.join(random.choice(string.ascii_letters) for _ in range(7))
-        executor.run('mkdir {}'.format(cd_dir))
-        cwd = os.getcwd()
-        with executor.cd(cd_dir):
-            self.assertEqual(os.getcwd(), os.path.join(cwd, cd_dir))
-        self.assertEqual(os.getcwd(), cwd)
-        executor.run('rm -r {}'.format(cd_dir))
+        with executor.cd('test'):
+            pass
+        self.assertEqual(mock.call_count, 2)
 
 
-#
 class TestParamikoCommandExecutor(unittest.TestCase):
 
     def setUp(self):
-        self.connection_mock = MagicMock()
-        self.connection_mock.exec_command.return_value = ('in', 'out', 'err')
-        self.connection = patch.object(
-            ParamikoCommandExecutor, 'connection', new_callable=PropertyMock,
-            return_value=self.connection_mock)
-        self.current_dir = patch.object(
-            ParamikoCommandExecutor, 'current_dir', new_callable=PropertyMock,
-            return_value=None)
-        with patch.object(
-                ParamikoCommandExecutor, '__init__', return_value=None):
-            self.executor = ParamikoCommandExecutor()
+        self.connect_mock = MagicMock()
+        self.connect_mock.exec_command.return_value = ('in', 'out', 'err')
+        self.executor = ParamikoCommandExecutor('host', 'name', 'key')
 
-    def test_run(self):
-        with self.connection, self.current_dir:
-            self.executor.run(COMMAND)
-            self.connection_mock.exec_command.assert_called_with(COMMAND)
+    @patch(PARAMIKO_CLIENT_CONNECT)
+    def test_run(self, mock):
+        mock.return_value = self.connect_mock
+        self.executor.run('ls')
+        self.connect_mock.exec_command.assert_called_with('ls')
 
-    def test_sudo(self):
-        with self.connection, self.current_dir:
-            self.executor.sudo(COMMAND)
-            self.connection_mock.exec_command.assert_called_with(
-                'sudo {}'.format(COMMAND))
+    @patch(PARAMIKO_CLIENT_CONNECT)
+    def test_sudo(self, mock):
+        mock.return_value = self.connect_mock
+        self.executor.sudo('ls')
+        self.connect_mock.exec_command.assert_called_with('sudo ls')
 
-    def test_cd(self):
-        with self.connection:
-            cd_dir = 'test'
-            with self.executor.cd(cd_dir):
-                self.executor.run(COMMAND)
-                self.connection_mock.exec_command.assert_called_with(
-                    'cd {}; {}'.format(cd_dir, COMMAND))
+    @patch(PARAMIKO_CLIENT_CONNECT)
+    def test_cd_run(self, mock):
+        mock.return_value = self.connect_mock
+        with self.executor.cd('test'):
+            self.executor.run('ls')
+        self.connect_mock.exec_command.assert_called_with('cd test; ls')
+
+    @patch(PARAMIKO_CLIENT_CONNECT)
+    def test_cd_sudo(self, mock):
+        mock.return_value = self.connect_mock
+        with self.executor.cd('test'):
+            self.executor.sudo('ls')
+        self.connect_mock.exec_command.assert_called_with('cd test; sudo ls')
+
+    @patch.object(ParamikoCommandExecutor, 'current_dir',
+                  new_callable=PropertyMock)
+    def test_cd(self, current_dir_mock):
+        with self.executor.cd('test'):
+            pass
+        self.assertEqual(current_dir_mock.call_count, 2)

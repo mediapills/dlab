@@ -26,10 +26,19 @@ from dlab_core.domain.usecases import UseCaseException
 from dlab_deployment.domain.service_providers import BaseIaCServiceProvider
 from dlab_deployment.domain.usecases import ProvisionUseCase, DestroyUseCase
 
-MOCK_PROVIDER = type(
-    'iac_provider', (BaseIaCServiceProvider,),
-    {'provision': MagicMock(), 'destroy': MagicMock(),
-     'output': MagicMock()})()
+
+class TestProvisionUseCase(unittest.TestCase):
+    def test_execute(self):
+        provider = MagicMock(spec=BaseIaCServiceProvider)
+        ProvisionUseCase(provider).execute()
+        provider.provision.assert_called()
+
+
+class TestDestroyUseCase(unittest.TestCase):
+    def test_execute(self):
+        provider = MagicMock(spec=BaseIaCServiceProvider)
+        DestroyUseCase(provider).execute()
+        provider.destroy.assert_called()
 
 
 class TestDeploymentUseCase(unittest.TestCase):
@@ -38,15 +47,3 @@ class TestDeploymentUseCase(unittest.TestCase):
         for provider in invalid_providers:
             with self.assertRaises(UseCaseException):
                 ProvisionUseCase(provider)
-
-
-class TestProvisionUseCase(unittest.TestCase):
-    def test_execute(self):
-        ProvisionUseCase(MOCK_PROVIDER).execute()
-        MOCK_PROVIDER.provision.assert_called()
-
-
-class TestDestroyUseCase(unittest.TestCase):
-    def test_execute(self):
-        DestroyUseCase(MOCK_PROVIDER).execute()
-        MOCK_PROVIDER.destroy.assert_called()
