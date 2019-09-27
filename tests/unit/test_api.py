@@ -18,26 +18,34 @@
 # under the License.
 #
 # ******************************************************************************
+import unittest
 
-from setuptools import setup
-from dlab_core.setup import SetupParametersDirector, SetupParametersBuilder
-
-
-def do_setup():
-    description = "Self-service, Fail-safe Exploratory Environment for" \
-                  "Collaborative Data Science Workflow"
-
-    builder = SetupParametersBuilder(
-        'dlab_core',
-        description
-    )
-
-    director = SetupParametersDirector()
-    director.build(builder)
-    args = director.parameters
-    args['scripts'] = ['bin/dlab', 'dlab_core/wsgi.py']
-    setup(**args)
+from dlab_core.app import app
+from dlab_core.schema_validator import validate_schema
 
 
-if __name__ == "__main__":
-    do_setup()
+class BaseTestAPI(unittest.TestCase):
+    def setUp(self):
+        self.client = app.test_client()
+
+
+class TestAPI(BaseTestAPI):
+
+    def test_health_check(self):
+        resp = self.client.get('/')
+        self.assertEqual(resp.data.decode(), 'It works')
+
+
+class TestSchemaValidator(unittest.TestCase):
+    SCHEMA = {"type": "object",
+              "properties": {
+                  "value": {"type": "number"}
+              }}
+
+    def test_invalid_data(self):
+        is_valid = validate_schema({'value': 'test'}, self.SCHEMA)
+        self.assertEqual(is_valid, 0)
+
+    def test_valid_data(self):
+        is_valid = validate_schema({'value': 1}, self.SCHEMA)
+        self.assertEqual(is_valid, 1)
