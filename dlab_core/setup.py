@@ -130,6 +130,7 @@ class SetupParametersDirector:
         self._builder.set_version()
         self._builder.set_long_description()
         self._builder.set_entry_points()
+        self._builder.set_package_data()
 
     @property
     def parameters(self):
@@ -177,6 +178,14 @@ class SetupParametersBuilder(object):
     @property
     def entry_points(self):
         """Get setup entry points
+
+        :return: dict
+        """
+        return {}
+
+    @property
+    def package_data(self):
+        """Get setup package data
 
         :return: dict
         """
@@ -309,3 +318,12 @@ class SetupParametersBuilder(object):
         """
         if self.entry_points:
             self._parameters['entry_points'] = self.entry_points
+
+    def set_package_data(self):
+        """
+        Include package data
+        :return: None
+        """
+        if self.package_data:
+            self._parameters['package_data'] = self.package_data
+            self._parameters['include_package_data'] = True

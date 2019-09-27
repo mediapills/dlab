@@ -201,6 +201,27 @@ class TestSetupParametersBuilder(unittest.TestCase):
 
         self.assertEqual(entry_point, entry_points())
 
+    def test_package_data(self):
+
+        package_data = {
+            'name': ['.*'],
+        }
+
+        class CustomClass(SetupParametersBuilder):
+            def package_data(self):
+                return package_data
+
+        builder = CustomClass(
+            MOCK_NAME,
+            MOCK_DESCRIPTION_SHORT
+        )
+
+        builder.set_package_data()
+
+        package_data = builder.parameters['package_data']
+
+        self.assertEqual(package_data, package_data())
+
 
 class TestSetupParametersDirector(unittest.TestCase):
 
