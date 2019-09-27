@@ -124,10 +124,11 @@ class ParamikoCommandExecutor(BaseCommandExecutor):
     @property
     def connection(self):
         if not self._connection:
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self._connection = ssh.connect(self.host, username=self.name,
-                                           key_filename=self.identity_file)
+            self._connection = paramiko.SSHClient()
+            self._connection.set_missing_host_key_policy(
+                paramiko.AutoAddPolicy())
+            self._connection.connect(self.host, username=self.name,
+                                     key_filename=self.identity_file)
         return self._connection
 
     @property
@@ -149,7 +150,7 @@ class ParamikoCommandExecutor(BaseCommandExecutor):
         if self.current_dir:
             command = 'cd {}; {}'.format(self.current_dir, command)
         stdin, stdout, stderr = self.connection.exec_command(command)
-        return stdout
+        return stdout.read().decode('ascii').strip("\n")
 
     def sudo(self, command):
         """Run sudo cli command
