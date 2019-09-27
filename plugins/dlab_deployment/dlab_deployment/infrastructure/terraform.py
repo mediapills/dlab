@@ -152,7 +152,8 @@ class Terraform(object):
         """
 
         command = self.build_tf_command(TERRAFORM_INIT_COMMAND)
-        return self.command_executor.run(command)
+        with self.command_executor.cd(self.tf_path):
+            return self.command_executor.run(command)
 
     @validate_tf_result(TF_VALIDATE_SUCCESS_MSG, TERRAFORM_VALIDATE_COMMAND)
     def validate(self):
@@ -161,26 +162,30 @@ class Terraform(object):
         :raise TerraformException: if validation status was not succeed
         """
         command = self.build_tf_command(TERRAFORM_VALIDATE_COMMAND)
-        return self.command_executor.run(command)
+        with self.command_executor.cd(self.tf_path):
+            return self.command_executor.run(command)
 
     # TODO: Add errors handling or success check
     def apply(self):
         """Apply terraform"""
 
         command = self.build_tf_command(TERRAFORM_APPLY_COMMAND)
-        return self.command_executor.run(command)
+        with self.command_executor.cd(self.tf_path):
+            return self.command_executor.run(command)
 
     def destroy(self):
         """Destroy terraform"""
 
         command = self.build_tf_command(TERRAFORM_DESTROY_COMMAND)
-        return self.command_executor.run(command)
+        with self.command_executor.cd(self.tf_path):
+            return self.command_executor.run(command)
 
     def output(self):
         """Extract terraform output"""
 
         command = self.build_tf_command(TERRAFORM_OUTPUT_COMMAND)
         with self.command_executor.cd(self.tf_path):
+
             return self.command_executor.run(command)
 
     def build_tf_command(self, command):
@@ -196,7 +201,6 @@ class Terraform(object):
                      if self.tf_params[key]
                      and TF_COMMANDS_ACTION_CODES.get(command, 0)
                      & val[ACTIONS]])
-        args.append(self.tf_path)
         return ' '.join(args)
 
     @staticmethod

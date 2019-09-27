@@ -52,7 +52,7 @@ class TestTerraform(unittest.TestCase):
     def test_output(self):
         Terraform(self.command_executor_mock).output()
         self.command_executor_mock.run.assert_called_with(
-            'terraform output -json ')
+            'terraform output -json')
 
     def test_apply(self):
         expected_args = ['terraform', 'apply', '-no-color', '-auto-approve',
