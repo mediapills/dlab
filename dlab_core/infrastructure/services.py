@@ -22,7 +22,7 @@ import requests
 import urllib3
 
 from dlab_core.domain.logger import INFO, ERROR
-from dlab_core.infrastructure import logger
+from dlab_core.infrastructure.logger import StreamLogBuilder
 
 from jose import jwt, JOSEError
 
@@ -30,54 +30,108 @@ from jose import jwt, JOSEError
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+class KeyCloakError(Exception):
+    pass
+
+
+class ConnectionError(KeyCloakError):
+    pass
+
+
 class KeyCloak(object):
+    """Client for KeyCloak interaction """
 
-    realm_address = 'https://52.11.45.11/auth/realms/dlab/'
-
-    def __init__(self, client_id, client_secret):
-        self.logger = self.set_up_logger()
-        self._pub_key = self.get_key()
+    def __init__(self, keycloak_server, realm_name, client_id, client_secret):
+        self._realm_address = keycloak_server + 'realms/' + realm_name
         self._client_id = client_id
         self._client_secret = client_secret
+        self.logger = StreamLogBuilder('keycloak', INFO).logging
+        self._pub_key = self.get_key()
 
-    def set_up_logger(self):
-        keycloak_logger = logger.StreamLogging('keycloak')
-        keycloak_logger.level = INFO
-        return keycloak_logger
+    def make_request_to_server(self, method='GET', endpoint='', **kwargs):
+        """Performs request to KeyCloak server and checks response
+
+        :type method: str
+        :param method: method for the HTTP request
+        :type endpoint: str
+        :param endpoint: KeyCloak server endpoint to make request to
+
+        :rtype: requests.Response
+        :return: HTTP response object
+        """
+        endpoint = self._realm_address + endpoint
+        kwargs['verify'] = True
+        response = requests.request(method, endpoint, **kwargs)
+        self.check_response(response)
+        return response
+
+    def check_response(self, response):
+        """Checks response status code
+
+        :type response: requests.Response
+        :param response: :class:`Response <Response>` object
+
+        :rtype: requests.Response
+        :return: :class:`Response <Response>` object
+
+        :raises InvalidResponseError: if response status code is not 200
+        """
+        if response.status_code > 200:
+            raise ConnectionError('Server responded with {} - {}'.format(
+                response.status_code, response.content.decode('utf8')
+            ))
 
     def get_key(self):
-        keys_json = requests.get(self.realm_address, verify=False).json()
-        return self.build_key(keys_json['public_key'])
+        """Retrieves public key from KeyCloak realm
 
-    def build_key(self, key):
-        pub_pattern = '-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----'
-        return pub_pattern.format(key)
+        :rtype: str
+        :return: public key for token decoding
+        """
+        response = self.make_request_to_server()
+        return response.json()['public_key']
 
     def validate_token(self, access_token):
+        """Validates signature of given token and introspects it
+
+        :type access_token: str
+        :param access_token: JWT-token
+
+        :rtype: bool
+        :return: True if token is valid and active, False otherwise
+        """
         sig_valid = self.validate_signature(access_token)
-        is_active = self.validate_token_is_active(access_token)
+        is_active = self.introspect_token(access_token)
         return sig_valid and is_active
 
     def validate_signature(self, access_token):
+        """Validates signature of given token
+
+        :type access_token: str
+        :param access_token: JWT-token
+
+        :rtype: bool
+        :return: True if token is valid, False otherwise
+        """
         try:
-            decoded_token = jwt.decode(access_token, key=self._pub_key)
-            self.logger.log(INFO, 'Decoded token: {}'.format(decoded_token))
+            jwt.decode(access_token, key=self._pub_key)
             return True
         except JOSEError as e:
             self.logger.log(ERROR, str(e))
             return False
 
-    def validate_token_is_active(self, access_token):
-        response = requests.post(
-            self.realm_address + 'protocol/openid-connect/token/introspect',
-            data={'token': access_token},
-            auth=(self._client_id, self._client_secret),
-            verify=False
-        )
-        if response.status_code > 200:
-            self.logger.log(ERROR, 'Server responded with {} - {}'.format(
-                response.status_code, response.content.decode('utf8')
-            ))
-            return False
+    def introspect_token(self, access_token):
+        """Introspects given token
 
+        :type access_token: str
+        :param access_token: JWT-token
+
+        :rtype: bool
+        :return: True if token is active, False otherwise
+        """
+        response = self.make_request_to_server(
+            method='POST',
+            endpoint='/protocol/openid-connect/token/introspect',
+            data={'token': access_token},
+            auth=(self._client_id, self._client_secret)
+        )
         return response.json().get('active')

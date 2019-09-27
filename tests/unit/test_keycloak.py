@@ -22,9 +22,9 @@ import unittest
 
 from mock import patch
 
-from dlab_core.infrastructure.services import KeyCloak
+from dlab_core.infrastructure.services import KeyCloak, ConnectionError
 
-MOCK_KEYS_DATA = {'public_key': 'secret'}
+MOCK_PUBLIC_KEY = 'secret'
 MOCK_VALID_TOKEN = (
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiWXVyYSJ9.bG1BjdKLzqdx1qho'
     'eg4B598nV9JOds0-23xgRXG-n5c'
@@ -35,8 +35,13 @@ MOCK_INVALID_TOKEN = (
 
 
 class MockResponse:
-    def __init__(self, json_data, status_code=200):
+    def __init__(self, json_data=None, status_code=200):
         self.json_data = json_data
+        if not json_data:
+            self.json_data = {
+                'public_key': MOCK_PUBLIC_KEY,
+                'active': True
+            }
         self.status_code = status_code
         self.content = 'Unauthorized'.encode('utf8')
 
@@ -46,23 +51,30 @@ class MockResponse:
 
 class TestKeyCloak(unittest.TestCase):
 
-    @patch('requests.get', return_value=MockResponse(MOCK_KEYS_DATA))
-    def setUp(self, *args):
-        self.keycloak = KeyCloak('client', 'secret')
-        self.keycloak._pub_key = 'secret'
+    def __init__(self, *args, **kwargs):
+        super(TestKeyCloak, self).__init__(*args, **kwargs)
+        with patch('requests.request', return_value=MockResponse()):
+            self.keycloak = KeyCloak(
+                keycloak_server='https://test-ip.com/auth/',
+                realm_name='test_realm',
+                client_id='client',
+                client_secret='secret'
+            )
+            self.keycloak._pub_key = 'secret'
 
-    @patch('requests.post', return_value=MockResponse({'active': True}))
+    @patch('requests.request', return_value=MockResponse())
     def test_valid_token(self, *args):
         self.assertTrue(self.keycloak.validate_token(MOCK_VALID_TOKEN))
 
-    @patch('requests.post', return_value=MockResponse({'active': True}))
+    @patch('requests.request', return_value=MockResponse())
     def test_invalid_token_signature(self, *args):
         self.assertFalse(self.keycloak.validate_token(MOCK_INVALID_TOKEN))
 
-    @patch('requests.post', return_value=MockResponse({'active': False}))
+    @patch('requests.request', return_value=MockResponse({'active': False}))
     def test_inactive_token(self, *args):
         self.assertFalse(self.keycloak.validate_token(MOCK_VALID_TOKEN))
 
-    @patch('requests.post', return_value=MockResponse({}, 405))
+    @patch('requests.request', return_value=MockResponse({}, 405))
     def test_bad_server_request(self, *args):
-        self.assertFalse(self.keycloak.validate_token(MOCK_VALID_TOKEN))
+        with self.assertRaises(ConnectionError):
+            self.keycloak.validate_token(MOCK_VALID_TOKEN)
