@@ -33,7 +33,7 @@ class TestAPI(BaseTestAPI):
 
     def test_health_check(self):
         resp = self.client.get('/')
-        self.assertEqual(resp.data, 'It works')
+        self.assertEqual(resp.data.decode(), 'It works')
 
 
 class TestCreateNotebooksAPI(BaseTestAPI):
