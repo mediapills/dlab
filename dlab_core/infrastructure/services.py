@@ -18,11 +18,14 @@
 # under the License.
 #
 # ******************************************************************************
-from dlab_core.domain.logger import *
-from dlab_core.infrastructure import logger
-from jose import jwt, JOSEError
 import requests
 import urllib3
+
+from dlab_core.domain.logger import INFO, ERROR
+from dlab_core.infrastructure import logger
+
+from jose import jwt, JOSEError
+
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
