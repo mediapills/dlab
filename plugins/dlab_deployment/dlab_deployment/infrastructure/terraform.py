@@ -151,7 +151,8 @@ class Terraform(object):
         :raise TerraformException: if initialization was not succeed
         """
 
-        return self.command_executor.run(TERRAFORM_INIT_COMMAND)
+        command = self.build_tf_command(TERRAFORM_INIT_COMMAND)
+        return self.command_executor.run(command)
 
     @validate_tf_result(TF_VALIDATE_SUCCESS_MSG, TERRAFORM_VALIDATE_COMMAND)
     def validate(self):
@@ -159,8 +160,8 @@ class Terraform(object):
 
         :raise TerraformException: if validation status was not succeed
         """
-
-        return self.command_executor.run(TERRAFORM_VALIDATE_COMMAND)
+        command = self.build_tf_command(TERRAFORM_VALIDATE_COMMAND)
+        return self.command_executor.run(command)
 
     # TODO: Add errors handling or success check
     def apply(self):
@@ -193,7 +194,8 @@ class Terraform(object):
         args.extend([val[TF_PARAMETER](self.tf_params[key])
                      for key, val in TERRAFORM_PARAMS.items()
                      if self.tf_params[key]
-                     and TF_COMMANDS_ACTION_CODES[command] & val[ACTIONS]])
+                     and TF_COMMANDS_ACTION_CODES.get(command, 0)
+                     & val[ACTIONS]])
         args.append(self.tf_path)
         return ' '.join(args)
 
