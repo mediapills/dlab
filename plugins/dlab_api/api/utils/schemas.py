@@ -11,9 +11,9 @@ CREATE_NOTEBOOK_SCHEMA = {
                     'Classification': {'type': 'string'},
                     'Properties': {
                         'type': 'object',
-                        "additionalProp": {"type": "object"}
+                        'additionalProp': {'type': 'object'}
                     },
-                    "Configurations": {'type': 'array'}
+                    'Configurations': {'type': 'array'}
                 }
             },
             'git_creds': {
@@ -54,14 +54,16 @@ CREATE_NOTEBOOK_SCHEMA = {
             'securityGroupIds': {'type': 'string'},
             'confTagResourceId': {'type': 'string'},
         }
-    }
+    },
+    'required': ['notebook', 'cloudConfig']
 }
 
 
 INSTALL_LIB_SCHEMA = {
-    "type": "array",
-    "items": {
+    'type': 'array',
+    'items': {
         'type': 'object',
+        'required': ['group', 'name', 'version'],
         'properties': {
             'group': {'type': 'string'},
             'name': {'type': 'string'},

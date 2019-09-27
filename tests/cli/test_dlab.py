@@ -20,6 +20,8 @@
 # ******************************************************************************
 
 import abc
+import sys
+
 import six
 import subprocess
 import unittest
