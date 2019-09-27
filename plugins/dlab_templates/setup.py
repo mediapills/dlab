@@ -25,16 +25,23 @@ from dlab_core.setup import (SetupParametersBuilder,
                              VERSION_FILE)
 
 """ Distribution name of package"""
-NAME = 'dlab_api'
+NAME = 'dlab_templates'
 
 """Short summary of the package"""
 DESCRIPTION = 'This a provider to API support.'
 
 
 class APISetupParametersBuilder(SetupParametersBuilder):
+
     @property
-    def version_file(self):
-        return VERSION_FILE
+    def entry_points(self):
+        api_entry_points = {
+            "dlab.plugin.api": [
+                "templates = dlab_templates.plugins:TemplateAPIPlugin",
+            ],
+        }
+        return dict(super(APISetupParametersBuilder, self).entry_points,
+                    **api_entry_points)
 
 
 def do_setup():
@@ -42,7 +49,6 @@ def do_setup():
     director = SetupParametersDirector()
     director.build(builder)
     args = director.parameters
-    args['scripts'] = ['api/wsgi.py']
     setup(**args)
 
 

@@ -18,26 +18,17 @@
 # under the License.
 #
 # ******************************************************************************
-
-from setuptools import setup
-from dlab_core.setup import SetupParametersDirector, SetupParametersBuilder
+from tests.unit.test_api import BaseTestAPI
 
 
-def do_setup():
-    description = "Self-service, Fail-safe Exploratory Environment for" \
-                  "Collaborative Data Science Workflow"
+class TestTemplateAPI(BaseTestAPI):
 
-    builder = SetupParametersBuilder(
-        'dlab_core',
-        description
-    )
+    def test_get_template_by_valid_type(self):
+        resp = self.client.get('/template/exploratory')
 
-    director = SetupParametersDirector()
-    director.build(builder)
-    args = director.parameters
-    args['scripts'] = ['bin/dlab', 'dlab_core/wsgi.py']
-    setup(**args)
+        self.assertDictEqual(resp.json, {})
 
+    def test_get_template_by_in_valid_type(self):
+        resp = self.client.get('/template/test')
 
-if __name__ == "__main__":
-    do_setup()
+        self.assertEqual(resp.json['code'], 0)

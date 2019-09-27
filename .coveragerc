@@ -3,6 +3,7 @@ omit =
     */__init__.py
     .tox
     dlab_core/__version__.py
+    dlab_core/wsgi.py
     setup.py
 
 [report]
