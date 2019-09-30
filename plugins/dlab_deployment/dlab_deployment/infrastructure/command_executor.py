@@ -21,10 +21,14 @@
 import abc
 from contextlib import contextmanager
 import os
+from shutil import copyfile
 import subprocess
+from time import sleep
 
 import paramiko
 import six
+
+from dlab_core.domain.helper import break_after
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -53,6 +57,17 @@ class BaseCommandExecutor(object):
         """Change work directory to path
         :type path: str
         :param path: directory location
+        """
+
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def put(self, local_path, remote_path):
+        """Copy file
+        :type local_path: str
+        :param local_path: path to local object
+        :type remote_path: str
+        :param remote_path: path to remote object
         """
 
         raise NotImplementedError
@@ -102,6 +117,16 @@ class LocalCommandExecutor(BaseCommandExecutor):
         finally:
             os.chdir(current_dir)
 
+    def put(self, local_path, remote_path):
+        """Copy file
+        :type local_path: str
+        :param local_path: path to local object
+        :type remote_path: str
+        :param remote_path: path to remote object
+        """
+
+        copyfile(local_path, remote_path)
+
 
 class ParamikoCommandExecutor(BaseCommandExecutor):
 
@@ -122,14 +147,26 @@ class ParamikoCommandExecutor(BaseCommandExecutor):
         self.identity_file = identity_file
 
     @property
+    @break_after(600)
     def connection(self):
         if not self._connection:
-            self._connection = paramiko.SSHClient()
-            self._connection.set_missing_host_key_policy(
+            connection = paramiko.SSHClient()
+            connection.set_missing_host_key_policy(
                 paramiko.AutoAddPolicy())
-            self._connection.connect(self.host, username=self.name,
-                                     key_filename=self.identity_file)
+            while True:
+                try:
+                    connection.connect(self.host, username=self.name,
+                                       key_filename=self.identity_file)
+                    connection.exec_command('ls')
+                    self._connection = connection
+                    break
+                except Exception:
+                    sleep(10)
+
         return self._connection
+    @property
+    def sftp_connection(self):
+        return self.connection.open_sftp()
 
     @property
     def current_dir(self):
@@ -169,3 +206,21 @@ class ParamikoCommandExecutor(BaseCommandExecutor):
             yield
         finally:
             self.current_dir = None
+
+    def put(self, local_path, remote_path):
+        """Copy file
+        :type local_path: str
+        :param local_path: path to local object
+        :type remote_path: str
+        :param remote_path: path to remote object
+        """
+        if os.path.isfile(local_path):
+            self.sftp_connection.put(local_path, remote_path)
+            self.sftp_connection.close()
+            return
+        self.sftp_connection.mkdir(remote_path)
+        for item in os.listdir(local_path):
+            abs_path = os.path.join(local_path, item)
+            abs_remote_path = os.path.join(remote_path, item)
+            self.put(abs_path, abs_remote_path)
+        self.sftp_connection.close()

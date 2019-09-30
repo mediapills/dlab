@@ -25,7 +25,12 @@ from mock import patch, MagicMock, PropertyMock
 from dlab_deployment.infrastructure.command_executor import (
     LocalCommandExecutor, ParamikoCommandExecutor)
 
-PARAMIKO_CLIENT_CONNECT = 'paramiko.SSHClient.connect'
+
+PARAMIKO_CLIENT_CONNECTION_MOCK = {
+    'target': ParamikoCommandExecutor,
+    'attribute': 'connection',
+    'new_callable': PropertyMock
+}
 
 
 class TestLocalCommandExecutor(unittest.TestCase):
@@ -42,29 +47,32 @@ class TestParamikoCommandExecutor(unittest.TestCase):
 
     def setUp(self):
         self.connect_mock = MagicMock()
-        self.connect_mock.exec_command.return_value = ('in', 'out', 'err')
+        output_mock = MagicMock()
+        output_mock.read.return_value = bytes('output', 'utf-8')
+        self.connect_mock.exec_command.return_value = (
+            'in', output_mock, 'err')
         self.executor = ParamikoCommandExecutor('host', 'name', 'key')
 
-    @patch(PARAMIKO_CLIENT_CONNECT)
+    @patch.object(**PARAMIKO_CLIENT_CONNECTION_MOCK)
     def test_run(self, mock):
         mock.return_value = self.connect_mock
         self.executor.run('ls')
         self.connect_mock.exec_command.assert_called_with('ls')
 
-    @patch(PARAMIKO_CLIENT_CONNECT)
+    @patch.object(**PARAMIKO_CLIENT_CONNECTION_MOCK)
     def test_sudo(self, mock):
         mock.return_value = self.connect_mock
         self.executor.sudo('ls')
         self.connect_mock.exec_command.assert_called_with('sudo ls')
 
-    @patch(PARAMIKO_CLIENT_CONNECT)
+    @patch.object(**PARAMIKO_CLIENT_CONNECTION_MOCK)
     def test_cd_run(self, mock):
         mock.return_value = self.connect_mock
         with self.executor.cd('test'):
             self.executor.run('ls')
         self.connect_mock.exec_command.assert_called_with('cd test; ls')
 
-    @patch(PARAMIKO_CLIENT_CONNECT)
+    @patch.object(**PARAMIKO_CLIENT_CONNECTION_MOCK)
     def test_cd_sudo(self, mock):
         mock.return_value = self.connect_mock
         with self.executor.cd('test'):
