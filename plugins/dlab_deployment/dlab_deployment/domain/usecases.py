@@ -20,14 +20,18 @@
 # *****************************************************************************
 
 import abc
+from time import sleep
 
 import six
 
+from dlab_core.domain.helper import break_after
 from dlab_core.domain.usecases import BaseUseCase, UseCaseException
 from dlab_deployment.domain.service_providers import BaseIaCServiceProvider
 
 LC_ERR_ILLEGAL_SERVICE_PROVIDER = (
     'Invalid service provider of type {}, should be instance of {}')
+
+TIME_OUT = 300
 
 
 def validate_service_provider_type(provider_type):
@@ -79,6 +83,11 @@ class DeploymentUseCase(BaseUseCase):
         raise NotImplementedError
 
 
+class ConfigurationUseCase(BaseUseCase):
+    def execute(self):
+        raise NotImplementedError
+
+
 class ProvisionUseCase(DeploymentUseCase):
 
     def execute(self):
@@ -103,8 +112,76 @@ class SSNDestroyUseCase(DestroyUseCase):
     pass
 
 
+class SSNConfigurationUseCase(ConfigurationUseCase):
+
+    def __init__(self, terraform_provider, command_executor,
+                 helm_charts_location, helm_charts_remote_location):
+        """
+        :type terraform_provider: BaseIaCServiceProvider
+        :param terraform_provider:  Terraform service provider
+        :type command_executor: BaseCommandExecutor
+        :param command_executor: remote cli
+        :type helm_charts_location: str
+        :param helm_charts_location: path to helm charts
+        :type helm_charts_remote_location:
+        :param helm_charts_remote_location: path for remote terraform
+        """
+
+        self.command_executor = command_executor
+        self.terraform_provider = terraform_provider
+        self.helm_charts_location = helm_charts_location
+        self.helm_charts_remote_location = helm_charts_remote_location
+
+    def execute(self):
+        """Configure instance
+        Check k8s and tiller status
+        Copy helm charts to instance
+        Provision helm charts
+        """
+        self.check_k8s_status()
+        # self.check_tiller_status()
+        self.copy_terraform_to_remote()
+        self.terraform_provider.provision()
+
+    @break_after(TIME_OUT)
+    def check_k8s_status(self):
+        """ Check kubernetes status """
+        command = ('kubectl cluster-info | '
+                   'sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"')
+        kubernetes_success_status = 'Kubernetes master is running'
+        kubernetes_dns_success_status = 'KubeDNS is running'
+        while True:
+            k8c_info_status = self.command_executor.run(command)
+            kubernetes_succeed = kubernetes_success_status in k8c_info_status
+            kube_dns_succeed = kubernetes_dns_success_status in k8c_info_status
+            if kubernetes_succeed and kube_dns_succeed:
+                return
+
+    @break_after(TIME_OUT)
+    def check_tiller_status(self):
+        """ Check tiller status """
+
+        command = ('kubectl get pods --all-namespaces | '
+                   'grep tiller | awk "{print $4}"')
+        tiller_success_status = 'Running'
+        while True:
+            tiller_status = self.command_executor.run(command)
+            if tiller_success_status in tiller_status:
+                return
+
+    def copy_terraform_to_remote(self):
+        """Transfer helm charts terraform files"""
+        self.command_executor.put(
+            self.helm_charts_location, self.helm_charts_remote_location)
+
+
 class EndpointProvisionUseCase(ProvisionUseCase):
     pass
+
+
+class EndpointConfigurationUseCase(ConfigurationUseCase):
+    def execute(self):
+        raise NotImplementedError
 
 
 class EndpointDestroyUseCase(DestroyUseCase):

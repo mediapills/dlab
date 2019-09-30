@@ -51,6 +51,21 @@ TF_COMMANDS_ACTION_CODES = {
     TERRAFORM_OUTPUT_COMMAND: OUTPUT,
 }
 
+
+def generate_tf_vars(variables):
+    args = []
+    for key, value in variables.items():
+        if not value:
+            continue
+        if type(value) == list:
+            quoted_list = ['"{}"'.format(item) for item in value]
+            joined_values = ', '.join(quoted_list)
+            value = '[{}]'.format(joined_values)
+        args.append((key, value))
+    args = ["-var '{0}={1}'".format(key, value) for key, value in args]
+    return ' '.join(args)
+
+
 TERRAFORM_PARAMS = {
     'no_color': {
         INITIAL_TYPE: bool,
@@ -80,8 +95,7 @@ TERRAFORM_PARAMS = {
         INITIAL_TYPE: dict,
         INITIAL_VALUE: {},
         ACTIONS: APPLY | DESTROY,
-        TF_PARAMETER: lambda x: ' '.join(['-var \'{}={}\''.format(k, v)
-                                          for k, v in x.items()]),
+        TF_PARAMETER: generate_tf_vars,
     },
 }
 
@@ -185,7 +199,6 @@ class Terraform(object):
 
         command = self.build_tf_command(TERRAFORM_OUTPUT_COMMAND)
         with self.command_executor.cd(self.tf_path):
-
             return self.command_executor.run(command)
 
     def build_tf_command(self, command):

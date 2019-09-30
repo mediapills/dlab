@@ -17,13 +17,15 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# ******************************************************************************
+# *****************************************************************************
+import unittest
 
-import dlab_core.domain
-import dlab_core.infrastructure
-import dlab_core.clidriver
-import dlab_core.containers
-import dlab_core.dispatchers
-import dlab_core.registry
-import dlab_core.setup
-import dlab_core.args_parser
+from dlab_core.args_parser import CLIArgsParser
+
+
+class TestCLIArgParser(unittest.TestCase):
+    def test_parse_args(self):
+        arguments = [{'key': '--test', 'params': {'type': str}}]
+        parser = CLIArgsParser(arguments)
+        result = parser.parse_args(['--test', 'value'])
+        self.assertEqual(result['test'], 'value')
