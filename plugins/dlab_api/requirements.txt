@@ -1,4 +1,0 @@
-flask
-jsonschema
-flask_restful
-uwsgi

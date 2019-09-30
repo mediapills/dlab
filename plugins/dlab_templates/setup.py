@@ -18,17 +18,39 @@
 # under the License.
 #
 # ******************************************************************************
-from tests.base_test import BaseTestAPI
+
+from setuptools import setup
+from dlab_core.setup import (SetupParametersBuilder,
+                             SetupParametersDirector,
+                             VERSION_FILE)
+
+""" Distribution name of package"""
+NAME = 'dlab_templates'
+
+"""Short summary of the package"""
+DESCRIPTION = 'This a provider to API support.'
 
 
-class TestTemplateAPI(BaseTestAPI):
+class APISetupParametersBuilder(SetupParametersBuilder):
 
-    def test_get_template_by_valid_type(self):
-        resp = self.client.get('/template/exploratory')
+    @property
+    def entry_points(self):
+        api_entry_points = {
+            "dlab.plugin.api": [
+                "templates = dlab_templates.plugins:TemplateAPIPlugin",
+            ],
+        }
+        return dict(super(APISetupParametersBuilder, self).entry_points,
+                    **api_entry_points)
 
-        self.assertDictEqual(resp.json, {})
 
-    def test_get_template_by_in_valid_type(self):
-        resp = self.client.get('/template/test')
+def do_setup():
+    builder = APISetupParametersBuilder(NAME, DESCRIPTION)
+    director = SetupParametersDirector()
+    director.build(builder)
+    args = director.parameters
+    setup(**args)
 
-        self.assertEqual(resp.json['code'], 0)
+
+if __name__ == "__main__":
+    do_setup()

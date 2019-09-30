@@ -35,7 +35,7 @@ def do_setup():
     director = SetupParametersDirector()
     director.build(builder)
     args = director.parameters
-
+    args['scripts'] = ['api/wsgi.py']
     args['scripts'] = ['bin/dlab']
     setup(**args)
 

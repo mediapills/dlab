@@ -78,6 +78,8 @@ class BaseCLITest(unittest.TestCase):
 
 class TestDLab(BaseCLITest):
 
+    # TODO check if sys.platform can help here for win
+    @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
     def test_cmd_help(self):
         out, err, exitcode = self.capture()
         self.assertEqual('', err)
