@@ -93,5 +93,6 @@ CREATE_PROJECT_SCHEMA = {
             'securityGroupIds': {'type': 'string'},
             'confTagResourceId': {'type': 'string'},
         }
-    }
+    },
+    'required': ['project', 'cloudProperties']
 }

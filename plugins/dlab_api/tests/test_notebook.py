@@ -18,15 +18,7 @@
 # under the License.
 #
 # ******************************************************************************
-
-import unittest
-
-from api.app import app
-
-
-class BaseTestAPI(unittest.TestCase):
-    def setUp(self):
-        self.client = app.test_client()
+from tests.base_test import BaseTestAPI
 
 
 class TestAPI(BaseTestAPI):
