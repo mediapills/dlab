@@ -19,6 +19,7 @@
 #
 # ******************************************************************************
 from setuptools import setup
+
 from dlab_core.setup import SetupParametersBuilder, SetupParametersDirector
 
 """ Distribution name of package"""
@@ -40,6 +41,12 @@ class AWSSetupParametersBuilder(SetupParametersBuilder):
 
         return dict(super(AWSSetupParametersBuilder, self).entry_points,
                     **aws_entry_points)
+
+    @property
+    def package_data(self):
+        package_data = {NAME: ['terraform/*/*', 'terraform/*/*/*']}
+        return dict(super(AWSSetupParametersBuilder, self).package_data,
+                    **package_data)
 
 
 def do_setup():
