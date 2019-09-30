@@ -18,10 +18,14 @@
 # under the License.
 #
 # *****************************************************************************
+import signal
+
 from dlab_core.domain.exceptions import DLabException
 
 LC_ERR_INVALID_PARAMETER_TYPE = (
     'Invalid parameter {} of type {}, should be {}')
+
+LC_ERR_TIMEOUT_REACHED = 'Timeout {} {}s has been reached'
 
 
 def validate_property_type(exp_type):
@@ -36,3 +40,25 @@ def validate_property_type(exp_type):
         return wrapper
 
     return validate
+
+
+def timeout_handler(signum, frame):
+    raise TimeoutError
+
+
+def break_after(seconds=2):
+    def break_func(fn):
+        def wrapper(*args, **kwargs):
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(seconds)
+            try:
+                res = fn(*args, **kwargs)
+                signal.alarm(0)
+                return res
+            except TimeoutError:
+                raise DLabException(LC_ERR_TIMEOUT_REACHED.format(
+                    fn.__name__, seconds))
+
+        return wrapper
+
+    return break_func

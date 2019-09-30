@@ -18,10 +18,11 @@
 # under the License.
 #
 # *****************************************************************************
+from time import sleep
 import unittest
 
 from dlab_core.domain.exceptions import DLabException
-from dlab_core.domain.helper import validate_property_type
+from dlab_core.domain.helper import validate_property_type, break_after
 
 
 class MockClass(object):
@@ -49,3 +50,11 @@ class TestHelper(unittest.TestCase):
         for val in test_values:
             with self.assertRaises(DLabException):
                 MockClass(val)
+
+    def test_break_after_decorator(self):
+        @break_after(3)
+        def test_fn():
+            sleep(10)
+
+        with self.assertRaises(DLabException):
+            test_fn()
