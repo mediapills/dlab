@@ -164,6 +164,7 @@ class ParamikoCommandExecutor(BaseCommandExecutor):
                     sleep(10)
 
         return self._connection
+
     @property
     def sftp_connection(self):
         return self.connection.open_sftp()
