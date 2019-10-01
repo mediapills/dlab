@@ -18,29 +18,19 @@
 # under the License.
 #
 # *****************************************************************************
+from time import sleep
+import unittest
 
-import abc
+from dlab_core.domain.exceptions import DLabException
+from dlab_core.domain.helper import break_after
 
-import six
 
+class TestHelper(unittest.TestCase):
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseIaCServiceProvider(object):
+    def test_break_after_decorator(self):
+        @break_after(3)
+        def test_fail():
+            sleep(10)
 
-    @abc.abstractmethod
-    def provision(self):
-        """Provision infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def destroy(self):
-        """Destroy infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def output(self):
-        """Get provision output"""
-
-        raise NotImplementedError
+        with self.assertRaises(DLabException):
+            test_fail()
