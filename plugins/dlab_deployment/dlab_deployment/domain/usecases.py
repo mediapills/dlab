@@ -92,7 +92,7 @@ class DestroyUseCase(DeploymentUseCase):
     def execute(self):
         """Destroy infrastructure"""
 
-        self.iac_service_provider.destoroy()
+        self.iac_service_provider.destroy()
 
 
 class SSNProvisionUseCase(ProvisionUseCase):
