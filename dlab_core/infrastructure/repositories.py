@@ -523,7 +523,7 @@ class SQLiteRepository(BaseFileRepository):
     @property
     def connection(self):
         if not self.__connection:
-            self.__connection = sqlite3.connect(self.location)
+            self.__connection = sqlite3.connect(self.location, check_same_thread=False)
         return self.__connection
 
     def _execute_get(self, query, *args):
@@ -544,8 +544,7 @@ class SQLiteRepository(BaseFileRepository):
 
     def find_one(self, key):
         data = self._execute_get(
-            self.ONE_QUERY_TEMPLATE.format(table=self._table_name, key=key),
-            key
+            self.ONE_QUERY_TEMPLATE.format(table=self._table_name, key=key), key
         )
 
         for row in data:

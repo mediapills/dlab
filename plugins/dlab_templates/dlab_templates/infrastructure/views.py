@@ -1,7 +1,7 @@
 from flask import request
 from flask_restful import Resource
 
-from api.processes_manager import Manager
+from api.app import app
 from dlab_templates.infrastructure.controllers import APITemplatesController
 
 
@@ -13,7 +13,7 @@ class TemplateAPI(Resource):
     # TODO: remove after test
     def post(self, type):
         data = request.json
-        m = Manager()
-        id = m.create_record(data)
+
+        id = app.manager.create_record(data)
         return {'id': id}
 
