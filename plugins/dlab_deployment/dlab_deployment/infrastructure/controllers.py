@@ -23,18 +23,18 @@ from dlab_core.infrastructure.controllers import BaseCLIController
 
 
 class BaseDeploymentCLIController(BaseCLIController):
-    @staticmethod
-    def deploy_ssn():
-        raise NotImplementedError
-
-    @staticmethod
-    def destroy_ssn():
+    @classmethod
+    def deploy_ssn(cls, *args):
         raise NotImplementedError
 
     @classmethod
-    def deploy_endpoint(cls):
+    def destroy_ssn(cls, *args):
         raise NotImplementedError
 
     @classmethod
-    def destroy_endpoint(cls):
+    def deploy_endpoint(cls, *args):
+        raise NotImplementedError
+
+    @classmethod
+    def destroy_endpoint(cls, *args):
         raise NotImplementedError

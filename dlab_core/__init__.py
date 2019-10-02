@@ -26,3 +26,4 @@ import dlab_core.containers
 import dlab_core.dispatchers
 import dlab_core.registry
 import dlab_core.setup
+import dlab_core.args_parser

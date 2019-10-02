@@ -18,29 +18,14 @@
 # under the License.
 #
 # *****************************************************************************
+import unittest
 
-import abc
-
-import six
+from dlab_core.args_parser import CLIArgsParser
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseIaCServiceProvider(object):
-
-    @abc.abstractmethod
-    def provision(self):
-        """Provision infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def destroy(self):
-        """Destroy infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def output(self):
-        """Get provision output"""
-
-        raise NotImplementedError
+class TestCLIArgParser(unittest.TestCase):
+    def test_parse_args(self):
+        arguments = [{'key': '--test', 'params': {'type': str}}]
+        parser = CLIArgsParser(arguments)
+        result = parser.parse_args(['--test', 'value'])
+        self.assertEqual(result['test'], 'value')
