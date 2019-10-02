@@ -20,8 +20,8 @@
 # ******************************************************************************
 import unittest
 
-from dlab_core.app import app
-from dlab_core.schema_validator import validate_schema
+from api.app import app
+from dlab_core.infrastructure.schema_validator import validate_schema
 
 
 class BaseTestAPI(unittest.TestCase):

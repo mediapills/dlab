@@ -18,7 +18,7 @@
 # under the License.
 #
 # ******************************************************************************
-from tests.unit.test_api import BaseTestAPI
+from tests.api.test_api import BaseTestAPI
 
 
 class TestTemplateAPI(BaseTestAPI):
