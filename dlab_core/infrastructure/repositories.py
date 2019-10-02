@@ -23,6 +23,8 @@ import abc
 import argparse
 import json
 import os
+import sqlite3
+
 import six
 import sys
 
@@ -34,7 +36,21 @@ LC_ERR_WRONG_ARGUMENTS = 'Unrecognized arguments'
 LC_ERR_INVALID_DATA_TYPE = 'Invalid context type, should be instance of {name}'
 LC_ERR_NO_FILE = 'No such file or directory: "{location}".'
 LC_ERR_NOT_JSON_CONTENT = 'No JSON object could be decoded'
+LC_READING_ERROR = 'Error while data reading with message "{msg}".'
 
+PROCESSED = 'PROCESSED'
+STARTED = 'STARTED'
+IN_PROGRESS = 'IN_PROGRESS'
+DONE = 'DONE'
+ERROR = 'ERROR'
+
+STATUSES = {
+    PROCESSED: '0',
+    STARTED: '1',
+    IN_PROGRESS: '2',
+    DONE: '3',
+    ERROR: '9'
+}
 # TODO remove condition after Python 2.7 retirement
 if six.PY2:
     # noinspection PyUnresolvedReferences
@@ -85,6 +101,13 @@ class RepositoryWrongArgumentException(RepositoryException):
     def __init__(self):
         super(RepositoryWrongArgumentException, self).__init__(
             LC_ERR_WRONG_ARGUMENTS
+        )
+
+
+class RepositoryOperationalErrorException(RepositoryException):
+    def __init__(self, message):
+        super(RepositoryOperationalErrorException, self).__init__(
+            LC_READING_ERROR.format(msg=message)
         )
 
 
@@ -481,3 +504,76 @@ class ChainOfRepositories(DictRepository):
                 data.update(repo.data)
 
         return data
+
+
+class SQLiteRepository(BaseFileRepository):
+    PR_KEY = 'id'
+    WHERE_STATEMENT = ' where {key}=?'
+    ALL_QUERY_TEMPLATE = 'SELECT * FROM {table}'
+    ONE_QUERY_TEMPLATE = ALL_QUERY_TEMPLATE + WHERE_STATEMENT
+    INSERT_QUERY = 'INSERT INTO {table}({fields}) VALUES({values})'
+    UPDATE_QUERY = 'UPDATE {table} SET {to_update}' + WHERE_STATEMENT
+
+    def __init__(self, absolute_path, table_name='dlab'):
+        super(SQLiteRepository, self).__init__(absolute_path)
+
+        self._table_name = table_name
+        self.__connection = None
+
+    @property
+    def connection(self):
+        if not self.__connection:
+            self.__connection = sqlite3.connect(self.location)
+        return self.__connection
+
+    def _execute_get(self, query, *args):
+        try:
+            with self.connection:
+                return self.connection.execute(query, args).fetchall()
+        except sqlite3.OperationalError as e:
+            raise RepositoryOperationalErrorException(str(e))
+
+    def _execute_set(self, query, *args):
+        try:
+            with self.connection:
+                cursor = self.connection.cursor()
+                cursor.execute(query, args)
+                return cursor.lastrowid
+        except sqlite3.OperationalError as e:
+            raise RepositoryOperationalErrorException(str(e))
+
+    def find_one(self, key):
+        data = self._execute_get(
+            self.ONE_QUERY_TEMPLATE.format(table=self._table_name, key=key),
+            key
+        )
+
+        for row in data:
+            return row[1]
+        return None
+
+    def insert_request(self, data):
+        if not isinstance(data, str):
+            data = json.dumps(data)
+        query = self.INSERT_QUERY.format(
+            table=self._table_name,
+            fields='request,status',
+            values='?,?'
+        )
+        return self._execute_set(query, *(data, STATUSES[PROCESSED]))
+
+    def update_status(self, record_id, value):
+        query = self._update_query(
+            table=self._table_name,
+            to_update='status=' + STATUSES[value],
+            key=self.PR_KEY
+        )
+        return self._execute_set(query, record_id)
+
+    def update_error(self, record_id, message):
+        to_update = 'status=' + STATUSES[ERROR] + ', error="{}"'.format(str(message))
+        query = self._update_query(table=self._table_name, to_update=to_update, key=self.PR_KEY)
+        self._execute_set(query, record_id)
+
+    def _update_query(self, **kwargs):
+        return self.UPDATE_QUERY.format(**kwargs)

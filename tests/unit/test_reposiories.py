@@ -59,6 +59,32 @@ def mock_isfile_true(func):
     return wrapper
 
 
+def mock_sqlite3_fetchall(data=()):
+
+    def decorator(func):
+
+        def wrapper(*args):
+            with patch('sqlite3.connect') as con:
+                con.return_value.execute.return_value.fetchall.return_value = data
+                return func(*args)
+
+        return wrapper
+
+    return decorator
+
+
+def mock_sqlite3_without_table(func):
+
+    def wrapper(*args):
+        with patch('sqlite3.connect') as con:
+            con.return_value.execute.side_effect = exceptions.DLabException(
+                'Table not found.'
+            )
+            return func(*args)
+
+    return wrapper
+
+
 @six.add_metaclass(abc.ABCMeta)
 class BaseRepositoryTestCase:
 
@@ -458,3 +484,62 @@ class TestChainOfRepositories(BaseRepositoryTestCase, unittest.TestCase):
     def test_register_validation(self):
         with self.assertRaises(exceptions.RepositoryDataTypeException):
             self.repo.register('str')
+
+
+# class TestSQLiteRepository(unittest.TestCase):
+#     MOCK_FILE_PATH = 'test.db'
+#     DB_TABLE = 'config'
+#
+#     DATA = (('key', 'value'),)
+#     DATA_LOWER_CASE = (('lower_case_key', 'lower_case_value'),)
+#     DATA_UPPER_CASE = (('UPPER_CASE_KEY', 'upper_case_value'),)
+#
+#     @mock_isfile_true
+#     def setUp(self):
+#         self.repo = repositories.SQLiteRepository(
+#             absolute_path=self.MOCK_FILE_PATH,
+#             table_name=self.DB_TABLE
+#         )
+#
+#     def test_file_not_exist(self):
+#         file_path = 'new_test.ini'
+#
+#         with self.assertRaises(exceptions.DLabException):
+#             self.repo.file_path = file_path
+#
+#     @mock_sqlite3_fetchall(data=DATA)
+#     def test_find_one(self):
+#         val = self.repo.find_one('key')
+#
+#         self.assertEqual('value', val)
+#
+#     @mock_sqlite3_fetchall(data=DATA)
+#     def test_find_all(self):
+#         data = self.repo.find_all()
+#
+#         self.assertEqual({'key': 'value'}, data)
+#
+#     @mock_sqlite3_without_table
+#     def test_table_not_found_exception(self):
+#         with self.assertRaises(exceptions.DLabException):
+#             self.repo.find_all()
+#
+#     def test_constructor_wrong_file_type_exception(self):
+#         with self.assertRaises(exceptions.DLabException):
+#             self.repo = repositories.SQLiteRepository(
+#                 absolute_path=None,
+#                 table_name=self.DB_TABLE
+#             )
+#
+#     # TODO: check wrong table name
+#     # def test_constructor_wrong_table_type_exception(self):
+#     #     with self.assertRaises(exceptions.DLabException):
+#     #         self.repo = repositories.SQLiteRepository(
+#     #             absolute_path=self.MOCK_FILE_PATH,
+#     #             table_name=None
+#     #         )
+#
+#     @mock_isfile_true
+#     def test_file_path_exception(self):
+#         with self.assertRaises(exceptions.DLabException):
+#             self.repo.file_path = None
