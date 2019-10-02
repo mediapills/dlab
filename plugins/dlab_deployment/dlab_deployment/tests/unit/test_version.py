@@ -18,29 +18,11 @@
 # under the License.
 #
 # *****************************************************************************
+import unittest
 
-import abc
-
-import six
+from dlab_deployment.__version__ import __version__
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseIaCServiceProvider(object):
-
-    @abc.abstractmethod
-    def provision(self):
-        """Provision infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def destroy(self):
-        """Destroy infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def output(self):
-        """Get provision output"""
-
-        raise NotImplementedError
+class TestVersion(unittest.TestCase):
+    def test_version(self):
+        self.assertEqual(__version__, '0.0.1')
