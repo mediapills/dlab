@@ -3,4 +3,5 @@ configparser >= 3.7.0
 flask
 jsonschema
 flask_restful
+persist-queue
 uwsgi

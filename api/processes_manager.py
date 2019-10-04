@@ -1,5 +1,6 @@
+import subprocess
+import sys
 from threading import Thread
-from time import sleep
 
 import persistqueue
 
@@ -9,15 +10,30 @@ DB_PATH = 'C:\Users\Dmytro_Khanas\projects\dlab'
 num_worker_threads = 2
 
 
-class Manager(object):
+class BaseManager(object):
     def __init__(self, location=None):
         if location is None:
             location = DB_PATH
+        self.location = location
         self.queue = persistqueue.FIFOSQLiteQueue(location, multithreading=True, auto_commit=False)
         self.repo = SQLiteRepository(location+'\data.db')
+
+
+class APIManager(BaseManager):
+    def create_record(self, data, resource, action):
+        record_id = self.repo.insert_request(data, resource, action)
+        self._create_task(record_id)
+        return record_id
+
+    def _create_task(self, record_id):
+        self.queue.put(str(record_id))
+
+
+class DaemonManager(BaseManager):
+    def __init__(self, location=None):
+        super(DaemonManager, self).__init__(location)
         for i in range(num_worker_threads):
             t = Thread(target=self.run)
-            t.daemon = True
             t.start()
 
     def run(self):
@@ -25,22 +41,17 @@ class Manager(object):
             record_id = self.start_task()
             try:
                 # TODO: run cli task
-                sleep(10)
-                # print(type(record_id))
-                # if record_id == '238':
-                #     raise Exception('test error')
-                # print('from manager run ' + str(record_id))
+                cmd = 'C:\Users\Dmytro_Khanas\projects\dlab\\test.py "{}"'.format(record_id)
+                p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                out, err = p.communicate()
+                if err:
+                    raise Exception(err)
+                print(out, err)
+                print('from manager run ' + str(record_id))
                 self.finish_task(record_id)
             except Exception as e:
+                print(e)
                 self.process_error(record_id, str(e))
-
-    def create_record(self, data):
-        record_id = self.repo.insert_request(data)
-        self._create_task(record_id)
-        return record_id
-
-    def _create_task(self, record_id):
-        self.queue.put(str(record_id))
 
     def finish_task(self, record_id):
         self.queue.task_done()
@@ -52,10 +63,12 @@ class Manager(object):
     def start_task(self):
         record_id = self.queue.get()
         self.repo.update_status(record_id, STARTED)
-        print('from manager start_task ' + str(record_id))
         return record_id
 
 
 if __name__ == '__main__':
-    m = Manager()
-    m.run()
+    m = DaemonManager()
+    try:
+        m.run()
+    except KeyboardInterrupt:
+        sys.exit(0)

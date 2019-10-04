@@ -24,6 +24,7 @@ import argparse
 import json
 import os
 import sqlite3
+from datetime import datetime
 
 import six
 import sys
@@ -523,7 +524,9 @@ class SQLiteRepository(BaseFileRepository):
     @property
     def connection(self):
         if not self.__connection:
-            self.__connection = sqlite3.connect(self.location, check_same_thread=False)
+            self.__connection = sqlite3.connect(self.location,
+                                                check_same_thread=False,
+                                                isolation_level=None)
         return self.__connection
 
     def _execute_get(self, query, *args):
@@ -551,28 +554,47 @@ class SQLiteRepository(BaseFileRepository):
             return row[1]
         return None
 
-    def insert_request(self, data):
-        if not isinstance(data, str):
-            data = json.dumps(data)
+    def insert_request(self, body_data, resource, action):
+        if isinstance(body_data, dict):
+            body_data = json.dumps(body_data)
         query = self.INSERT_QUERY.format(
             table=self._table_name,
-            fields='request,status',
-            values='?,?'
+            fields='request,status,resource,action,created,updated',
+            values='?,?,?,?,?,?'
         )
-        return self._execute_set(query, *(data, STATUSES[PROCESSED]))
+        date = self.date
+        args = (body_data, STATUSES[PROCESSED], resource, action, date, date)
+        return self._execute_set(query, *args)
+
+    @property
+    def date(self):
+        return datetime.now()
 
     def update_status(self, record_id, value):
+        to_update = self._prepare_update_data(status=STATUSES[value], updated=self.date)
         query = self._update_query(
             table=self._table_name,
-            to_update='status=' + STATUSES[value],
+            to_update=to_update,
             key=self.PR_KEY
         )
         return self._execute_set(query, record_id)
 
     def update_error(self, record_id, message):
-        to_update = 'status=' + STATUSES[ERROR] + ', error="{}"'.format(str(message))
-        query = self._update_query(table=self._table_name, to_update=to_update, key=self.PR_KEY)
+        to_update = self._prepare_update_data(status=STATUSES[ERROR],
+                                              error=message,
+                                              updated=self.date)
+        query = self._update_query(table=self._table_name,
+                                   to_update=to_update,
+                                   key=self.PR_KEY)
         self._execute_set(query, record_id)
+
+    @classmethod
+    def _prepare_update_data(cls, **params):
+        params_list = []
+        for key, value in params.items():
+            value = str(value).replace('"', "\'")
+            params_list.append('{}=\"{}\"'.format(key, value))
+        return ', '.join(params_list)
 
     def _update_query(self, **kwargs):
         return self.UPDATE_QUERY.format(**kwargs)
