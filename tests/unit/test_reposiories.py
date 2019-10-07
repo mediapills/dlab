@@ -59,30 +59,30 @@ def mock_isfile_true(func):
     return wrapper
 
 
-def mock_sqlite3_fetchall(data=()):
-
-    def decorator(func):
-
-        def wrapper(*args):
-            with patch('sqlite3.connect') as con:
-                con.return_value.execute.return_value.fetchall.return_value = data
-                return func(*args)
-
-        return wrapper
-
-    return decorator
-
-
-def mock_sqlite3_without_table(func):
-
-    def wrapper(*args):
-        with patch('sqlite3.connect') as con:
-            con.return_value.execute.side_effect = exceptions.DLabException(
-                'Table not found.'
-            )
-            return func(*args)
-
-    return wrapper
+# def mock_sqlite3_fetchall(data=()):
+#
+#     def decorator(func):
+#
+#         def wrapper(*args):
+#             with patch('sqlite3.connect') as con:
+#                 con.return_value.execute.return_value.fetchall.return_value = data  # noqa: E501
+#                 return func(*args)
+#
+#         return wrapper
+#
+#     return decorator
+#
+#
+# def mock_sqlite3_without_table(func):
+#
+#     def wrapper(*args):
+#         with patch('sqlite3.connect') as con:
+#             con.return_value.execute.side_effect = exceptions.DLabException(
+#                 'Table not found.'
+#             )
+#             return func(*args)
+#
+#     return wrapper
 
 
 @six.add_metaclass(abc.ABCMeta)

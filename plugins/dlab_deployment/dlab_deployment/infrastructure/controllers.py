@@ -18,9 +18,10 @@
 # under the License.
 #
 # ******************************************************************************
-from api.processes_manager import APIManager
+from api.managers import APIManager
 from dlab_core.domain.entities import STATUS_PROCESSED, STATUS_BAD_REQUEST
-from dlab_core.infrastructure.controllers import BaseCLIController, BaseAPIController
+from dlab_core.infrastructure.controllers import (
+    BaseCLIController, BaseAPIController)
 from dlab_core.infrastructure.schema_validator import validate_schema
 from dlab_deployment.infrastructure.schemas import CREATE_PROJECT_SCHEMA
 
@@ -55,8 +56,10 @@ class APIProjectsController(BaseAPIController):
         is_valid = validate_schema(request.json, CREATE_PROJECT_SCHEMA)
         if is_valid:
             manager = APIManager()
-            id = manager.create_record(request.json, request.blueprint, DEPLOY)
-            return {'code': id}, STATUS_PROCESSED
+            record_id = manager.create_record(
+                request.json, request.blueprint, DEPLOY
+            )
+            return {'code': record_id}, STATUS_PROCESSED
 
         return {"code": is_valid, "message": "string"}, STATUS_BAD_REQUEST
 

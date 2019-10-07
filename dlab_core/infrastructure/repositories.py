@@ -24,8 +24,7 @@ import argparse
 import json
 import os
 import sqlite3
-from datetime import datetime
-
+import persistqueue
 import six
 import sys
 
@@ -37,7 +36,7 @@ LC_ERR_WRONG_ARGUMENTS = 'Unrecognized arguments'
 LC_ERR_INVALID_DATA_TYPE = 'Invalid context type, should be instance of {name}'
 LC_ERR_NO_FILE = 'No such file or directory: "{location}".'
 LC_ERR_NOT_JSON_CONTENT = 'No JSON object could be decoded'
-LC_READING_ERROR = 'Error while data reading with message "{msg}".'
+LC_READING_ERROR = 'Error while data reading with message \'{msg}\'.'
 
 PROCESSED = 'PROCESSED'
 STARTED = 'STARTED'
@@ -527,6 +526,7 @@ class SQLiteRepository(BaseFileRepository):
             self.__connection = sqlite3.connect(self.location,
                                                 check_same_thread=False,
                                                 isolation_level=None)
+            self.__connection.row_factory = sqlite3.Row
         return self.__connection
 
     def _execute_get(self, query, *args):
@@ -547,54 +547,61 @@ class SQLiteRepository(BaseFileRepository):
 
     def find_one(self, key):
         data = self._execute_get(
-            self.ONE_QUERY_TEMPLATE.format(table=self._table_name, key=key), key
+            self.ONE_QUERY_TEMPLATE.format(
+                table=self._table_name, key=self.PR_KEY
+            ), key
         )
+        return dict(data[0])
 
-        for row in data:
-            return row[1]
-        return None
-
-    def insert_request(self, body_data, resource, action):
-        if isinstance(body_data, dict):
-            body_data = json.dumps(body_data)
+    def insert(self, entity):
         query = self.INSERT_QUERY.format(
             table=self._table_name,
-            fields='request,status,resource,action,created,updated',
-            values='?,?,?,?,?,?'
+            fields=self.fields(entity),
+            values=self.question_marks(entity)
         )
-        date = self.date
-        args = (body_data, STATUSES[PROCESSED], resource, action, date, date)
-        return self._execute_set(query, *args)
+        return self._execute_set(query, *self.values(entity))
 
-    @property
-    def date(self):
-        return datetime.now()
-
-    def update_status(self, record_id, value):
-        to_update = self._prepare_update_data(status=STATUSES[value], updated=self.date)
-        query = self._update_query(
+    def update(self, entity):
+        to_update = self._prepare_update_data(entity)
+        query = self.UPDATE_QUERY.format(
             table=self._table_name,
             to_update=to_update,
             key=self.PR_KEY
         )
-        return self._execute_set(query, record_id)
+        return self._execute_set(query, entity.id)
 
-    def update_error(self, record_id, message):
-        to_update = self._prepare_update_data(status=STATUSES[ERROR],
-                                              error=message,
-                                              updated=self.date)
-        query = self._update_query(table=self._table_name,
-                                   to_update=to_update,
-                                   key=self.PR_KEY)
-        self._execute_set(query, record_id)
+    def fields_list(self, entity):
+        return entity.__dict__.keys()
 
-    @classmethod
-    def _prepare_update_data(cls, **params):
+    def fields(self, entity):
+        return ','.join(self.fields_list(entity))
+
+    def values(self, entity):
+        return entity.__dict__.values()
+
+    def question_marks(self, entity):
+        return ','.join(['?' for _ in range(len(self.values(entity)))])
+
+    def _prepare_update_data(self, entity):
         params_list = []
-        for key, value in params.items():
-            value = str(value).replace('"', "\'")
-            params_list.append('{}=\"{}\"'.format(key, value))
+        for field in self.fields_list(entity):
+            value = str(getattr(entity, field)).replace('"', "\'")
+            params_list.append('{}=\"{}\"'.format(field, value))
         return ', '.join(params_list)
 
-    def _update_query(self, **kwargs):
-        return self.UPDATE_QUERY.format(**kwargs)
+
+class FIFOSQLiteQueueRepository(BaseFileRepository):
+    def __init__(self, absolute_path):
+        super(FIFOSQLiteQueueRepository, self).__init__(absolute_path)
+        self.queue = persistqueue.FIFOSQLiteQueue(absolute_path,
+                                                  multithreading=True,
+                                                  auto_commit=False)
+
+    def insert(self, entity):
+        self.queue.put(entity.id)
+
+    def get(self):
+        return self.queue.get()
+
+    def delete(self):
+        self.queue.task_done()

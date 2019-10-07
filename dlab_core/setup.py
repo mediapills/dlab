@@ -250,6 +250,7 @@ class SetupParametersBuilder(object):
 
         if sys.platform == 'win32':
             self._parameters['install_requires'].append('pypiwin32')
+            self._parameters['install_requires'].remove('uwsgi')
 
     @property
     def lib_file(self):
