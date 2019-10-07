@@ -67,6 +67,7 @@ class TestConfigurationUseCase(unittest.TestCase):
         self.use_case.copy_terraform_to_remote = MagicMock()
         self.provider.provision = MagicMock()
         self.use_case.execute()
+
         self.use_case.check_k8s_status.assert_called()
         self.use_case.check_tiller_status.assert_called()
         self.use_case.copy_terraform_to_remote.assert_called()

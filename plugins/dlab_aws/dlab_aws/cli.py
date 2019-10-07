@@ -18,9 +18,9 @@
 # under the License.
 #
 # ******************************************************************************
+from itertools import groupby
 
 from dlab_aws.infrastructure.controllers.deployment import AWSCLIController
-
 from dlab_core.args_parser import ArgumentsBuilder
 
 COMPONENT_SSN = 'ssn'
@@ -36,13 +36,22 @@ DEPLOY_ROUTES = [{
     'func': lambda: AWSCLIController.destroy_ssn(SSN_ARGUMENTS),
     'args': [None, COMPONENT_SSN, ACTION_DESTROY]
 }, {
-    'func': AWSCLIController.deploy_endpoint,
+    'func': lambda: AWSCLIController.deploy_endpoint(
+        get_args(SSN_ARGUMENTS, ENDPOINT_ARGUMENTS)),
     'args': [None, COMPONENT_ENDPOINT, ACTION_DEPLOY]
 }, {
     'func': AWSCLIController.destroy_endpoint,
     'args': [None, COMPONENT_ENDPOINT, ACTION_DESTROY]
 }]
 
+
+def get_args(args1, args2):
+    sorted_args = sorted(args1 + args2, key=lambda x: x['key'])
+    return [list(group)[0] for key, group
+            in groupby(sorted_args, lambda x: x['key'])]
+
+
+# TODO: move into plugin ini file package_data
 
 """SSN arguments (k8s, helm charts)"""
 SSN_ARGUMENTS = ArgumentsBuilder().add(
@@ -130,3 +139,92 @@ SSN_ARGUMENTS = ArgumentsBuilder().add(
     '--billing_tag', str, 'Billing tag', 'dlab').add(
     '--pkey', str, 'Path to key', required=True).add(
     '--no_color', bool, 'No color console output', True).build()
+
+"""SSN arguments (k8s, helm charts)"""
+ENDPOINT_ARGUMENTS = ArgumentsBuilder().add(
+    '--no_color', bool, 'No color console output', True).add(
+    '--state', str, 'State file path').add(
+    '--secret_access_key', str, 'AWS Secret Access Key', required=True).add(
+    '--access_key_id', str, 'AWS Access Key ID', required=True).add(
+    '--pkey', str, 'path to key', required=True).add(
+    '--service_base_name', str,
+    'Any infrastructure value (should be unique if  multiple SSN\'s have '
+    'been deployed before). Should be same as on ssn').add(
+    '--vpc_id', str, 'ID of AWS VPC if you already have VPC created.').add(
+    '--vpc_cidr', str, 'CIDR for VPC creation. Conflicts with vpc_id.',
+    '172.31.0.0/16').add(
+    '--ssn_subnet', str,
+    'ID of AWS Subnet if you already have subnet created.').add(
+    '--ssn_k8s_sg_id', str, 'ID of SSN SG.').add(
+    '--subnet_cidr', str,
+    'CIDR for Subnet creation. Conflicts with subnet_id.',
+    '172.31.0.0/24').add(
+    '--ami', str, 'ID of EC2 AMI.', required=True).add(
+    '--key_name', str, 'Name of EC2 Key pair.', required=True).add(
+    '--endpoint_id', str, 'Endpoint id.', required=True).add(
+    '--region', str, 'Name of AWS region.', 'us-west-2').add(
+    '--zone', str, 'Name of AWS zone.', 'a').add(
+    '--network_type', str,
+    'Type of created network (if network is not existed and require creation) '
+    'for endpoint', 'public').add(
+    '--endpoint_instance_shape', str, 'Instance shape of Endpoint.',
+    't2.medium').add(
+    '--endpoint_volume_size', int, 'Size of root volume in GB.', 30).add(
+    '--endpoint_eip_allocation_id', str,
+    'Elastic Ip created for Endpoint').add(
+    '--product', str, 'Product name.', 'dlab').add(
+    '--additional_tag', str, 'Additional tag.', 'product:dlab').add(
+    '--ldap_host', str, 'ldap host', required=True).add(
+    '--ldap_dn', str, 'ldap dn', required=True).add(
+    '--ldap_user', str, 'ldap user', required=True).add(
+    '--ldap_bind_creds', str, 'ldap bind creds', required=True).add(
+    '--ldap_users_group', str, 'ldap users group', required=True).add(
+    '--dlab_path', str, 'Dlab path', '/opt/dlab').add(
+    '--key_name', str, 'Key name', '').add(
+    '--endpoint_eip_address', str, 'Endpoint eip address').add(
+    '--pkey', str, 'Pkey', '').add(
+    '--hostname', str, 'Hostname', '').add(
+    '--os_user', str, 'Os user', 'dlab-user').add(
+    '--cloud_provider', str, 'Cloud provider', '').add(
+    '--mongo_host', str, 'Mongo host', 'MONGO_HOST').add(
+    '--mongo_port', str, 'Mongo port', '27017').add(
+    '--ss_host', str, 'Ss host', '').add(
+    '--ss_port', str, 'Ss port', '8443').add(
+    '--keycloack_host', str, 'Keycloack host', '').add(
+    '--repository_address', str, 'Repository address', '').add(
+    '--repository_port', str, 'Repository port', '').add(
+    '--repository_user', str, 'Repository user', '').add(
+    '--repository_pass', str, 'Repository pass', '').add(
+    '--docker_version', str, 'Docker version', '18.06.3~ce~3-0~ubuntu').add(
+    '--ssn_bucket_name', str, 'Ssn bucket name', '').add(
+    '--endpoint_keystore_password', str, 'Endpoint keystore password', '').add(
+    '--keycloak_client_secret', str, 'Keycloak client secret', '').add(
+    '--branch_name', str, 'Branch name', 'DLAB-terraform').add(
+    '--env_os', str, 'Env os', 'debian').add(
+    '--service_base_name', str, 'Service base name', '').add(
+    '--edge_instence_size', str, 'Edge instence size', 't2.medium').add(
+    '--subnet_id', str, 'Subnet id', '').add(
+    '--region', str, 'Region', '').add(
+    '--tag_resource_id', str, 'Tag resource id', 'user:tag').add(
+    '--ssn_k8s_sg_id', str, 'Ssn k8s sg id', '').add(
+    '--ssn_instance_size', str, 'Ssn instance size', 't2.large').add(
+    '--vpc2_id', str, 'Vpc2 id', '').add(
+    '--subnet2_id', str, 'Subnet2 id', '').add(
+    '--conf_key_dir', str, 'Conf key dir', '/root/keys/').add(
+    '--vpc_id', str, 'Vpc id', '').add(
+    '--peering_id', str, 'Peering id', '').add(
+    '--azure_resource_group_name', str, 'Azure resource group name', '').add(
+    '--azure_ssn_storage_account_tag', str, 'Azure ssn storage account tag',
+    '').add(
+    '--azure_shared_storage_account_tag', str,
+    'Azure shared storage account tag', '').add(
+    '--azure_datalake_tag', str, 'Azure datalake tag', '').add(
+    '--azure_client_id', str, 'Azure client id', '').add(
+    '--gcp_project_id', str, 'Gcp project id', '').add(
+    '--ldap_host', str, 'Ldap host', '').add(
+    '--ldap_dn', str, 'Ldap dn', '').add(
+    '--ldap_users_group', str, 'Ldap users group', '').add(
+    '--ldap_user', str, 'Ldap user', '').add(
+    '--ldap_bind_creds', str, 'Ldap bind creds', '').add(
+    '--ssn_k8s_nlb_dns_name', str, 'Ssn k8s nlb dns name', '').add(
+    '--ssn_k8s_alb_dns_name', str, 'Ssn k8s alb dns name', '').build()

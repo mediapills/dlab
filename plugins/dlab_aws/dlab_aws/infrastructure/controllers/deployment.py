@@ -22,7 +22,8 @@ import os
 
 from dlab_core.args_parser import CLIArgsParser
 from dlab_deployment.domain.usecases import SSNProvisionUseCase, \
-    SSNConfigurationUseCase, SSNDestroyUseCase
+    SSNConfigurationUseCase, SSNDestroyUseCase, EndpointProvisionUseCase, \
+    EndpointConfigurationUseCase
 from dlab_deployment.infrastructure.command_executor import (
     LocalCommandExecutor, ParamikoCommandExecutor)
 from dlab_deployment.infrastructure.controllers import (
@@ -39,7 +40,7 @@ SSN_TF_KEYS = [
     'tag_resource_id', 'additional_tag', 'env_os'
 ]
 
-HELM_CHARTS_CHARTS_ARGS = [
+HELM_CHARTS_TF_ARGS = [
     'env_os', 'region', 'service_base_name', 'ssn_k8s_workers_count',
     'ssn_k8s_masters_shape', 'zone', 'ssn_keystore_password',
     'endpoint_keystore_password', 'ssn_bucket_name', 'endpoint_eip_address',
@@ -51,16 +52,26 @@ HELM_CHARTS_CHARTS_ARGS = [
     'billing_resource_id', 'billing_tags', 'billing_tag'
 ]
 
+ENDPOINT_TF_ARGS = [
+    'secret_access_key', 'access_key_id', 'service_base_name', 'vpc_id',
+    'vpc_cidr', 'ssn_subnet', 'subnet_cidr', 'ami', 'key_name', 'endpoint_id',
+    'region', 'zone', 'network_type', 'endpoint_instance_shape',
+    'endpoint_volume_size',
+    'endpoint_eip_allocation_id', 'product', 'additional_tag',
+    'tag_resource_id'
+]
+
 STATE_TF_OPTION = 'state'
 NO_COLOR_TF_OPTION = 'no_color'
 
-SSN_TERRAFORM_PATH = os.path.abspath(os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '../../terraform/ssn'))
-HELM_CHARTS_TERRAFORM_PATH = os.path.abspath(os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '../../terraform/helm_charts'))
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+SSN_TERRAFORM_PATH = os.path.abspath(
+    os.path.join(BASE_PATH, '../../terraform/ssn'))
+HELM_CHARTS_TERRAFORM_PATH = os.path.abspath(
+    os.path.join(BASE_PATH, '../../terraform/helm_charts'))
 HELM_CHARTS_REMOTE_TERRAFORM_PATH = 'helm_charts'
-ENDPOINT_TERRAFORM_PATH = os.path.abspath(os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '../../terraform/endpoint'))
+ENDPOINT_TERRAFORM_PATH = os.path.abspath(
+    os.path.join(BASE_PATH, '../../terraform/endpoint'))
 
 
 class AWSController(BaseDeploymentCLIController):
@@ -85,15 +96,18 @@ class AWSController(BaseDeploymentCLIController):
         master_ip = output.get('ssn_k8s_masters_ip_addresses', [None])[0]
         user_name = args.get('os_user')
         key = args.get('pkey')
+        args['master_ip'] = master_ip
         args.update(output)
         paramiko_executor = ParamikoCommandExecutor(master_ip, user_name, key)
         remote_terraform_provider = cls.init_terraform_provider(
             paramiko_executor, HELM_CHARTS_REMOTE_TERRAFORM_PATH, args,
-            HELM_CHARTS_CHARTS_ARGS)
+            HELM_CHARTS_TF_ARGS)
         ssn_configuration_use_case = SSNConfigurationUseCase(
             remote_terraform_provider, paramiko_executor,
             HELM_CHARTS_TERRAFORM_PATH, HELM_CHARTS_REMOTE_TERRAFORM_PATH)
         ssn_configuration_use_case.execute()
+        return dict(remote_terraform_provider.output(),
+                    **local_terraform_provider.output())
 
     @classmethod
     def destroy_ssn(cls, args):
@@ -103,8 +117,20 @@ class AWSController(BaseDeploymentCLIController):
         ssn_destroy_use_case.execute()
 
     @classmethod
-    def deploy_endpoint(cls):
-        raise NotImplementedError
+    def deploy_endpoint(cls, args):
+        ssn_output = AWSController.deploy_ssn(args)
+        args.update(ssn_output)
+        if 'ssn_vpc_id' in args:
+            args['vpc_id'] = args['ssn_vpc_id']
+        terraform_provider = cls.init_terraform_provider(
+            LocalCommandExecutor(), ENDPOINT_TERRAFORM_PATH,
+            args, ENDPOINT_TF_ARGS)
+        endpoint_provision_use_case = EndpointProvisionUseCase(
+            terraform_provider)
+        endpoint_provision_use_case.execute()
+        endpoint_configuration_use_case = EndpointConfigurationUseCase(
+            LocalCommandExecutor(), args)
+        endpoint_configuration_use_case.execute()
 
     @classmethod
     def destroy_endpoint(cls):
@@ -124,8 +150,9 @@ class AWSCLIController(AWSController):
         super(AWSCLIController, cls).destroy_ssn(args)
 
     @classmethod
-    def deploy_endpoint(cls):
-        raise NotImplementedError
+    def deploy_endpoint(cls, available_args):
+        args = CLIArgsParser(available_args).parse_args()
+        super(AWSCLIController, cls).deploy_endpoint(args)
 
     @classmethod
     def destroy_endpoint(cls):
