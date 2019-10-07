@@ -21,65 +21,72 @@
 import requests
 import urllib3
 
-from dlab_core.domain.logger import INFO, ERROR
-from dlab_core.infrastructure.logger import StreamLogBuilder
+from dlab_core.domain.exceptions import DLabException
 
-from jose import jwt, JOSEError
+from jose import jwt
+
+
+URL_INTROSPECT = '{realm_address}/protocol/openid-connect/token/introspect'
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-class KeyCloakError(Exception):
-    pass
+class KeyCloakError(DLabException):
+    def __str__(self):
+        return self.message.format(*self.args)
 
 
-class ConnectionError(KeyCloakError):
-    pass
+class InvalidParameterFormatError(KeyCloakError):
+    message = 'Parameter {0} is not of {1} type: {2}'
 
 
 class KeyCloak(object):
-    """Client for KeyCloak interaction """
+    """Client for KeyCloak interaction
 
-    def __init__(self, keycloak_server, realm_name, client_id, client_secret):
-        self._realm_address = keycloak_server + 'realms/' + realm_name
+    :type keycloak_host: str
+    :param keycloak_host: IP or hostname for KeyCloak server to use
+
+    :type realm_name: str
+    :param realm_name: name of the KeyCloak Realm to use
+
+    :type client_id: str
+    :param client_id: KeyCloak Client to use for token introspection
+
+    :type client_secret: str
+    :param client_secret: KeyCloak Client secret string
+    """
+    def __init__(self, keycloak_host, realm_name, client_id, client_secret):
+        check = ['keycloak_host', 'realm_name', 'client_id', 'client_secret']
+        for arg_name in check:
+            arg_value = locals()[arg_name]
+            if not isinstance(arg_value, str):
+                raise InvalidParameterFormatError(
+                    arg_name, 'str', type(arg_value).__name__
+                )
+        self._realm_address = '{}realms/{}'.format(keycloak_host, realm_name)
         self._client_id = client_id
         self._client_secret = client_secret
-        self.logger = StreamLogBuilder('keycloak', INFO).logging
         self._pub_key = self.get_key()
 
     def make_request_to_server(self, method='GET', endpoint='', **kwargs):
-        """Performs request to KeyCloak server and checks response
+        """Performs request to endpoint
 
         :type method: str
         :param method: method for the HTTP request
         :type endpoint: str
-        :param endpoint: KeyCloak server endpoint to make request to
+        :param endpoint: endpoint to make request to
 
         :rtype: requests.Response
         :return: HTTP response object
         """
-        endpoint = self._realm_address + endpoint
-        kwargs['verify'] = True
-        response = requests.request(method, endpoint, **kwargs)
-        self.check_response(response)
-        return response
-
-    def check_response(self, response):
-        """Checks response status code
-
-        :type response: requests.Response
-        :param response: :class:`Response <Response>` object
-
-        :rtype: requests.Response
-        :return: :class:`Response <Response>` object
-
-        :raises InvalidResponseError: if response status code is not 200
-        """
-        if response.status_code > 200:
-            raise ConnectionError('Server responded with {} - {}'.format(
-                response.status_code, response.content.decode('utf8')
-            ))
+        kwargs['verify'] = kwargs.get('verify') or False
+        try:
+            response = requests.request(method, endpoint, **kwargs)
+            response.raise_for_status()
+            return response
+        except requests.exceptions.RequestException:
+            return
 
     def get_key(self):
         """Retrieves public key from KeyCloak realm
@@ -87,8 +94,13 @@ class KeyCloak(object):
         :rtype: str
         :return: public key for token decoding
         """
-        response = self.make_request_to_server()
-        return response.json()['public_key']
+        response = self.make_request_to_server(endpoint=self._realm_address)
+        if response:
+            # PyJWT expects key to be in PEM format (including header/footer)
+            return (
+                '-----BEGIN PUBLIC KEY-----\n{}'
+                '\n-----END PUBLIC KEY-----'
+            ).format(response.json().get('public_key'))
 
     def validate_token(self, access_token):
         """Validates signature of given token and introspects it
@@ -99,6 +111,7 @@ class KeyCloak(object):
         :rtype: bool
         :return: True if token is valid and active, False otherwise
         """
+        self._pub_key = self._pub_key or self.get_key()
         sig_valid = self.validate_signature(access_token)
         is_active = self.introspect_token(access_token)
         return sig_valid and is_active
@@ -115,8 +128,7 @@ class KeyCloak(object):
         try:
             jwt.decode(access_token, key=self._pub_key)
             return True
-        except JOSEError as e:
-            self.logger.log(ERROR, str(e))
+        except Exception:
             return False
 
     def introspect_token(self, access_token):
@@ -128,10 +140,11 @@ class KeyCloak(object):
         :rtype: bool
         :return: True if token is active, False otherwise
         """
+        endpoint = URL_INTROSPECT.format(realm_address=self._realm_address)
         response = self.make_request_to_server(
             method='POST',
-            endpoint='/protocol/openid-connect/token/introspect',
+            endpoint=endpoint,
             data={'token': access_token},
             auth=(self._client_id, self._client_secret)
         )
-        return response.json().get('active')
+        return response.json().get('active') if response else False

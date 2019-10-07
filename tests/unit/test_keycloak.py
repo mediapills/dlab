@@ -20,9 +20,13 @@
 # ******************************************************************************
 import unittest
 
+from dlab_core.infrastructure.services import (
+    KeyCloak, InvalidParameterFormatError
+)
+
 from mock import patch
 
-from dlab_core.infrastructure.services import KeyCloak, ConnectionError
+from requests.exceptions import RequestException
 
 MOCK_PUBLIC_KEY = 'secret'
 MOCK_VALID_TOKEN = (
@@ -35,15 +39,16 @@ MOCK_INVALID_TOKEN = (
 
 
 class MockResponse:
-    def __init__(self, json_data=None, status_code=200):
-        self.json_data = json_data
-        if not json_data:
-            self.json_data = {
-                'public_key': MOCK_PUBLIC_KEY,
-                'active': True
-            }
-        self.status_code = status_code
-        self.content = 'Unauthorized'.encode('utf8')
+    def __init__(self, active=True, ok=True):
+        self.json_data = {
+            'public_key': MOCK_PUBLIC_KEY,
+            'active': active
+        }
+        self.ok = ok
+
+    def raise_for_status(self):
+        if not self.ok:
+            raise RequestException('Bad request')
 
     def json(self):
         return self.json_data
@@ -55,7 +60,7 @@ class TestKeyCloak(unittest.TestCase):
         super(TestKeyCloak, self).__init__(*args, **kwargs)
         with patch('requests.request', return_value=MockResponse()):
             self.keycloak = KeyCloak(
-                keycloak_server='https://test-ip.com/auth/',
+                keycloak_host='https://test-ip.com/auth/',
                 realm_name='test_realm',
                 client_id='client',
                 client_secret='secret'
@@ -70,11 +75,26 @@ class TestKeyCloak(unittest.TestCase):
     def test_invalid_token_signature(self, *args):
         self.assertFalse(self.keycloak.validate_token(MOCK_INVALID_TOKEN))
 
-    @patch('requests.request', return_value=MockResponse({'active': False}))
+    @patch('requests.request', return_value=MockResponse(active=False))
     def test_inactive_token(self, *args):
         self.assertFalse(self.keycloak.validate_token(MOCK_VALID_TOKEN))
 
-    @patch('requests.request', return_value=MockResponse({}, 405))
+    @patch('requests.request', return_value=MockResponse(ok=False))
     def test_bad_server_request(self, *args):
-        with self.assertRaises(ConnectionError):
-            self.keycloak.validate_token(MOCK_VALID_TOKEN)
+        self.assertFalse(self.keycloak.validate_token(MOCK_VALID_TOKEN))
+
+
+class TestKeyCloakInvalidArgFormat(unittest.TestCase):
+
+    def test_bad_argument_format(self):
+        with self.assertRaises(InvalidParameterFormatError) as context:
+            self.keycloak = KeyCloak(
+                keycloak_host='https://test-ip.com/auth/',
+                realm_name='test_realm',
+                client_id='client',
+                client_secret=5
+            )
+        self.assertEqual(
+            str(context.exception),
+            'Parameter client_secret is not of str type: int'
+        )
