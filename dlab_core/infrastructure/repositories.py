@@ -590,9 +590,8 @@ class SQLiteRepository(BaseFileRepository):
         return ', '.join(params_list)
 
 
-class FIFOSQLiteQueueRepository(BaseFileRepository):
+class FIFOSQLiteQueueRepository(object):
     def __init__(self, absolute_path):
-        super(FIFOSQLiteQueueRepository, self).__init__(absolute_path)
         self.queue = persistqueue.FIFOSQLiteQueue(absolute_path,
                                                   multithreading=True,
                                                   auto_commit=False)

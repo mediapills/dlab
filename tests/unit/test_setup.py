@@ -109,6 +109,7 @@ class TestSetupParametersBuilder(unittest.TestCase):
             requires = self.builder.parameters['install_requires']
 
             self.assertGreater(len(requires), 0)
+            self.assertNotIn('uwsgi', requires)
 
     @mock_isfile()
     @patch(FN_OPEN, mock_open(read_data='__version__ = "0.0.1"'))

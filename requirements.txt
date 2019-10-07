@@ -4,4 +4,4 @@ flask
 jsonschema
 flask_restful
 persist-queue
-uwsgi
+uwsgi; platform_system != "Windows"
