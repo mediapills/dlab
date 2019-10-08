@@ -21,7 +21,7 @@
 import unittest
 
 from dlab_core.infrastructure.services import (
-    KeyCloak, InvalidParameterFormatError
+    KeyCloak, InvalidParameterFormatError, KeyCloakConnectionError
 )
 
 from mock import patch
@@ -81,7 +81,8 @@ class TestKeyCloak(unittest.TestCase):
 
     @patch('requests.request', return_value=MockResponse(ok=False))
     def test_bad_server_request(self, *args):
-        self.assertFalse(self.keycloak.validate_token(MOCK_VALID_TOKEN))
+        with self.assertRaises(KeyCloakConnectionError):
+            self.keycloak.validate_token(MOCK_VALID_TOKEN)
 
 
 class TestKeyCloakInvalidArgFormat(unittest.TestCase):
