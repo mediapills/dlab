@@ -33,12 +33,18 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class KeyCloakError(DLabException):
-    def __str__(self):
-        return self.message.format(*self.args)
+    pass
 
 
 class InvalidParameterFormatError(KeyCloakError):
     message = 'Parameter {0} is not of {1} type: {2}'
+
+    def __str__(self):
+        return self.message.format(*self.args)
+
+
+class KeyCloakConnectionError(KeyCloakError):
+    pass
 
 
 class KeyCloak(object):
@@ -64,7 +70,9 @@ class KeyCloak(object):
                 raise InvalidParameterFormatError(
                     arg_name, 'str', type(arg_value).__name__
                 )
-        self._realm_address = '{}realms/{}'.format(keycloak_host, realm_name)
+        self._realm_address = '{}/realms/{}'.format(
+            keycloak_host.rstrip('/'), realm_name
+        )
         self._client_id = client_id
         self._client_secret = client_secret
         self._pub_key = self.get_key()
@@ -85,8 +93,8 @@ class KeyCloak(object):
             response = requests.request(method, endpoint, **kwargs)
             response.raise_for_status()
             return response
-        except requests.exceptions.RequestException:
-            return
+        except requests.exceptions.RequestException as e:
+            raise KeyCloakConnectionError(str(e))
 
     def get_key(self):
         """Retrieves public key from KeyCloak realm
