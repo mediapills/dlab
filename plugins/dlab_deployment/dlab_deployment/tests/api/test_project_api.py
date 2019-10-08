@@ -35,7 +35,7 @@ class TestCreateProjectAPI(BaseTestAPI):
             }
         )
 
-        self.assertEqual(resp.json['code'], 1)
+        self.assertGreaterEqual(resp.json['code'], 1)
 
     def test_create_invalid_valid_data(self):
         resp = self.client.post(
