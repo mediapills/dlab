@@ -18,6 +18,34 @@
 # under the License.
 #
 # ******************************************************************************
+import unittest
 
-__version_info__ = (0, 0, 1)
-__version__ = ".".join(map(str, __version_info__))
+from api.app import app
+from dlab_core.infrastructure.schema_validator import validate_schema
+
+
+class BaseTestAPI(unittest.TestCase):
+    def setUp(self):
+        self.client = app.test_client()
+
+
+class TestAPI(BaseTestAPI):
+
+    def test_health_check(self):
+        resp = self.client.get('/')
+        self.assertEqual(resp.data.decode(), 'It works')
+
+
+class TestSchemaValidator(unittest.TestCase):
+    SCHEMA = {"type": "object",
+              "properties": {
+                  "value": {"type": "number"}
+              }}
+
+    def test_invalid_data(self):
+        is_valid = validate_schema({'value': 'test'}, self.SCHEMA)
+        self.assertEqual(is_valid, 0)
+
+    def test_valid_data(self):
+        is_valid = validate_schema({'value': 1}, self.SCHEMA)
+        self.assertEqual(is_valid, 1)

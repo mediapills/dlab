@@ -18,6 +18,7 @@
 # under the License.
 #
 # *****************************************************************************
+import sys
 from time import sleep
 import unittest
 
@@ -27,6 +28,7 @@ from dlab_core.domain.helper import break_after
 
 class TestHelper(unittest.TestCase):
 
+    @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
     def test_break_after_decorator(self):
         @break_after(3)
         def test_fail():

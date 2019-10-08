@@ -32,6 +32,7 @@ from dlab_core.routing import CLIRoute
 
 """cli entry_points group name for plugins in setup.py"""
 CLI_ENTRY_POINTS_GROUP_NAME = 'dlab.plugin.cli'
+API_ENTRY_POINTS_GROUP_NAME = 'dlab.plugin.api'
 
 
 class PluginLoadException(DLabException):
@@ -63,10 +64,8 @@ class BasePlugin(object):
     @classmethod
     def load_entry_point(cls, ep):
         """ Load EntryPoint
-
         :type ep: EntryPoint
         :param ep: Setup EntryPoint.
-
         :raises PluginLoadException:
         """
         plugin = ep.load()
@@ -106,7 +105,21 @@ class BaseCLIPlugin(BasePlugin):
 
 @six.add_metaclass(abc.ABCMeta)
 class BaseAPIPlugin(BasePlugin):
-    pass
+    ep_group = API_ENTRY_POINTS_GROUP_NAME
+
+    @staticmethod
+    def add_routes(app):
+        pass
+
+
+class APIPlugin(BaseAPIPlugin):
+
+    @classmethod
+    def routes(cls, app):
+        if cls.ep_group:
+            for plugin in cls.load_plugins(cls.ep_group):
+                plugin.add_routes(app)
+        return app
 
 
 class CLIPlugin(BaseCLIPlugin):
