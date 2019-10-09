@@ -23,7 +23,8 @@ import os
 from dlab_core.args_parser import CLIArgsParser
 from dlab_deployment.domain.usecases import SSNProvisionUseCase, \
     SSNConfigurationUseCase, SSNDestroyUseCase, EndpointProvisionUseCase, \
-    EndpointConfigurationUseCase
+    EndpointConfigurationUseCase, ProjectProvisionUseCase, \
+    ProjectDestroyUseCase, EndpointDestroyUseCase
 from dlab_deployment.infrastructure.command_executor import (
     LocalCommandExecutor, ParamikoCommandExecutor)
 from dlab_deployment.infrastructure.controllers import (
@@ -61,6 +62,13 @@ ENDPOINT_TF_ARGS = [
     'tag_resource_id'
 ]
 
+PROJECT_TF_ARGS = [
+    'access_key_id', 'secret_access_key', 'service_base_name', 'project_name',
+    'project_tag', 'endpoint_tag', 'user_tag', 'custom_tag', 'region', 'zone',
+    'vpc_id', 'subnet_id', 'nb_cidr', 'edge_cidr', 'ami', 'instance_type',
+    'key_name', 'edge_volume_size', 'additional_tag', 'tag_resource_id'
+]
+
 STATE_TF_OPTION = 'state'
 NO_COLOR_TF_OPTION = 'no_color'
 
@@ -72,6 +80,8 @@ HELM_CHARTS_TERRAFORM_PATH = os.path.abspath(
 HELM_CHARTS_REMOTE_TERRAFORM_PATH = 'helm_charts'
 ENDPOINT_TERRAFORM_PATH = os.path.abspath(
     os.path.join(BASE_PATH, '../../terraform/endpoint'))
+PROJECT_TERRAFORM_PATH = os.path.abspath(
+    os.path.join(BASE_PATH, '../../terraform/project'))
 
 
 class AWSController(BaseDeploymentCLIController):
@@ -133,8 +143,35 @@ class AWSController(BaseDeploymentCLIController):
         endpoint_configuration_use_case.execute()
 
     @classmethod
-    def destroy_endpoint(cls):
-        raise NotImplementedError
+    def destroy_endpoint(cls, args):
+        ssn_terraform_provider = cls.init_terraform_provider(
+            LocalCommandExecutor(), SSN_TERRAFORM_PATH, args, SSN_TF_KEYS)
+        ssn_output = ssn_terraform_provider.output()
+        args.update(ssn_output)
+        endpoint_terraform_provider = cls.init_terraform_provider(
+            LocalCommandExecutor(), PROJECT_TERRAFORM_PATH,
+            args, PROJECT_TF_ARGS)
+        endpoint_destroy_use_case = EndpointDestroyUseCase(
+            endpoint_terraform_provider)
+        endpoint_destroy_use_case.execute()
+
+    @classmethod
+    def deploy_project(cls, args):
+        terraform_provider = cls.init_terraform_provider(
+            LocalCommandExecutor(), PROJECT_TERRAFORM_PATH,
+            args, PROJECT_TF_ARGS)
+        project_provision_use_case = ProjectProvisionUseCase(
+            terraform_provider)
+        project_provision_use_case.execute()
+
+    @classmethod
+    def destroy_project(cls, args):
+        terraform_provider = cls.init_terraform_provider(
+            LocalCommandExecutor(), PROJECT_TERRAFORM_PATH,
+            args, PROJECT_TF_ARGS)
+        project_destroy_use_case = ProjectDestroyUseCase(
+            terraform_provider)
+        project_destroy_use_case.execute()
 
 
 class AWSCLIController(AWSController):
@@ -157,3 +194,13 @@ class AWSCLIController(AWSController):
     @classmethod
     def destroy_endpoint(cls):
         raise NotImplementedError
+
+    @classmethod
+    def deploy_project(cls, available_args):
+        args = CLIArgsParser(available_args).parse_args()
+        super(AWSCLIController, cls).deploy_project(args)
+
+    @classmethod
+    def destroy_project(cls, available_args):
+        args = CLIArgsParser(available_args).parse_args()
+        super(AWSCLIController, cls).destroy_project(args)

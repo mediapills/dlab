@@ -930,3 +930,11 @@ class EndpointConfigurationUseCase(ConfigurationUseCase):
 
 class EndpointDestroyUseCase(DestroyUseCase):
     pass
+
+
+class ProjectProvisionUseCase(ProvisionUseCase):
+    pass
+
+
+class ProjectDestroyUseCase(DestroyUseCase):
+    pass

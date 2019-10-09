@@ -25,24 +25,32 @@ from dlab_core.args_parser import ArgumentsBuilder
 
 COMPONENT_SSN = 'ssn'
 COMPONENT_ENDPOINT = 'endpoint'
+COMPONENT_PROJECT = 'project'
 
 ACTION_DEPLOY = 'deploy'
 ACTION_DESTROY = 'destroy'
 
 DEPLOY_ROUTES = [{
     'func': lambda: AWSCLIController.deploy_ssn(SSN_ARGUMENTS),
-    'args': [None, COMPONENT_SSN, ACTION_DEPLOY]
+    'args': [None, COMPONENT_SSN, ACTION_DEPLOY],
 }, {
     'func': lambda: AWSCLIController.destroy_ssn(SSN_ARGUMENTS),
-    'args': [None, COMPONENT_SSN, ACTION_DESTROY]
+    'args': [None, COMPONENT_SSN, ACTION_DESTROY],
 }, {
     'func': lambda: AWSCLIController.deploy_endpoint(
         get_args(SSN_ARGUMENTS, ENDPOINT_ARGUMENTS)),
-    'args': [None, COMPONENT_ENDPOINT, ACTION_DEPLOY]
+    'args': [None, COMPONENT_ENDPOINT, ACTION_DEPLOY],
 }, {
     'func': AWSCLIController.destroy_endpoint,
-    'args': [None, COMPONENT_ENDPOINT, ACTION_DESTROY]
-}]
+    'args': [None, COMPONENT_ENDPOINT, ACTION_DESTROY],
+}, {
+    'func': lambda: AWSCLIController.deploy_project(PROJECT_ARGUMENTS),
+    'args': [None, COMPONENT_PROJECT, ACTION_DEPLOY],
+}, {
+    'func': lambda: AWSCLIController.deploy_destroy(PROJECT_ARGUMENTS),
+    'args': [None, COMPONENT_PROJECT, ACTION_DESTROY],
+},
+]
 
 
 def get_args(args1, args2):
@@ -228,3 +236,25 @@ ENDPOINT_ARGUMENTS = ArgumentsBuilder().add(
     '--ldap_bind_creds', str, 'Ldap bind creds', '').add(
     '--ssn_k8s_nlb_dns_name', str, 'Ssn k8s nlb dns name', '').add(
     '--ssn_k8s_alb_dns_name', str, 'Ssn k8s alb dns name', '').build()
+
+PROJECT_ARGUMENTS = ArgumentsBuilder().add(
+    '--access_key_id', 'Access secret key', required=True).add(
+    '--secret_access_key', 'Secret access key', required=True).add(
+    '--service_base_name', 'Service base name', required=True).add(
+    '--project_name', 'Project name', required=True).add(
+    '--project_tag', 'Project tag', required=True).add(
+    '--endpoint_tag', 'Endpoint tag', required=True).add(
+    '--user_tag', 'User tag', required=True).add(
+    '--custom_tag', 'Custom tag', required=True).add(
+    '--region', 'Region', required=True).add(
+    '--zone', 'Zone', required=True).add(
+    '--vpc_id', 'VPC id', required=True).add(
+    '--subnet_id', 'Subnet id', required=True).add(
+    '--nb_cidr', 'NB cidr', required=True).add(
+    '--edge_cidr', 'EDGE cidr', required=True).add(
+    '--ami', 'AMI', required=True).add(
+    '--instance_type', 'Instance type', required=True).add(
+    '--key_name', 'Key name', required=True).add(
+    '--edge_volume_size', 'Edge_volume size', required=True).add(
+    '--additional_tag', 'Additional tag', 'product:dlab', required=True).add(
+    '--tag_resource_id', 'Tag resource id', 'user:tag', required=True).build()

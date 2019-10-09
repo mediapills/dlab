@@ -38,3 +38,11 @@ class BaseDeploymentCLIController(BaseCLIController):
     @classmethod
     def destroy_endpoint(cls, *args):
         raise NotImplementedError
+
+    @classmethod
+    def deploy_project(cls, *args):
+        raise NotImplementedError
+
+    @classmethod
+    def destroy_project(cls, *args):
+        raise NotImplementedError

@@ -19,42 +19,9 @@
 #
 # ******************************************************************************
 
-# Default values for dlab-ui.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+provider "aws" {
+  access_key = var.access_key_id
+  secret_key = var.secret_access_key
+  region     = var.region
+}
 
-replicaCount: 1
-labels: {}
-
-ui:
-  bucketName: ${ssn_bucket_name}
-  image:
-    repository: epamdlab/ui
-    tag: '0.1-aws'
-    pullPolicy: Always
-  service:
-    type: NodePort
-    #  port: 58443
-    http_port: 58080
-    https_port: 58443
-  ingress:
-    enabled: true
-    host: ${ssn_k8s_alb_dns_name}
-    annotations:
-      kubernetes.io/ingress.class: nginx
-      nginx.ingress.kubernetes.io/ssl-redirect: "false"
-
-    tls: []
-    #  - secretName: chart-example-tls
-    #    hosts:
-    #      - chart-example.local
-  mongo:
-    host: ${mongo_service_name}
-    port: ${mongo_port}
-    username: ${mongo_user}
-    db_name: ${mongo_db_name}
-  provisionService:
-    host: ${provision_service_host}
-  keycloak:
-    auth_server_url: http://${ssn_k8s_alb_dns_name}/auth
-    redirect_uri: http://${ssn_k8s_alb_dns_name}/
