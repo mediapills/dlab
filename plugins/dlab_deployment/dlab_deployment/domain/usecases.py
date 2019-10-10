@@ -408,7 +408,7 @@ class EndpointConfigurationUseCase(ConfigurationUseCase):
             traceback.print_exc()
             sys.exit(1)
 
-    def configure_keystore_endpoint(self, os_user):
+    def configure_keystore_endpoint(self, os_user):  # noqa C901
         try:
             if self.cli_args.get('cloud_provider') == "aws":
                 self.console.sudo('apt-get install -y awscli')

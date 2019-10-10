@@ -50,17 +50,20 @@ class APIManager(BaseManager):
 
 
 class DaemonManager(BaseManager):
-    def __init__(self, location=None):
+    def __init__(self, location=None,
+                 num_worker=num_worker_threads,
+                 infinity_loop=0):
+
         super(DaemonManager, self).__init__(location)
         self.logging.info('Init treads')
-
-        for i in range(num_worker_threads):
-            t = Thread(target=self.run)
-            t.start()
+        self.infinity_loop = infinity_loop
+        for i in range(num_worker):
+            self.t = Thread(target=self.run)
+            self.t.start()
 
     def run(self):
         self.logging.info('Run thread')
-        while True:
+        while self.infinity_loop:
             record_id = self.start_task()
             try:
                 cmd = self.get_execution_command(record_id)

@@ -18,9 +18,13 @@
 # under the License.
 #
 # ******************************************************************************
+import sqlite3
 import unittest
 
+from mock import patch
+
 from api.app import app
+from dlab_core.infrastructure.repositories import STATUSES, DONE
 
 
 class BaseTestAPI(unittest.TestCase):
@@ -29,7 +33,11 @@ class BaseTestAPI(unittest.TestCase):
 
 
 class TestCreateProjectAPI(BaseTestAPI):
-    def test_create_valid_data(self):
+
+    @patch('sqlite3.connect', autospec=True)
+    def test_create_valid_data(self, connect):
+        connect.return_value = sqlite3.connect(':memory:')
+
         resp = self.client.post(
             '/project',
             json={
@@ -51,11 +59,33 @@ class TestCreateProjectAPI(BaseTestAPI):
 
 class TestProjectAPI(BaseTestAPI):
 
-    def test_get_project_status(self):
+    @patch('sqlite3.connect', autospec=True)
+    @patch('api.managers.APIManager.get_record')
+    def test_get_project_status(self, mock_get_record, connect):
+        connect.return_value = sqlite3.connect(':memory:')
+        mock_get_record.return_value = {
+            'request': '{"request":"request"}',
+            'action': 'action',
+            'resource': 'resource',
+            'status': int(STATUSES[DONE])
+        }
+
         resp = self.client.get('/project/1/status')
 
         self.assertDictEqual(resp.json,
                              {'code': 1, 'status': 'DONE'}
+                             )
+
+    @patch('sqlite3.connect', autospec=True)
+    @patch('api.managers.APIManager.get_record')
+    def test_get_project_status_wrong_value(self, mock_get_record, connect):
+        connect.return_value = sqlite3.connect(':memory:')
+        mock_get_record.return_value = {}
+
+        resp = self.client.get('/project/2/status')
+
+        self.assertDictEqual(resp.json,
+                             {'code': 0, 'message': 'Project not found'}
                              )
 
     def test_delete_project(self):

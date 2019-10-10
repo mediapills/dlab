@@ -34,6 +34,9 @@ from dlab_core.infrastructure import repositories
 from dlab_core.infrastructure import repositories as exceptions
 from mock import patch, Mock
 
+from dlab_core.infrastructure.repositories import RepositoryOperationalErrorException, \
+    RepositoryDataTypeException
+
 
 def mock_config_parser(data):
 
@@ -479,6 +482,10 @@ class TestSQLiteRepository(unittest.TestCase):
             request='data', resource='resource',
             action='action', status=0)
 
+    def test_location(self):
+        with self.assertRaises(RepositoryDataTypeException):
+            repositories.SQLiteRepository(1)
+
     def test_init_repo(self):
         self.dbc._init()
         self.dbc._init.assert_called_with()
@@ -491,29 +498,53 @@ class TestSQLiteRepository(unittest.TestCase):
             check_same_thread=False, isolation_level=None
         )
 
-    def test_execute_get(self):
-        self.dbc._execute_get.return_value = 1
-        self.dbc._execute_get()
-        self.dbc._execute_get.assert_called_with()
+    @patch('sqlite3.connect', autospec=True)
+    def test_execute_get(self, mock_sqlite):
+        mock_sqlite.return_value.execute.return_value.fetchall.return_value = ('action', 'resource')
+        dbc = repositories.SQLiteRepository(':memory:')
+        value = dbc._execute_get('select * from dlab')
+        self.assertEqual(('action', 'resource'), value)
 
     def test_execute_set(self):
         self.dbc._execute_set.return_value = 1
         self.dbc._execute_set()
         self.dbc._execute_set.assert_called_with()
 
-    def test_find_one(self):
-        self.dbc.find_one.return_value = {'action': 'action'}
-        self.assertEqual(self.dbc.find_one(b'action'), {'action': 'action'})
+    @patch('sqlite3.connect', autospec=True)
+    def test_execute_get_error(self, mock_sqlite):
+        mock_sqlite.return_value.execute.side_effect = sqlite3.OperationalError('db blocked')
+        dbc = repositories.SQLiteRepository(':memory:')
+        with self.assertRaises(RepositoryOperationalErrorException) as context:
+            dbc._execute_get('se')
+        self.assertTrue('db blocked' in str(context.exception))
 
-    def test_insert(self):
-        self.dbc.insert.return_value = 1
-        self.assertEqual(self.dbc.insert(self.entity), 1)
-        self.dbc.insert.assert_called_with(self.entity)
+    @patch('sqlite3.connect', autospec=True)
+    def test_execute_set_error(self, mock_sqlite):
+        mock_sqlite.return_value.cursor.return_value.execute.side_effect = sqlite3.OperationalError('db blocked')
+        dbc = repositories.SQLiteRepository(':memory:')
+        with self.assertRaises(RepositoryOperationalErrorException) as context:
+            dbc._execute_set('se')
+        self.assertTrue('db blocked' in str(context.exception))
 
-    def test_update(self):
-        self.dbc.update.return_value = 1
-        self.assertEqual(self.dbc.update(self.entity), 1)
-        self.dbc.update.assert_called_with(self.entity)
+    @patch('sqlite3.connect', autospec=True)
+    def test_find_one(self, mock_sqlite):
+        mock_sqlite.return_value.execute.return_value.fetchall.return_value = [{'action': 'action'}]
+        dbc = repositories.SQLiteRepository(':memory:')
+        self.assertEqual(dbc.find_one(b'action'), {'action': 'action'})
+
+    @patch('sqlite3.connect', autospec=True)
+    def test_insert(self, mock_sqlite):
+        mock_sqlite.return_value.cursor.return_value.execute.return_value = 1
+        dbc = repositories.SQLiteRepository(':memory:')
+        self.assertEqual(dbc.insert(self.entity), 1)
+
+    @patch('sqlite3.connect', autospec=True)
+    def test_update(self, mock_sqlite):
+        id = 1
+        mock_sqlite.return_value.execute.return_value = ('action', 'resource')
+        dbc = repositories.SQLiteRepository(':memory:')
+        self.entity.id = id
+        self.assertEqual(dbc.update(self.entity), id)
 
     def test_fields_list(self):
         self.dbc.fields_list.return_value = [
@@ -579,8 +610,8 @@ class TestFIFOSQLiteQueueRepository(unittest.TestCase):
 
     def test_get(self):
         self.dbc.get.return_value = 1
-        self.dbc.get(self.entity)
-        self.dbc.get.assert_called_with(self.entity)
+        self.dbc.get()
+        self.dbc.get.assert_called_with()
 
     def test_delete(self):
         self.dbc.delete.return_value = None

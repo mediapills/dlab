@@ -13,4 +13,4 @@ def health_check():
 
 
 if __name__ == '__main__':
-    app.run(debug=False)  # pragma: nocover
+    app.run(debug=False)  # pragma: no cover
