@@ -52,7 +52,7 @@ class APIManager(BaseManager):
 class DaemonManager(BaseManager):
     def __init__(self, location=None,
                  num_worker=num_worker_threads,
-                 infinity_loop=0):
+                 infinity_loop=True):
 
         super(DaemonManager, self).__init__(location)
         self.logging.info('Init treads')
