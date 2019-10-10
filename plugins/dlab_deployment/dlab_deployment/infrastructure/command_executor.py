@@ -84,12 +84,14 @@ class LocalCommandExecutor(BaseCommandExecutor):
         :return execution result
         """
         lines = []
+        print(command)
         process = subprocess.Popen(
             command, shell=True, universal_newlines=True,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         while process.poll() is None:
             line = process.stdout.readline()
             lines.append(line)
+            print(line)
             # TODO: Add logging
 
         return ' '.join(lines)
