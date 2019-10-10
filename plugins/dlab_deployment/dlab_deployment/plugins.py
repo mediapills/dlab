@@ -21,11 +21,18 @@
 
 import abc
 import six
+from dlab_deployment.infrastructure.views import ProjectAPI, CreateProjectAPI
+from flask import Blueprint
+from flask_restful import Api
 
 from dlab_core.plugins import BaseAPIPlugin, BaseCLIPlugin
 
 """deploy entry_points group name for plugins in setup.py"""
 DEPLOY_ENTRY_POINTS_GROUP_NAME = 'dlab.deployment.plugin.cli'
+
+project_bp = Blueprint('project', __name__, url_prefix='/project')
+
+api = Api(project_bp)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -45,4 +52,14 @@ class DeploymentCLIPlugin(BaseDeploymentCLIPlugin):
 
 
 class DeploymentAPIPlugin(BaseAPIPlugin):
-    pass
+
+    @staticmethod
+    def add_routes(app):
+        api.add_resource(CreateProjectAPI, '')
+        api.add_resource(ProjectAPI,
+                         '/<string:id>/status',
+                         '/<string:name>',
+                         '/<string:name>/<string:action>'
+                         )
+
+        app.register_blueprint(project_bp)

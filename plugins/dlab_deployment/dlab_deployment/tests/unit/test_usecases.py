@@ -18,6 +18,7 @@
 # under the License.
 #
 # *****************************************************************************
+import sys
 import unittest
 
 from mock import MagicMock
@@ -73,6 +74,7 @@ class TestConfigurationUseCase(unittest.TestCase):
         self.use_case.copy_terraform_to_remote.assert_called()
         self.provider.provision.assert_called()
 
+    @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
     def test_check_k8s_status(self):
         self.command_executor.run.return_value = '''
         Kubernetes master is running
@@ -80,6 +82,7 @@ class TestConfigurationUseCase(unittest.TestCase):
         '''
         self.assertEqual(self.use_case.check_k8s_status(), None)
 
+    @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
     def test_check_tiller_status(self):
         self.command_executor.run.return_value = 'Running'
         self.assertEqual(self.use_case.check_tiller_status(), None)

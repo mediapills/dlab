@@ -18,6 +18,7 @@
 # under the License.
 #
 # *****************************************************************************
+import sys
 import unittest
 
 from mock import patch, MagicMock, PropertyMock
@@ -60,28 +61,33 @@ class TestParamikoCommandExecutor(unittest.TestCase):
             'in', output_mock, 'err')
         self.executor = ParamikoCommandExecutor('host', 'name', 'key')
 
+    @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
     @mock_connection
     def test_run(self, mock):
         self.executor.run('ls')
         mock.exec_command.assert_called_with('ls')
 
+    @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
     @mock_connection
     def test_sudo(self, mock):
         self.executor.sudo('ls')
         mock.exec_command.assert_called_with('sudo ls')
 
+    @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
     @mock_connection
     def test_cd_run(self, mock):
         with self.executor.cd('test'):
             self.executor.run('ls')
         mock.exec_command.assert_called_with('cd test; ls')
 
+    @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
     @mock_connection
     def test_cd_sudo(self, mock):
         with self.executor.cd('test'):
             self.executor.sudo('ls')
         mock.exec_command.assert_called_with('cd test; sudo ls')
 
+    @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
     @mock_connection
     def test_connection_init_error(self, mock):
         mock.connect = MagicMock(side_effect=[Exception, None])
@@ -95,6 +101,7 @@ class TestParamikoCommandExecutor(unittest.TestCase):
             pass
         self.assertEqual(current_dir_mock.call_count, 2)
 
+    @unittest.skipIf(sys.platform == 'win32', reason="does not run on windows")
     @patch.object(command_executor, 'SCPClient')
     def test_put(self, scp_client):
         with patch('paramiko.SSHClient'):

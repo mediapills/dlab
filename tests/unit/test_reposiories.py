@@ -21,13 +21,21 @@
 
 import abc
 import argparse
+import os
 import sys
+
+import mock
 import six
 import unittest
+import sqlite3
 
+from api.models import DlabModel, FIFOModel
 from dlab_core.infrastructure import repositories
 from dlab_core.infrastructure import repositories as exceptions
-from mock import patch
+from mock import patch, Mock
+
+from dlab_core.infrastructure.repositories import RepositoryOperationalErrorException, \
+    RepositoryDataTypeException
 
 
 def mock_config_parser(data):
@@ -458,3 +466,154 @@ class TestChainOfRepositories(BaseRepositoryTestCase, unittest.TestCase):
     def test_register_validation(self):
         with self.assertRaises(exceptions.RepositoryDataTypeException):
             self.repo.register('str')
+
+
+class TestSQLiteRepository(unittest.TestCase):
+
+    def setUp(self):
+        self.base_dir = os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__))
+        )
+        self.db_path = os.path.join(self.base_dir, '..', 'database')
+        with patch('dlab_core.infrastructure.repositories.SQLiteRepository'):
+            self.dbc = repositories.SQLiteRepository(self.db_path)
+
+        self.entity = DlabModel(
+            request='data', resource='resource',
+            action='action', status=0)
+
+    def test_location(self):
+        with self.assertRaises(RepositoryDataTypeException):
+            repositories.SQLiteRepository(1)
+
+    def test_init_repo(self):
+        self.dbc._init()
+        self.dbc._init.assert_called_with()
+
+    @patch('sqlite3.connect')
+    def test_connection(self, mock_sqlite3):
+        dbc = repositories.SQLiteRepository(self.db_path)
+        mock_sqlite3.assert_called_with(
+            os.path.join(self.db_path, dbc.get_db()),
+            check_same_thread=False, isolation_level=None
+        )
+
+    @patch('sqlite3.connect', autospec=True)
+    def test_execute_get(self, mock_sqlite):
+        mock_sqlite.return_value.execute.return_value.fetchall.return_value = ('action', 'resource')
+        dbc = repositories.SQLiteRepository(':memory:')
+        value = dbc._execute_get('select * from dlab')
+        self.assertEqual(('action', 'resource'), value)
+
+    def test_execute_set(self):
+        self.dbc._execute_set.return_value = 1
+        self.dbc._execute_set()
+        self.dbc._execute_set.assert_called_with()
+
+    @patch('sqlite3.connect', autospec=True)
+    def test_execute_get_error(self, mock_sqlite):
+        mock_sqlite.return_value.execute.side_effect = sqlite3.OperationalError('db blocked')
+        dbc = repositories.SQLiteRepository(':memory:')
+        with self.assertRaises(RepositoryOperationalErrorException) as context:
+            dbc._execute_get('se')
+        self.assertTrue('db blocked' in str(context.exception))
+
+    @patch('sqlite3.connect', autospec=True)
+    def test_execute_set_error(self, mock_sqlite):
+        mock_sqlite.return_value.cursor.return_value.execute.side_effect = sqlite3.OperationalError('db blocked')
+        dbc = repositories.SQLiteRepository(':memory:')
+        with self.assertRaises(RepositoryOperationalErrorException) as context:
+            dbc._execute_set('se')
+        self.assertTrue('db blocked' in str(context.exception))
+
+    @patch('sqlite3.connect', autospec=True)
+    def test_find_one(self, mock_sqlite):
+        mock_sqlite.return_value.execute.return_value.fetchall.return_value = [{'action': 'action'}]
+        dbc = repositories.SQLiteRepository(':memory:')
+        self.assertEqual(dbc.find_one(b'action'), {'action': 'action'})
+
+    @patch('sqlite3.connect', autospec=True)
+    def test_insert(self, mock_sqlite):
+        mock_sqlite.return_value.cursor.return_value.execute.return_value = 1
+        dbc = repositories.SQLiteRepository(':memory:')
+        self.assertEqual(dbc.insert(self.entity), 1)
+
+    @patch('sqlite3.connect', autospec=True)
+    def test_update(self, mock_sqlite):
+        id = 1
+        mock_sqlite.return_value.execute.return_value = ('action', 'resource')
+        dbc = repositories.SQLiteRepository(':memory:')
+        self.entity.id = id
+        self.assertEqual(dbc.update(self.entity), id)
+
+    def test_fields_list(self):
+        self.dbc.fields_list.return_value = [
+            'request', 'resource', 'action', 'status'
+        ]
+        self.assertEqual(
+            self.dbc.fields_list(self.entity),
+            ['request', 'resource', 'action', 'status']
+        )
+        self.dbc.fields_list.assert_called_with(self.entity)
+
+    def test_fields(self):
+        self.dbc.fields.return_value = 'request,resource,action,status'
+        self.assertEqual(
+            self.dbc.fields(self.entity),
+            'request,resource,action,status'
+        )
+        self.dbc.fields.assert_called_with(self.entity)
+
+    def test_values(self):
+        self.dbc.values.return_value = ['data', 'resource', 'action', 0]
+        self.assertEqual(
+            self.dbc.values(self.entity),
+            ['data', 'resource', 'action', 0]
+        )
+        self.dbc.values.assert_called_with(self.entity)
+
+    def test_question_marks(self):
+        self.dbc.question_marks.return_value = '?,?'
+        self.assertEqual(
+            self.dbc.question_marks(self.entity),
+            '?,?'
+        )
+        self.dbc.question_marks.assert_called_with(self.entity)
+
+    def test_prepare_update_data(self):
+        self.dbc._prepare_update_data.return_value = 'param1, param2'
+        self.assertEqual(
+            self.dbc._prepare_update_data(self.entity),
+            'param1, param2'
+        )
+        self.dbc._prepare_update_data.assert_called_with(self.entity)
+
+
+class TestFIFOSQLiteQueueRepository(unittest.TestCase):
+
+    def setUp(self):
+        self.base_dir = os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__))
+        )
+        self.db_path = os.path.join(self.base_dir, '..', 'database')
+        with patch(
+            'dlab_core.infrastructure.repositories.FIFOSQLiteQueueRepository'
+        ):
+            self.dbc = repositories.FIFOSQLiteQueueRepository(self.db_path)
+
+        self.entity = FIFOModel(id=1)
+
+    def test_insert(self):
+        self.dbc.insert.return_value = None
+        self.dbc.insert(self.entity)
+        self.dbc.insert.assert_called_with(self.entity)
+
+    def test_get(self):
+        self.dbc.get.return_value = 1
+        self.dbc.get()
+        self.dbc.get.assert_called_with()
+
+    def test_delete(self):
+        self.dbc.delete.return_value = None
+        self.dbc.delete(self.entity)
+        self.dbc.delete.assert_called_with(self.entity)
