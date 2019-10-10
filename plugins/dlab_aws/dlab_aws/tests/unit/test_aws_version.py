@@ -17,13 +17,12 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# ******************************************************************************
+# *****************************************************************************
+import unittest
 
-import dlab_core.domain
-import dlab_core.infrastructure
-import dlab_core.clidriver
-import dlab_core.containers
-import dlab_core.dispatchers
-import dlab_core.registry
-import dlab_core.setup
-import dlab_core.args_parser
+from __version__ import __version__
+
+
+class TestVersion(unittest.TestCase):
+    def test_version(self):
+        self.assertEqual(__version__, '0.0.1')
