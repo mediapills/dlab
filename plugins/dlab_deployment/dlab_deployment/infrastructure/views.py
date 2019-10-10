@@ -12,8 +12,8 @@ class CreateProjectAPI(Resource):
 
 class ProjectAPI(Resource):
 
-    def get(self, name, **kwargs):
-        return APIProjectsController.get_project(name)
+    def get(self, id, **kwargs):
+        return APIProjectsController.get_project(id)
 
     def put(self, name, **kwargs):
         return APIProjectsController.update_project(name, **kwargs)

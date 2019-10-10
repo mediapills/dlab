@@ -51,6 +51,13 @@ STATUSES = {
     DONE: '3',
     ERROR: '9'
 }
+STATUSES_BY_NUM = {
+    0: PROCESSED,
+    1: STARTED,
+    2: IN_PROGRESS,
+    3: DONE,
+    9: ERROR
+}
 # TODO remove condition after Python 2.7 retirement
 if six.PY2:
     # noinspection PyUnresolvedReferences
@@ -539,7 +546,6 @@ class SQLiteRepository(BaseDBRepository):
             raise RepositoryOperationalErrorException(str(e))
 
     def find_one(self, key):
-        key = key.decode()
         data = self._execute_get(
             self.ONE_QUERY_TEMPLATE.format(
                 table=self._table_name, key=self.PR_KEY
@@ -602,7 +608,10 @@ class FIFOSQLiteQueueRepository(object):
         self.queue.put(str(entity.id).encode())
 
     def get(self):
-        return self.queue.get()
+        id = self.queue.get()
+        if id and isinstance(id, bytes):
+            id = id.decode()
+        return id
 
     def delete(self):
         self.queue.task_done()

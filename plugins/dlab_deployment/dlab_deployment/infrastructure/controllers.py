@@ -19,9 +19,12 @@
 #
 # ******************************************************************************
 from api.managers import APIManager
-from dlab_core.domain.entities import STATUS_PROCESSED, STATUS_BAD_REQUEST
+from dlab_core.domain.entities import (
+    STATUS_PROCESSED, STATUS_BAD_REQUEST, STATUS_OK, STATUS_NOT_FOUND
+)
 from dlab_core.infrastructure.controllers import (
     BaseCLIController, BaseAPIController)
+from dlab_core.infrastructure.repositories import STATUSES_BY_NUM
 from dlab_core.infrastructure.schema_validator import validate_schema
 from dlab_deployment.infrastructure.schemas import CREATE_PROJECT_SCHEMA
 
@@ -72,8 +75,13 @@ class APIProjectsController(BaseAPIController):
         return {"code": is_valid, "message": "string"}, STATUS_BAD_REQUEST
 
     @classmethod
-    def get_project(cls, name):
-        return {"status": "running", "error_message": "string"}
+    def get_project(cls, id):
+        manager = APIManager()
+        object = manager.get_record(id)
+        if object:
+            object['status'] = STATUSES_BY_NUM[object['status']]
+            return {"code": 1, "status": object['status']}, STATUS_OK
+        return {"code": 0, "message": "Project not found"}, STATUS_NOT_FOUND
 
     @classmethod
     def update_project(cls, name, **kwargs):

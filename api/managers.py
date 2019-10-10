@@ -8,7 +8,7 @@ from api.command_builder import CommandBuilder
 from api.models import DlabModel, FIFOModel
 from dlab_core.infrastructure.repositories import (
     SQLiteRepository, STARTED, DONE, STATUSES,
-    PROCESSED, ERROR, FIFOSQLiteQueueRepository)
+    PROCESSED, ERROR, FIFOSQLiteQueueRepository, STATUSES_BY_NUM)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 num_worker_threads = 2
@@ -44,6 +44,9 @@ class APIManager(BaseManager):
         )
         self.queue.insert(FIFOModel(id=record_id))
         return record_id
+
+    def get_record(self, id):
+        return self.repo.find_one(id)
 
 
 class DaemonManager(BaseManager):

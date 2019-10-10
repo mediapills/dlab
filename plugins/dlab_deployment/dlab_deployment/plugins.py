@@ -57,7 +57,7 @@ class DeploymentAPIPlugin(BaseAPIPlugin):
     def add_routes(app):
         api.add_resource(CreateProjectAPI, '')
         api.add_resource(ProjectAPI,
-                         '/<string:name>/status',
+                         '/<string:id>/status',
                          '/<string:name>',
                          '/<string:name>/<string:action>'
                          )
