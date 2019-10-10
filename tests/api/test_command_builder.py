@@ -58,7 +58,7 @@ class TestCommandBuilder(unittest.TestCase):
         )
 
     def test_params(self):
-        self.assertEqual('', self.cb.params)
+        self.assertEqual('--project_name=project_name', self.cb.params)
 
     def test_build_cmd(self):
         self.assertEqual(

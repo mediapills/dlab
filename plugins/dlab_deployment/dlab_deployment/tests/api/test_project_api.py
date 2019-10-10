@@ -52,11 +52,10 @@ class TestCreateProjectAPI(BaseTestAPI):
 class TestProjectAPI(BaseTestAPI):
 
     def test_get_project_status(self):
-        resp = self.client.get('/project/name/status')
+        resp = self.client.get('/project/1/status')
 
         self.assertDictEqual(resp.json,
-                             {"status": "running",
-                              "error_message": "string"}
+                             {'code': 1, 'status': 'DONE'}
                              )
 
     def test_delete_project(self):

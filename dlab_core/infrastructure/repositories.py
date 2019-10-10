@@ -551,7 +551,7 @@ class SQLiteRepository(BaseDBRepository):
                 table=self._table_name, key=self.PR_KEY
             ), key
         )
-        return dict(data[0])
+        return dict(data[0]) if data else {}
 
     def insert(self, entity):
         query = self.INSERT_QUERY.format(
