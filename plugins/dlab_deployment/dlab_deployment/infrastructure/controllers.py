@@ -18,8 +18,16 @@
 # under the License.
 #
 # ******************************************************************************
+from api.managers import APIManager
+from dlab_core.domain.entities import STATUS_PROCESSED, STATUS_BAD_REQUEST
+from dlab_core.infrastructure.controllers import (
+    BaseCLIController, BaseAPIController)
+from dlab_core.infrastructure.schema_validator import validate_schema
+from dlab_deployment.infrastructure.schemas import CREATE_PROJECT_SCHEMA
 
-from dlab_core.infrastructure.controllers import BaseCLIController
+START = 'start'
+STOP = 'stop'
+DEPLOY = 'deploy'
 
 
 class BaseDeploymentCLIController(BaseCLIController):
@@ -46,3 +54,52 @@ class BaseDeploymentCLIController(BaseCLIController):
     @classmethod
     def destroy_project(cls, *args):
         raise NotImplementedError
+
+
+class APIProjectsController(BaseAPIController):
+    allowed_actions = [START, STOP]
+
+    @classmethod
+    def create_project(cls, request):
+        is_valid = validate_schema(request.json, CREATE_PROJECT_SCHEMA)
+        if is_valid:
+            manager = APIManager()
+            record_id = manager.create_record(
+                request.json, request.blueprint, DEPLOY
+            )
+            return {'code': record_id}, STATUS_PROCESSED
+
+        return {"code": is_valid, "message": "string"}, STATUS_BAD_REQUEST
+
+    @classmethod
+    def get_project(cls, name):
+        return {"status": "running", "error_message": "string"}
+
+    @classmethod
+    def update_project(cls, name, **kwargs):
+        action = kwargs.get('action')
+        if action not in cls.allowed_actions:
+            return {"code": 0, "message": "string"}, STATUS_BAD_REQUEST
+
+        # TODO: handle not found
+        # if not found:
+        #     return {"code": 0, "message": "string"}, 404
+
+        status = cls.do_action(action)
+        return {'status': status}, STATUS_PROCESSED
+
+    @classmethod
+    def delete_project(cls, name):
+        # TODO: handle not found
+        # if not found:
+        #     return {"code": 0, "message": "string"}, 404
+        return {}, STATUS_PROCESSED
+
+    @classmethod
+    def do_action(cls, action):
+        status = 1
+        if action == START:
+            pass
+        if action == STOP:
+            pass
+        return status
