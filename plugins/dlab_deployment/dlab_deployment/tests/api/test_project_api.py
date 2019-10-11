@@ -41,8 +41,12 @@ class TestCreateProjectAPI(BaseTestAPI):
         resp = self.client.post(
             '/project',
             json={
-                "access-key-id": "access-key-id",
-                "secret-access-key": "secret-access-key"
+                "project": {
+                    "useSharedImages": True,
+                },
+                "cloudProperties": {
+                    "os": "string",
+                }
             }
         )
 
@@ -51,7 +55,11 @@ class TestCreateProjectAPI(BaseTestAPI):
     def test_create_invalid_valid_data(self):
         resp = self.client.post(
             '/project',
-            json={"access-key-id": "access-key-id"}
+            json={
+                "project": {
+                    "useSharedImages": True,
+                }
+            }
         )
 
         self.assertEqual(resp.json['code'], 0)

@@ -58,10 +58,10 @@ class DaemonManager(BaseManager):
         self.logging.info('Init treads')
         self.infinity_loop = infinity_loop
         for i in range(num_worker):
-            self.t = Thread(target=self.run)
-            self.t.start()
+            self.t = Thread(target=self.run)  # pragma: no cover
+            self.t.start()  # pragma: no cover
 
-    def run(self):
+    def run(self):  # pragma: no cover
         self.logging.info('Run thread')
         if self.infinity_loop:
             while self.infinity_loop:
@@ -83,11 +83,11 @@ class DaemonManager(BaseManager):
 
             self.logging.info('Post subprocess')
             if 'Traceback' in err.decode():
-                raise DaemonManagerException(err)
+                raise DaemonManagerException(err)   # pragma: no cover
 
             self.finish_task(record_id)
 
-        except DaemonManagerException as e:
+        except DaemonManagerException as e:   # pragma: no cover
             self.process_error(record_id, str(e))
 
     def finish_task(self, record_id):
@@ -115,7 +115,7 @@ class DaemonManager(BaseManager):
         return builder.build_cmd()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     m = DaemonManager()
     try:
         m.run()

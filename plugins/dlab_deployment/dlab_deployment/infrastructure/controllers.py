@@ -24,8 +24,10 @@ from dlab_core.domain.entities import (
 )
 from dlab_core.infrastructure.controllers import (
     BaseCLIController, BaseAPIController)
+from dlab_core.infrastructure.mapping import mapper
 from dlab_core.infrastructure.repositories import STATUSES_BY_NUM
 from dlab_core.infrastructure.schema_validator import validate_schema
+from dlab_deployment.infrastructure.mapper import MAP_CREATE_PROJECT
 from dlab_deployment.infrastructure.schemas import CREATE_PROJECT_SCHEMA
 
 START = 'start'
@@ -67,8 +69,9 @@ class APIProjectsController(BaseAPIController):
         is_valid = validate_schema(request.json, CREATE_PROJECT_SCHEMA)
         if is_valid:
             manager = APIManager()
+            data = mapper(request.json, MAP_CREATE_PROJECT)
             record_id = manager.create_record(
-                request.json, request.blueprint, DEPLOY
+                data, request.blueprint, DEPLOY
             )
             return {'code': record_id}, STATUS_PROCESSED
 
