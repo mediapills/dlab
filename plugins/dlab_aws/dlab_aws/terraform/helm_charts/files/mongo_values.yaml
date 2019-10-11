@@ -17,30 +17,23 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# *****************************************************************************
+# ******************************************************************************
 
-import abc
+replicaSet:
+  enabled: true
 
-import six
+mongodbRootPassword: "${mongo_root_pwd}"
+mongodbUsername: ${mongo_db_username}
+mongodbDatabase: ${mongo_dbname}
+mongodbPassword: "${mongo_db_pwd}"
 
+image:
+  tag: ${mongo_image_tag}
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseIaCServiceProvider(object):
+persistence:
+  enabled: false
 
-    @abc.abstractmethod
-    def provision(self):
-        """Provision infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def destroy(self):
-        """Destroy infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def output(self):
-        """Get provision output"""
-
-        raise NotImplementedError
+service:
+  type: NodePort
+  port: ${mongo_service_port}
+  nodePort: ${mongo_node_port}

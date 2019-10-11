@@ -17,30 +17,11 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# *****************************************************************************
+# ******************************************************************************
 
-import abc
-
-import six
-
-
-@six.add_metaclass(abc.ABCMeta)
-class BaseIaCServiceProvider(object):
-
-    @abc.abstractmethod
-    def provision(self):
-        """Provision infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def destroy(self):
-        """Destroy infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def output(self):
-        """Get provision output"""
-
-        raise NotImplementedError
+mysqlRootPassword: "${mysql_root_password}"
+mysqlUser: ${mysql_user}
+mysqlPassword: "${mysql_user_password}"
+mysqlDatabase: ${mysql_db_name}
+persistence:
+  existingClaim: ${mysql_volume_claim}

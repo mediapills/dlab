@@ -1,3 +1,4 @@
+{{- /*
 # *****************************************************************************
 #
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -17,30 +18,21 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# *****************************************************************************
+# ******************************************************************************
+*/ -}}
 
-import abc
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dlab-billing.fullname" . }}
+  labels:
+{{ include "dlab-billing.labels" . | indent 4 }}
+spec:
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 27017
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: {{ include "dlab-billing.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
 
-import six
-
-
-@six.add_metaclass(abc.ABCMeta)
-class BaseIaCServiceProvider(object):
-
-    @abc.abstractmethod
-    def provision(self):
-        """Provision infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def destroy(self):
-        """Destroy infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def output(self):
-        """Get provision output"""
-
-        raise NotImplementedError

@@ -17,30 +17,48 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# *****************************************************************************
+# ******************************************************************************
 
-import abc
+variable "access_key_id" {}
 
-import six
+variable "secret_access_key" {}
 
+variable "service_base_name" {}
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseIaCServiceProvider(object):
+variable "project_name" {}
 
-    @abc.abstractmethod
-    def provision(self):
-        """Provision infrastructure"""
+variable "project_tag" {}
 
-        raise NotImplementedError
+variable "endpoint_tag" {}
 
-    @abc.abstractmethod
-    def destroy(self):
-        """Destroy infrastructure"""
+variable "user_tag" {}
 
-        raise NotImplementedError
+variable "custom_tag" {}
 
-    @abc.abstractmethod
-    def output(self):
-        """Get provision output"""
+variable "region" {}
 
-        raise NotImplementedError
+variable "zone" {}
+
+variable "vpc_id" {}
+
+variable "subnet_id" {}
+
+variable "nb_cidr" {}
+
+variable "edge_cidr" {}
+
+variable "ami" {}
+
+variable "instance_type" {}
+
+variable "key_name" {}
+
+variable "edge_volume_size" {}
+
+variable "additional_tag" {
+  default = "product:dlab"
+}
+
+variable "tag_resource_id" {
+  default = "user:tag"
+}

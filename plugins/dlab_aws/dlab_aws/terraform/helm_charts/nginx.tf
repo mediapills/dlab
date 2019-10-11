@@ -17,30 +17,14 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# *****************************************************************************
+# ******************************************************************************
 
-import abc
+resource "helm_release" "nginx" {
+    name      = "nginx-ingress"
+    chart     = "stable/nginx-ingress"
+    wait = true
 
-import six
-
-
-@six.add_metaclass(abc.ABCMeta)
-class BaseIaCServiceProvider(object):
-
-    @abc.abstractmethod
-    def provision(self):
-        """Provision infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def destroy(self):
-        """Destroy infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def output(self):
-        """Get provision output"""
-
-        raise NotImplementedError
+    values = [
+        file("files/nginx_values.yaml")
+    ]
+}

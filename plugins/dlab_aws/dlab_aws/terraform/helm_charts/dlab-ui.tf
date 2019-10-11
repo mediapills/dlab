@@ -17,30 +17,28 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# *****************************************************************************
+# ******************************************************************************
 
-import abc
+data "template_file" "dlab_ui_values" {
+  template = file("./dlab-ui-chart/values.yaml")
+  vars = {
+      mongo_db_name          = var.mongo_dbname
+      mongo_user             = var.mongo_db_username
+      mongo_port             = var.mongo_service_port
+      mongo_service_name     = var.mongo_service_name
+      ssn_k8s_alb_dns_name   = var.ssn_k8s_alb_dns_name
+      ssn_bucket_name        = var.ssn_bucket_name
+      provision_service_host = var.endpoint_eip_address
+  }
+}
 
-import six
+resource "helm_release" "dlab_ui" {
+    name       = "dlab-ui"
+    chart      = "./dlab-ui-chart"
+    depends_on = [helm_release.mongodb, kubernetes_secret.mongo_db_password_secret]
+    wait       = true
 
-
-@six.add_metaclass(abc.ABCMeta)
-class BaseIaCServiceProvider(object):
-
-    @abc.abstractmethod
-    def provision(self):
-        """Provision infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def destroy(self):
-        """Destroy infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def output(self):
-        """Get provision output"""
-
-        raise NotImplementedError
+    values     = [
+        data.template_file.dlab_ui_values.rendered
+    ]
+}

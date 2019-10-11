@@ -17,30 +17,34 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# *****************************************************************************
+# ******************************************************************************
 
-import abc
+from setuptools import setup
+from dlab_core.setup import (SetupParametersBuilder,
+                             SetupParametersDirector,
+                             VERSION_FILE)
 
-import six
+""" Distribution name of package"""
+NAME = 'dlab_api'
+
+"""Short summary of the package"""
+DESCRIPTION = 'This a provider to API support.'
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseIaCServiceProvider(object):
+class APISetupParametersBuilder(SetupParametersBuilder):
+    @property
+    def version_file(self):
+        return VERSION_FILE
 
-    @abc.abstractmethod
-    def provision(self):
-        """Provision infrastructure"""
 
-        raise NotImplementedError
+def do_setup():
+    builder = APISetupParametersBuilder(NAME, DESCRIPTION)
+    director = SetupParametersDirector()
+    director.build(builder)
+    args = director.parameters
+    args['scripts'] = ['api/wsgi.py']
+    setup(**args)
 
-    @abc.abstractmethod
-    def destroy(self):
-        """Destroy infrastructure"""
 
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def output(self):
-        """Get provision output"""
-
-        raise NotImplementedError
+if __name__ == "__main__":
+    do_setup()

@@ -17,30 +17,14 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# *****************************************************************************
+# ******************************************************************************
+provider "helm" {
+    install_tiller  = true
+    namespace       = "kube-system"
+    service_account = "tiller"
+    tiller_image    = "gcr.io/kubernetes-helm/tiller:v2.14.1"
+}
 
-import abc
-
-import six
-
-
-@six.add_metaclass(abc.ABCMeta)
-class BaseIaCServiceProvider(object):
-
-    @abc.abstractmethod
-    def provision(self):
-        """Provision infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def destroy(self):
-        """Destroy infrastructure"""
-
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def output(self):
-        """Get provision output"""
-
-        raise NotImplementedError
+output "keycloak_client_secret" {
+    value = random_uuid.keycloak_client_secret.result
+}
