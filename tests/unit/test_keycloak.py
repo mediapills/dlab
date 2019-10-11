@@ -66,10 +66,10 @@ class TestKeyCloak(unittest.TestCase):
                 client_id='client',
                 client_secret='secret'
             )
-            self.keycloak._pub_key = 'secret'
 
     @patch('requests.request', return_value=MockResponse())
     def test_valid_token(self, *args):
+        self.keycloak._pub_key = 'secret'
         self.assertTrue(self.keycloak.validate_token(MOCK_VALID_TOKEN))
 
     @patch('requests.request', return_value=MockResponse())
@@ -92,7 +92,7 @@ class TestKeyCloakInvalidArgFormat(unittest.TestCase):
         with self.assertRaises(DLabException):
             self.keycloak = KeyCloak(
                 keycloak_host='https://test-ip.com/auth/',
-                realm_name='test_realm',
+                realm_name=5,
                 client_id='client',
-                client_secret=5
+                client_secret='secret'
             )
