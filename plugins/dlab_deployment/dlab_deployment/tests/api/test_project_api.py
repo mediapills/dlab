@@ -88,8 +88,14 @@ class TestProjectAPI(BaseTestAPI):
                              {'code': 0, 'message': 'Project not found'}
                              )
 
-    def test_delete_project(self):
-        resp = self.client.delete('/project/name')
+    @patch('sqlite3.connect', autospec=True)
+    @patch('api.managers.APIManager.delete_record', autospec=True)
+    @patch('api.managers.APIManager.get_record', autospec=True)
+    def test_delete_project(self, mock_get_record, mock_delete_record, connect):
+        connect.return_value = sqlite3.connect(':memory:')
+        mock_get_record.return_value = 1
+        mock_delete_record.return_value = 1
+        resp = self.client.delete('/project/1')
 
         self.assertEqual(resp.status, '202 ACCEPTED')
 

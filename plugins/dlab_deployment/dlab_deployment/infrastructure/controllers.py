@@ -31,6 +31,7 @@ from dlab_deployment.infrastructure.schemas import CREATE_PROJECT_SCHEMA
 START = 'start'
 STOP = 'stop'
 DEPLOY = 'deploy'
+DESTROY = 'destroy'
 
 
 class BaseDeploymentCLIController(BaseCLIController):
@@ -97,11 +98,13 @@ class APIProjectsController(BaseAPIController):
         return {'status': status}, STATUS_PROCESSED
 
     @classmethod
-    def delete_project(cls, name):
-        # TODO: handle not found
-        # if not found:
-        #     return {"code": 0, "message": "string"}, 404
-        return {}, STATUS_PROCESSED
+    def delete_project(cls, id):
+        manager = APIManager()
+        object = manager.get_record(id)
+        if not object:
+            return {"code": 0, "message": "Not Found"}, 404
+        id = manager.delete_record(object, DESTROY)
+        return {'id': id}, STATUS_PROCESSED
 
     @classmethod
     def do_action(cls, action):

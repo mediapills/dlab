@@ -58,7 +58,7 @@ class DeploymentAPIPlugin(BaseAPIPlugin):
         api.add_resource(CreateProjectAPI, '')
         api.add_resource(ProjectAPI,
                          '/<string:id>/status',
-                         '/<string:name>',
+                         '/<string:id>',
                          '/<string:name>/<string:action>'
                          )
 

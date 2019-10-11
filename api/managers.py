@@ -48,6 +48,16 @@ class APIManager(BaseManager):
     def get_record(self, id):
         return self.repo.find_one(id)
 
+    def delete_record(self, object, action):
+        self.repo.update(
+            DlabModel(id=object['id'],
+                      status=STATUSES[PROCESSED],
+                      action=action)
+        )
+        self.queue.insert(FIFOModel(id=object['id']))
+
+        return object['id']
+
 
 class DaemonManager(BaseManager):
     def __init__(self, location=None,
