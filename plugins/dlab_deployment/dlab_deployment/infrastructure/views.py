@@ -18,5 +18,5 @@ class ProjectAPI(Resource):
     def put(self, name, **kwargs):
         return APIProjectsController.update_project(name, **kwargs)
 
-    def delete(self, name, **kwargs):
-        return APIProjectsController.delete_project(name)
+    def delete(self, id, **kwargs):
+        return APIProjectsController.delete_project(id)
