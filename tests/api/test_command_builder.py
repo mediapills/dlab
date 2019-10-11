@@ -63,6 +63,6 @@ class TestCommandBuilder(unittest.TestCase):
     def test_build_cmd(self):
         self.assertEqual(
             self.cb.build_cmd(),
-            [self.cb.python, self.cb.dlab,
-             self.cb.resource, self.cb.action, self.cb.params]
+            ' '.join([self.cb.python, self.cb.dlab,
+             self.cb.resource, self.cb.action, self.cb.params])
         )

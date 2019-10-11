@@ -34,4 +34,6 @@ class CommandBuilder(object):
         return os.path.join(self.__executable_path, 'python')
 
     def build_cmd(self):
-        return [self.python, self.dlab, self.resource, self.action, self.params]
+        return ' '.join(
+            [self.python, self.dlab, self.resource, self.action, self.params]
+        )

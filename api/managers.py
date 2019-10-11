@@ -63,22 +63,32 @@ class DaemonManager(BaseManager):
 
     def run(self):
         self.logging.info('Run thread')
-        while self.infinity_loop:
-            record_id = self.start_task()
-            try:
-                cmd = self.get_execution_command(record_id)
-                p = subprocess.Popen(cmd,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE,
-                                     shell=True)
-                out, err = p.communicate()
-                if err:
-                    raise DaemonManagerException(err)
+        if self.infinity_loop:
+            while self.infinity_loop:
+                self.run_func()
+        else:
+            self.run_func()
 
-                self.finish_task(record_id)
+    def run_func(self):
+        record_id = self.start_task()
+        try:
+            cmd = self.get_execution_command(record_id)
+            self.logging.info('Pre subprocess')
 
-            except DaemonManagerException as e:
-                self.process_error(record_id, str(e))
+            p = subprocess.Popen(cmd,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 shell=True)
+            out, err = p.communicate()
+
+            self.logging.info('Post subprocess')
+            if 'Traceback' in err.decode():
+                raise DaemonManagerException(err)
+
+            self.finish_task(record_id)
+
+        except DaemonManagerException as e:
+            self.process_error(record_id, str(e))
 
     def finish_task(self, record_id):
         self.logging.info('Finish task {}'.format(record_id))
