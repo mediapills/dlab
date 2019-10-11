@@ -54,6 +54,12 @@ class TestAPIManager(unittest.TestCase):
         record_id = self.api_manager.create_record('data', 'resource', 'action')
         self.assertGreater(record_id, 0)
 
+    @patch('dlab_core.infrastructure.repositories.SQLiteRepository.find_one')
+    def test_get_record(self, mock_find_one):
+        mock_find_one.return_value = {'action': 'action'}
+        record = self.api_manager.get_record('1')
+        self.assertEqual(record, {'action': 'action'})
+
 
 class TestDaemonManager(unittest.TestCase):
     def setUp(self):
@@ -99,8 +105,8 @@ class TestDaemonManager(unittest.TestCase):
             self.builder.build_cmd()
         )
 
-    # @patch('api.managers.DaemonManager.start_task', return_value='1')
-    # @patch('api.managers.DaemonManager.get_execution_command')
-    # def test_run(self, mock_execution_command, *args):
-    #     mock_execution_command.return_value = self.builder.build_cmd()
-    #     self.daemon_manager.run()
+    @patch('api.managers.DaemonManager.start_task', return_value='1')
+    @patch('api.managers.DaemonManager.get_execution_command')
+    def test_run_func(self, mock_execution_command, *args):
+        mock_execution_command.return_value = self.builder.build_cmd()
+        self.daemon_manager.run_func()

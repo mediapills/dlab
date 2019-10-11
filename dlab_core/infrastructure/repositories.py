@@ -226,7 +226,7 @@ class BaseFileRepository(DictRepository):
 
 class BaseDBRepository(BaseFileRepository):
     def get_db(self):
-        return 'data.db' if six.PY2 else 'data3.db'
+        return 'data.db'
 
     @classmethod
     def _validate(cls, location):

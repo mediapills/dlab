@@ -24,7 +24,6 @@ import argparse
 import os
 import sys
 
-import mock
 import six
 import unittest
 import sqlite3
@@ -32,10 +31,12 @@ import sqlite3
 from api.models import DlabModel, FIFOModel
 from dlab_core.infrastructure import repositories
 from dlab_core.infrastructure import repositories as exceptions
-from mock import patch, Mock
+from mock import patch
 
-from dlab_core.infrastructure.repositories import RepositoryOperationalErrorException, \
+from dlab_core.infrastructure.repositories import (
+    RepositoryOperationalErrorException,
     RepositoryDataTypeException
+)
 
 
 def mock_config_parser(data):
@@ -482,10 +483,6 @@ class TestSQLiteRepository(unittest.TestCase):
             request='data', resource='resource',
             action='action', status=0)
 
-    def test_location(self):
-        with self.assertRaises(RepositoryDataTypeException):
-            repositories.SQLiteRepository(1)
-
     def test_init_repo(self):
         self.dbc._init()
         self.dbc._init.assert_called_with()
@@ -500,7 +497,8 @@ class TestSQLiteRepository(unittest.TestCase):
 
     @patch('sqlite3.connect', autospec=True)
     def test_execute_get(self, mock_sqlite):
-        mock_sqlite.return_value.execute.return_value.fetchall.return_value = ('action', 'resource')
+        mock_sqlite.return_value.execute.\
+            return_value.fetchall.return_value = ('action', 'resource')
         dbc = repositories.SQLiteRepository(':memory:')
         value = dbc._execute_get('select * from dlab')
         self.assertEqual(('action', 'resource'), value)
@@ -512,7 +510,8 @@ class TestSQLiteRepository(unittest.TestCase):
 
     @patch('sqlite3.connect', autospec=True)
     def test_execute_get_error(self, mock_sqlite):
-        mock_sqlite.return_value.execute.side_effect = sqlite3.OperationalError('db blocked')
+        mock_sqlite.return_value.\
+            execute.side_effect = sqlite3.OperationalError('db blocked')
         dbc = repositories.SQLiteRepository(':memory:')
         with self.assertRaises(RepositoryOperationalErrorException) as context:
             dbc._execute_get('se')
@@ -520,7 +519,9 @@ class TestSQLiteRepository(unittest.TestCase):
 
     @patch('sqlite3.connect', autospec=True)
     def test_execute_set_error(self, mock_sqlite):
-        mock_sqlite.return_value.cursor.return_value.execute.side_effect = sqlite3.OperationalError('db blocked')
+        mock_sqlite.return_value.cursor.\
+            return_value.execute.\
+            side_effect = sqlite3.OperationalError('db blocked')
         dbc = repositories.SQLiteRepository(':memory:')
         with self.assertRaises(RepositoryOperationalErrorException) as context:
             dbc._execute_set('se')
@@ -528,7 +529,8 @@ class TestSQLiteRepository(unittest.TestCase):
 
     @patch('sqlite3.connect', autospec=True)
     def test_find_one(self, mock_sqlite):
-        mock_sqlite.return_value.execute.return_value.fetchall.return_value = [{'action': 'action'}]
+        mock_sqlite.return_value.execute.\
+            return_value.fetchall.return_value = [{'action': 'action'}]
         dbc = repositories.SQLiteRepository(':memory:')
         self.assertEqual(dbc.find_one(b'action'), {'action': 'action'})
 
