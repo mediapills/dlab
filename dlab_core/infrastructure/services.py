@@ -22,6 +22,7 @@ import requests
 import urllib3
 
 from dlab_core.domain.exceptions import DLabException
+from dlab_core.domain.helper import validate_property_type
 
 from jose import jwt
 
@@ -32,18 +33,11 @@ URL_INTROSPECT = '{realm_address}/protocol/openid-connect/token/introspect'
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-class KeyCloakError(DLabException):
+class KeyCloakException(DLabException):
     pass
 
 
-class InvalidParameterFormatError(KeyCloakError):
-    message = 'Parameter {0} is not of {1} type: {2}'
-
-    def __str__(self):
-        return self.message.format(*self.args)
-
-
-class KeyCloakConnectionError(KeyCloakError):
+class KeyCloakConnectionException(KeyCloakException):
     pass
 
 
@@ -63,46 +57,81 @@ class KeyCloak(object):
     :param client_secret: KeyCloak Client secret string
     """
     def __init__(self, keycloak_host, realm_name, client_id, client_secret):
-        check = ['keycloak_host', 'realm_name', 'client_id', 'client_secret']
-        for arg_name in check:
-            arg_value = locals()[arg_name]
-            if not isinstance(arg_value, str):
-                raise InvalidParameterFormatError(
-                    arg_name, 'str', type(arg_value).__name__
-                )
-        self._realm_address = '{}/realms/{}'.format(
-            keycloak_host.rstrip('/'), realm_name
-        )
-        self._client_id = client_id
-        self._client_secret = client_secret
-        self._pub_key = self.get_key()
+        if not (isinstance(keycloak_host, str) and isinstance(realm_name, str)):
+            raise DLabException(
+                'Either Keycloak host or Realm name '
+                'has invalid type ({}, {})'.format(keycloak_host, realm_name)
+            )
+        self.realm_address = (keycloak_host, realm_name)
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self._pub_key = None
 
-    def make_request_to_server(self, method='GET', endpoint='', **kwargs):
+    @property
+    def realm_address(self):
+        return self._realm_address
+
+    @realm_address.setter
+    def realm_address(self, value):
+        self._realm_address = '{}/realms/{}'.format(
+            value[0].rstrip('/'), value[1]
+        )
+
+    @property
+    def client_id(self):
+        return self._client_id
+
+    @client_id.setter
+    @validate_property_type(str)
+    def client_id(self, value):
+        self._client_id = value
+
+    @property
+    def client_secret(self):
+        return self._client_secret
+
+    @client_secret.setter
+    @validate_property_type(str)
+    def client_secret(self, value):
+        self._client_secret = value
+
+    @property
+    def public_key(self):
+        if not self._pub_key:
+            self._pub_key = self.retrieve_key()
+
+        return self._pub_key
+
+    def make_request_to_server(self, method='GET', endpoint='', verify=False,
+                               **kwargs):
         """Performs request to endpoint
 
         :type method: str
         :param method: method for the HTTP request
         :type endpoint: str
         :param endpoint: endpoint to make request to
+        :type verify: bool
+        :param verify: whether to verify server's TLS certificate
 
         :rtype: requests.Response
         :return: HTTP response object
         """
-        kwargs['verify'] = kwargs.get('verify') or False
         try:
-            response = requests.request(method, endpoint, **kwargs)
+            response = requests.request(
+                method, endpoint, verify=verify, **kwargs
+            )
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as e:
-            raise KeyCloakConnectionError(str(e))
+            raise KeyCloakConnectionException(str(e))
 
-    def get_key(self):
+    def retrieve_key(self):
         """Retrieves public key from KeyCloak realm
 
         :rtype: str
         :return: public key for token decoding
         """
-        response = self.make_request_to_server(endpoint=self._realm_address)
+        response = self.make_request_to_server(endpoint=self.realm_address)
         if response:
             # PyJWT expects key to be in PEM format (including header/footer)
             return (
@@ -119,7 +148,6 @@ class KeyCloak(object):
         :rtype: bool
         :return: True if token is valid and active, False otherwise
         """
-        self._pub_key = self._pub_key or self.get_key()
         sig_valid = self.validate_signature(access_token)
         is_active = self.introspect_token(access_token)
         return sig_valid and is_active
@@ -134,10 +162,11 @@ class KeyCloak(object):
         :return: True if token is valid, False otherwise
         """
         try:
-            jwt.decode(access_token, key=self._pub_key)
-            return True
+            jwt.decode(access_token, key=self.public_key)
         except Exception:
             return False
+        else:
+            return True
 
     def introspect_token(self, access_token):
         """Introspects given token
@@ -148,11 +177,11 @@ class KeyCloak(object):
         :rtype: bool
         :return: True if token is active, False otherwise
         """
-        endpoint = URL_INTROSPECT.format(realm_address=self._realm_address)
+        endpoint = URL_INTROSPECT.format(realm_address=self.realm_address)
         response = self.make_request_to_server(
             method='POST',
             endpoint=endpoint,
             data={'token': access_token},
-            auth=(self._client_id, self._client_secret)
+            auth=(self.client_id, self.client_secret)
         )
         return response.json().get('active') if response else False

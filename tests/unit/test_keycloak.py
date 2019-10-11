@@ -20,8 +20,9 @@
 # ******************************************************************************
 import unittest
 
+from dlab_core.domain.exceptions import DLabException
 from dlab_core.infrastructure.services import (
-    KeyCloak, InvalidParameterFormatError, KeyCloakConnectionError
+    KeyCloak, KeyCloakConnectionException
 )
 
 from mock import patch
@@ -81,21 +82,17 @@ class TestKeyCloak(unittest.TestCase):
 
     @patch('requests.request', return_value=MockResponse(ok=False))
     def test_bad_server_request(self, *args):
-        with self.assertRaises(KeyCloakConnectionError):
+        with self.assertRaises(KeyCloakConnectionException):
             self.keycloak.validate_token(MOCK_VALID_TOKEN)
 
 
 class TestKeyCloakInvalidArgFormat(unittest.TestCase):
 
     def test_bad_argument_format(self):
-        with self.assertRaises(InvalidParameterFormatError) as context:
+        with self.assertRaises(DLabException):
             self.keycloak = KeyCloak(
                 keycloak_host='https://test-ip.com/auth/',
                 realm_name='test_realm',
                 client_id='client',
                 client_secret=5
             )
-        self.assertEqual(
-            str(context.exception),
-            'Parameter client_secret is not of str type: int'
-        )
