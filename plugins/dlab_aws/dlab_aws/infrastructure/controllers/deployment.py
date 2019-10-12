@@ -138,8 +138,11 @@ class AWSController(BaseDeploymentCLIController):
         endpoint_provision_use_case = EndpointProvisionUseCase(
             terraform_provider)
         endpoint_provision_use_case.execute()
+        key = key = args.get('pkey')
+        ip = args.get('endpoint_eip_address')
+        paramiko_executor = ParamikoCommandExecutor(ip, 'ubuntu', key)
         endpoint_configuration_use_case = EndpointConfigurationUseCase(
-            LocalCommandExecutor(), args)
+            paramiko_executor, args)
         endpoint_configuration_use_case.execute()
 
     @classmethod

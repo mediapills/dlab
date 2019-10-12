@@ -47,7 +47,7 @@ DEPLOY_ROUTES = [{
     'func': lambda: AWSCLIController.deploy_project(PROJECT_ARGUMENTS),
     'args': [None, COMPONENT_PROJECT, ACTION_DEPLOY],
 }, {
-    'func': lambda: AWSCLIController.deploy_destroy(PROJECT_ARGUMENTS),
+    'func': lambda: AWSCLIController.destroy_project(PROJECT_ARGUMENTS),
     'args': [None, COMPONENT_PROJECT, ACTION_DESTROY],
 },
 ]
@@ -206,7 +206,9 @@ ENDPOINT_ARGUMENTS = ArgumentsBuilder().add(
     '--docker_version', str, 'Docker version', '18.06.3~ce~3-0~ubuntu').add(
     '--ssn_bucket_name', str, 'Ssn bucket name', '').add(
     '--endpoint_keystore_password', str, 'Endpoint keystore password', '').add(
+    '--keycloak_client_id', str, 'Keycloak client id', '').add(
     '--keycloak_client_secret', str, 'Keycloak client secret', '').add(
+    '--mongo_password', str, 'Mongo password', '').add(
     '--branch_name', str, 'Branch name', 'DLAB-terraform').add(
     '--env_os', str, 'Env os', 'debian').add(
     '--service_base_name', str, 'Service base name', '').add(

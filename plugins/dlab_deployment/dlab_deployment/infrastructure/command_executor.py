@@ -88,11 +88,13 @@ class LocalCommandExecutor(BaseCommandExecutor):
         process = subprocess.Popen(
             command, shell=True, universal_newlines=True,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        while process.poll() is None:
-            line = process.stdout.readline()
-            lines.append(line)
-            print(line)
-            # TODO: Add logging
+        with open('/tmp/logs/tf.output', 'a') as log:
+            while process.poll() is None:
+                line = process.stdout.readline()
+                lines.append(line)
+                print(line)
+                log.write(line)
+                # TODO: Add logging
 
         return ' '.join(lines)
 
@@ -189,7 +191,7 @@ class ParamikoCommandExecutor(BaseCommandExecutor):
         :rtype: str
         :return execution result
         """
-
+        print(command)
         if self.current_dir:
             command = 'cd {}; {}'.format(self.current_dir, command)
         stdin, stdout, stderr = self.connection.exec_command(command)
