@@ -1,2 +1,2 @@
 flask
-uwsgi
+uwsgi; platform_system != "Windows"
