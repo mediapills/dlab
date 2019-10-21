@@ -41,6 +41,20 @@ class KeyCloakConnectionException(KeyCloakException):
     pass
 
 
+class StringProperty(object):
+    """A descriptor that forbids non-string values """
+
+    def __init__(self, value=None):
+        self.value = value
+
+    def __get__(self, instance, owner):
+        return self.value
+
+    @validate_property_type(str, arg_index=2)
+    def __set__(self, instance, value):
+        self.value = value
+
+
 class KeyCloak(object):
     """Client for KeyCloak interaction
 
@@ -56,44 +70,20 @@ class KeyCloak(object):
     :type client_secret: str
     :param client_secret: KeyCloak Client secret string
     """
+    client_id = StringProperty()
+    client_secret = StringProperty()
+    realm_name = StringProperty()
+    keycloak_host = StringProperty()
+
     def __init__(self, keycloak_host, realm_name, client_id, client_secret):
-        if not (isinstance(keycloak_host, str) and isinstance(realm_name, str)):
-            raise DLabException(
-                'Either Keycloak host or Realm name '
-                'has invalid type ({}, {})'.format(keycloak_host, realm_name)
-            )
-        self.realm_address = (keycloak_host, realm_name)
         self.client_id = client_id
         self.client_secret = client_secret
-        self._pub_key = None
-
-    @property
-    def realm_address(self):
-        return self._realm_address
-
-    @realm_address.setter
-    def realm_address(self, value):
-        self._realm_address = '{}/realms/{}'.format(
-            value[0].rstrip('/'), value[1]
+        self.realm_name = realm_name
+        self.keycloak_host = keycloak_host
+        self.realm_address = '{}/realms/{}'.format(
+            self.keycloak_host.rstrip('/'), self.realm_name
         )
-
-    @property
-    def client_id(self):
-        return self._client_id
-
-    @client_id.setter
-    @validate_property_type(str)
-    def client_id(self, value):
-        self._client_id = value
-
-    @property
-    def client_secret(self):
-        return self._client_secret
-
-    @client_secret.setter
-    @validate_property_type(str)
-    def client_secret(self, value):
-        self._client_secret = value
+        self._pub_key = None
 
     @property
     def public_key(self):
@@ -102,8 +92,7 @@ class KeyCloak(object):
 
         return self._pub_key
 
-    def make_request_to_server(self, method='GET', endpoint='', verify=False,
-                               **kwargs):
+    def make_request_to_server(self, method, endpoint, verify=False, **kwargs):
         """Performs request to endpoint
 
         :type method: str
@@ -131,7 +120,10 @@ class KeyCloak(object):
         :rtype: str
         :return: public key for token decoding
         """
-        response = self.make_request_to_server(endpoint=self.realm_address)
+        response = self.make_request_to_server(
+            method='GET',
+            endpoint=self.realm_address
+        )
         if response:
             # PyJWT expects key to be in PEM format (including header/footer)
             return (
