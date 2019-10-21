@@ -28,10 +28,10 @@ LC_ERR_INVALID_PARAMETER_TYPE = (
 LC_ERR_TIMEOUT_REACHED = 'Timeout {} {}s has been reached'
 
 
-def validate_property_type(exp_type):
+def validate_property_type(exp_type, arg_index=1):
     def validate(fn):
         def wrapper(*args, **kwargs):
-            argument = args[1]
+            argument = args[arg_index]
             if not isinstance(argument, exp_type):
                 raise DLabException(LC_ERR_INVALID_PARAMETER_TYPE.format(
                     argument, type(argument).__name__, exp_type.__name__))
