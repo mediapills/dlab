@@ -138,8 +138,11 @@ class AWSController(BaseDeploymentCLIController):
         endpoint_provision_use_case = EndpointProvisionUseCase(
             terraform_provider)
         endpoint_provision_use_case.execute()
+        key = key = args.get('pkey')
+        ip = args.get('endpoint_eip_address')
+        paramiko_executor = ParamikoCommandExecutor(ip, 'ubuntu', key)
         endpoint_configuration_use_case = EndpointConfigurationUseCase(
-            LocalCommandExecutor(), args)
+            paramiko_executor, args)
         endpoint_configuration_use_case.execute()
 
     @classmethod
@@ -192,8 +195,9 @@ class AWSCLIController(AWSController):
         super(AWSCLIController, cls).deploy_endpoint(args)
 
     @classmethod
-    def destroy_endpoint(cls):
-        raise NotImplementedError
+    def destroy_endpoint(cls, available_args):
+        args = CLIArgsParser(available_args).parse_args()
+        super(AWSCLIController, cls).destroy_endpoint(args)
 
     @classmethod
     def deploy_project(cls, available_args):

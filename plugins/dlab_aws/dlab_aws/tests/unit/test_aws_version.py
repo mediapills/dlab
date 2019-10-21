@@ -20,9 +20,9 @@
 # *****************************************************************************
 import unittest
 
-from __version__ import __version__
+from dlab_aws import __version__
 
 
 class TestVersion(unittest.TestCase):
     def test_version(self):
-        self.assertEqual(__version__, '0.0.1')
+        self.assertEqual(__version__.__version__, '0.0.1')

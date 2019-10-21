@@ -41,13 +41,14 @@ DEPLOY_ROUTES = [{
         get_args(SSN_ARGUMENTS, ENDPOINT_ARGUMENTS)),
     'args': [None, COMPONENT_ENDPOINT, ACTION_DEPLOY],
 }, {
-    'func': AWSCLIController.destroy_endpoint,
+    'func': lambda: AWSCLIController.destroy_endpoint(
+        get_args(SSN_ARGUMENTS, ENDPOINT_ARGUMENTS)),
     'args': [None, COMPONENT_ENDPOINT, ACTION_DESTROY],
 }, {
     'func': lambda: AWSCLIController.deploy_project(PROJECT_ARGUMENTS),
     'args': [None, COMPONENT_PROJECT, ACTION_DEPLOY],
 }, {
-    'func': lambda: AWSCLIController.deploy_destroy(PROJECT_ARGUMENTS),
+    'func': lambda: AWSCLIController.destroy_project(PROJECT_ARGUMENTS),
     'args': [None, COMPONENT_PROJECT, ACTION_DESTROY],
 },
 ]
@@ -206,7 +207,9 @@ ENDPOINT_ARGUMENTS = ArgumentsBuilder().add(
     '--docker_version', str, 'Docker version', '18.06.3~ce~3-0~ubuntu').add(
     '--ssn_bucket_name', str, 'Ssn bucket name', '').add(
     '--endpoint_keystore_password', str, 'Endpoint keystore password', '').add(
+    '--keycloak_client_id', str, 'Keycloak client id', '').add(
     '--keycloak_client_secret', str, 'Keycloak client secret', '').add(
+    '--mongo_password', str, 'Mongo password', '').add(
     '--branch_name', str, 'Branch name', 'DLAB-terraform').add(
     '--env_os', str, 'Env os', 'debian').add(
     '--service_base_name', str, 'Service base name', '').add(
@@ -238,23 +241,23 @@ ENDPOINT_ARGUMENTS = ArgumentsBuilder().add(
     '--ssn_k8s_alb_dns_name', str, 'Ssn k8s alb dns name', '').build()
 
 PROJECT_ARGUMENTS = ArgumentsBuilder().add(
-    '--access_key_id', 'Access secret key', required=True).add(
-    '--secret_access_key', 'Secret access key', required=True).add(
-    '--service_base_name', 'Service base name', required=True).add(
-    '--project_name', 'Project name', required=True).add(
-    '--project_tag', 'Project tag', required=True).add(
-    '--endpoint_tag', 'Endpoint tag', required=True).add(
-    '--user_tag', 'User tag', required=True).add(
-    '--custom_tag', 'Custom tag', required=True).add(
-    '--region', 'Region', required=True).add(
-    '--zone', 'Zone', required=True).add(
-    '--vpc_id', 'VPC id', required=True).add(
-    '--subnet_id', 'Subnet id', required=True).add(
-    '--nb_cidr', 'NB cidr', required=True).add(
-    '--edge_cidr', 'EDGE cidr', required=True).add(
-    '--ami', 'AMI', required=True).add(
-    '--instance_type', 'Instance type', required=True).add(
-    '--key_name', 'Key name', required=True).add(
-    '--edge_volume_size', 'Edge_volume size', required=True).add(
-    '--additional_tag', 'Additional tag', 'product:dlab', required=True).add(
-    '--tag_resource_id', 'Tag resource id', 'user:tag', required=True).build()
+    '--access_key_id', str, 'Access secret key', required=True).add(
+    '--secret_access_key', str, 'Secret access key', required=True).add(
+    '--service_base_name', str, 'Service base name', required=True).add(
+    '--project_name', str, 'Project name', required=True).add(
+    '--project_tag', str, 'Project tag', required=True).add(
+    '--endpoint_tag', str, 'Endpoint tag', required=True).add(
+    '--user_tag', str, 'User tag', required=True).add(
+    '--custom_tag', str, 'Custom tag', required=True).add(
+    '--region', str, 'Region', required=True).add(
+    '--zone', str, 'Zone', required=True).add(
+    '--vpc_id', str, 'VPC id', required=True).add(
+    '--subnet_id', str, 'Subnet id', required=True).add(
+    '--nb_cidr', str, 'NB cidr', required=True).add(
+    '--edge_cidr', str, 'EDGE cidr', required=True).add(
+    '--ami', str, 'AMI', required=True).add(
+    '--instance_type', str, 'Instance type', required=True).add(
+    '--key_name', str, 'Key name', required=True).add(
+    '--edge_volume_size', str, 'Edge_volume size', required=True).add(
+    '--additional_tag', str, 'Additional tag', 'product:dlab').add(
+    '--tag_resource_id', str, 'Tag resource id', 'user:tag').build()
