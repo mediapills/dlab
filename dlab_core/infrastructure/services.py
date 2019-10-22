@@ -122,7 +122,7 @@ class KeyCloak(object):
         """
         response = self.make_request_to_server(
             method='GET',
-            endpoint=self.realm_address
+            endpoint=self.realm_address,
         )
         if response:
             # PyJWT expects key to be in PEM format (including header/footer)
@@ -174,6 +174,6 @@ class KeyCloak(object):
             method='POST',
             endpoint=endpoint,
             data={'token': access_token},
-            auth=(self.client_id, self.client_secret)
+            auth=(self.client_id, self.client_secret),
         )
         return response.json().get('active') if response else False
