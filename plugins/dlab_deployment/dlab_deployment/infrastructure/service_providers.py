@@ -18,6 +18,7 @@
 # under the License.
 #
 # *****************************************************************************
+import json
 
 from dlab_deployment.domain.service_providers import BaseIaCServiceProvider
 from dlab_deployment.infrastructure.terraform import Terraform
@@ -54,4 +55,5 @@ class TerraformServiceProvider(BaseIaCServiceProvider):
         :rtype dict
         """
 
-        return self.terraform.output()
+        return {k: v.get('value') for k, v in
+                json.loads(self.terraform.output()).items()}

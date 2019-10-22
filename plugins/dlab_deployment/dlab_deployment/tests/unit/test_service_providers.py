@@ -50,5 +50,6 @@ class TestTerraformServiceProviders(unittest.TestCase):
         self.provider.terraform.apply.assert_not_called()
 
     def test_output(self):
-        self.provider.output()
-        self.provider.terraform.output.assert_called()
+        with patch('json.loads', return_value={'test': {'value': 'test'}}):
+            self.provider.output()
+            self.provider.terraform.output.assert_called()

@@ -87,10 +87,12 @@ class LocalCommandExecutor(BaseCommandExecutor):
         process = subprocess.Popen(
             command, shell=True, universal_newlines=True,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        while process.poll() is None:
-            line = process.stdout.readline()
-            lines.append(line)
-            # TODO: Add logging
+        with open('/tmp/tf.output', 'a') as log:
+            while process.poll() is None:
+                line = process.stdout.readline()
+                lines.append(line)
+                log.write(line)
+                # TODO: Add logging
 
         return ' '.join(lines)
 
