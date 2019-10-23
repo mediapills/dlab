@@ -32,6 +32,7 @@ LC_ERR_ILLEGAL_SERVICE_PROVIDER = (
 
 def validate_service_provider_type(provider_type):
     """Validate passed to setter service provider type"""
+
     def validate_service_provider(fn):
         def wrapped(*args, **kwargs):
             service_provider = args[1]
@@ -41,7 +42,9 @@ def validate_service_provider_type(provider_type):
                         type(service_provider).__name__, provider_type.__name__
                     ))
             return fn(*args, **kwargs)
+
         return wrapped
+
     return validate_service_provider
 
 
@@ -99,6 +102,15 @@ class SSNProvisionUseCase(ProvisionUseCase):
     pass
 
 
+class ConfigurationUseCase(BaseUseCase):
+    def execute(self):
+        raise NotImplementedError
+
+
+class SSNConfigurationUseCase(ConfigurationUseCase):
+    pass
+
+
 class SSNDestroyUseCase(DestroyUseCase):
     pass
 
@@ -108,4 +120,20 @@ class EndpointProvisionUseCase(ProvisionUseCase):
 
 
 class EndpointDestroyUseCase(DestroyUseCase):
+    pass
+
+
+class EndpointConfigurationUseCase(ConfigurationUseCase):
+    pass
+
+
+class ProjectProvisionUseCase(ProvisionUseCase):
+    pass
+
+
+class ProjectDestroyUseCase(DestroyUseCase):
+    pass
+
+
+class ProjectConfigurationUseCase(ConfigurationUseCase):
     pass
