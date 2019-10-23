@@ -44,6 +44,12 @@ class DeploySetupParametersBuilder(SetupParametersBuilder):
         return dict(super(DeploySetupParametersBuilder, self).entry_points,
                     **deploy_entry_points)
 
+    @property
+    def package_data(self):
+        package_data = {NAME: ['files/*']}
+        return dict(super(DeploySetupParametersBuilder, self).package_data,
+                    **package_data)
+
 
 def do_setup():
     builder = DeploySetupParametersBuilder(NAME, DESCRIPTION)
