@@ -22,7 +22,7 @@ from time import sleep
 import unittest
 
 from dlab_core.domain.exceptions import DLabException
-from dlab_core.domain.helper import break_after
+from dlab_core.domain.helper import break_after, validate_property_type
 
 
 class TestHelper(unittest.TestCase):
@@ -34,3 +34,20 @@ class TestHelper(unittest.TestCase):
 
         with self.assertRaises(DLabException):
             test_fail()
+
+    def test_validate_property_type_index_error(self):
+        @validate_property_type(str, 2)
+        def test_index_error():
+            pass
+
+        with self.assertRaises(DLabException):
+            test_index_error()
+
+    def test_validate_property_type_error(self):
+        @validate_property_type(str)
+        def test_type_error(val):
+            pass
+        values = [1, {}, [], (), None]
+        for v in values:
+            with self.assertRaises(DLabException):
+                test_type_error(v)
