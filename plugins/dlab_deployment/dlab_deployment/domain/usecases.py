@@ -99,6 +99,20 @@ class SSNProvisionUseCase(ProvisionUseCase):
     pass
 
 
+class ConfigurationUseCase(BaseUseCase):
+    def execute(self):
+        raise NotImplementedError
+
+
+class SSNConfigurationUseCase(ConfigurationUseCase):
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def execute(self):
+        pass
+
+
 class SSNDestroyUseCase(DestroyUseCase):
     pass
 
@@ -109,3 +123,29 @@ class EndpointProvisionUseCase(ProvisionUseCase):
 
 class EndpointDestroyUseCase(DestroyUseCase):
     pass
+
+
+class EndpointConfigurationUseCase(ConfigurationUseCase):
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def execute(self):
+        pass
+
+
+class ProjectProvisionUseCase(ProvisionUseCase):
+    pass
+
+
+class ProjectDestroyUseCase(DestroyUseCase):
+    pass
+
+
+class ProjectConfigurationUseCase(ConfigurationUseCase):
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def execute(self):
+        pass

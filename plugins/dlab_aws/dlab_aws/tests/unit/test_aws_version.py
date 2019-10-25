@@ -17,32 +17,12 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# ******************************************************************************
+# *****************************************************************************
+import unittest
 
-from dlab_core.infrastructure.controllers import BaseCLIController
+from dlab_aws import __version__
 
 
-class BaseDeploymentCLIController(BaseCLIController):
-    @classmethod
-    def deploy_ssn(cls):
-        raise NotImplementedError
-
-    @classmethod
-    def destroy_ssn(cls):
-        raise NotImplementedError
-
-    @classmethod
-    def deploy_endpoint(cls):
-        raise NotImplementedError
-
-    @classmethod
-    def destroy_endpoint(cls):
-        raise NotImplementedError
-
-    @classmethod
-    def deploy_project(cls):
-        raise NotImplementedError
-
-    @classmethod
-    def destroy_project(cls):
-        raise NotImplementedError
+class TestVersion(unittest.TestCase):
+    def test_version(self):
+        self.assertEqual(__version__.__version__, '0.0.1')
