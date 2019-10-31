@@ -235,20 +235,23 @@ class EndpointConfigurationUseCase(ConfigurationUseCase):
 
     def create_user(self):
         command = '''
-        set -e ; \
-        export os_user={os_user} ; \
-        sudo_group={sudo_group} ; \
-        initial_user={initial_user} ; \
-        [ ! -f "/home/$initial_user/.ssh_user_ensured" ] ; \
-        sudo useradd -m -G $sudo_group -s /bin/bash $os_user ; \
-        sudo echo "$os_user ALL = (ALL) NOPASSWD:ALL" >> sudo /etc/sudoers ; \
-        sudo mkdir /home/$os_user/.ssh ; \
-        sudo chown -R $initial_user:$initial_user /home/$os_user/.ssh/ ; \
-        sudo cat /home/$initial_user/.ssh/authorized_keys > /home/$os_user/.ssh/authorized_keys ; \
-        sudo chown -R $os_user:$os_user /home/$os_user/.ssh/ ; \
-        sudo chmod 700 /home/$os_user/.ssh ; \
-        sudo chmod 600 /home/$os_user/.ssh/authorized_keys ; \
-        touch /home/$initial_user/.ssh_user_ensured 
+        set -e; \
+        export os_user=dlab-user; \
+        export sudo_group=sudo; \
+        export initial_user=lisovskyi_yurii_gmail_com; \
+        if [ ! -f "/home/$initial_user/.ssh_user_ensured" ]; then \
+            sudo useradd -m -G $sudo_group -s /bin/bash $os_user; \
+            sudo echo "$os_user ALL = (ALL) NOPASSWD:ALL" | sudo EDITOR = 'tee \
+-a' visudo; \
+            sudo mkdir /home/$os_user/.ssh; \
+            sudo chown -R $initial_user:$initial_user /home/$os_user/.ssh/; \
+            sudo cat /home/$initial_user/.ssh/authorized_keys > /home/$os_user/\
+.ssh/authorized_keys; \
+            sudo chown -R $os_user:$os_user /home/$os_user/.ssh/; \
+            sudo chmod 700 /home/$os_user/.ssh; \
+            sudo chmod 600 /home/$os_user/.ssh/authorized_keys; \
+            touch /home/$initial_user/.ssh_user_ensured; \
+        fi
         '''.format(os_user=self.cli_args.get('os_user'),
                       sudo_group='sudo',
                       initial_user='ubuntu')
@@ -275,20 +278,21 @@ class EndpointConfigurationUseCase(ConfigurationUseCase):
 
     def ensure_logs_endpoint(self):
         command = '''
-        set -e ; \
-        export os_user={os_user} ; \
-        export dlab_path={dlab_path} ; \
-        export log_root_dir={log_root_dir} ; \
-        export supervisor_log_file={supervisor_log_file} ; \
-        [ ! -f "/home/$os_user/.ensure_dir/logs_ensured" ] ; \
-            mkdir -p $dlab_path ; \
-            chown -R $os_user $dlab_path ; \
-            mkdir -p $log_root_dir/provisioning ; \
-            touch $log_root_dir/provisioning/provisioning.log ; \
-            mkdir -p /var/log/application ; \
-            touch $supervisor_log_file ; \
-            chown -R $os_user $log_root_dir ; \
-            touch /home/$os_user/.ensure_dir/logs_ensured \
+        set -e; \
+        export os_user=dlab-user; \
+        export dlab_path=/opt/dlab; \
+        export log_root_dir='/var/opt/dlab/log'; \
+        export supervisor_log_file='/var/log/application/provision-service.log'; \
+        if [ ! -f "/home/$os_user/.ensure_dir/logs_ensured" ]; then \
+            mkdir -p $dlab_path; \
+            chown -R $os_user $dlab_path; \
+            mkdir -p $log_root_dir/provisioning; \
+            touch $log_root_dir/provisioning/provisioning.log; \
+            mkdir -p /var/log/application; \
+            touch $supervisor_log_file; \
+            chown -R $os_user $log_root_dir; \
+            mkdir -p /home/$os_user/.ensure_dir; \
+            touch /home/$os_user/.ensure_dir/logs_ensured; \
         fi
         '''.format(
             os_user=self.cli_args.get('os_user'),
