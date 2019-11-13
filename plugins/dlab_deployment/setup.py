@@ -46,7 +46,7 @@ class DeploySetupParametersBuilder(SetupParametersBuilder):
 
     @property
     def package_data(self):
-        package_data = {NAME: ['files/*']}
+        package_data = {NAME: ['config_files/*']}
         return dict(super(DeploySetupParametersBuilder, self).package_data,
                     **package_data)
 

@@ -188,7 +188,7 @@ class EndpointProvisionUseCase(ProvisionUseCase):
 
 class EndpointConfigurationUseCase(ConfigurationUseCase):
 
-    config_files_path = '{}/files'.format(
+    config_files_path = '{}/config_files'.format(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     )
 
