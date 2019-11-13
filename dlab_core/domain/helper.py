@@ -26,12 +26,17 @@ LC_ERR_INVALID_PARAMETER_TYPE = (
     'Invalid parameter {} of type {}, should be {}')
 
 LC_ERR_TIMEOUT_REACHED = 'Timeout {} {}s has been reached'
+LC_ERR_INDEX_OUT_OF_RANGE = 'Argument index {} is out of range'
 
 
-def validate_property_type(exp_type):
+def validate_property_type(exp_type, index=1):
     def validate(fn):
         def wrapper(*args, **kwargs):
-            argument = args[1]
+            try:
+                argument = args[index]
+            except IndexError:
+                raise DLabException(LC_ERR_INDEX_OUT_OF_RANGE.format(index))
+
             if not isinstance(argument, exp_type):
                 raise DLabException(LC_ERR_INVALID_PARAMETER_TYPE.format(
                     argument, type(argument).__name__, exp_type.__name__))
