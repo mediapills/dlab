@@ -19,24 +19,37 @@
 #
 # ******************************************************************************
 
+from dlab_aws.arguments import (
+    ENDPOINT_ARGUMENTS, PROJECT_ARGUMENTS, SSN_ARGUMENTS
+)
 from dlab_aws.infrastructure.controllers.deployment import AWSCLIController
 
 COMPONENT_SSN = 'ssn'
 COMPONENT_ENDPOINT = 'endpoint'
+COMPONENT_PROJECT = 'project'
 
 ACTION_DEPLOY = 'deploy'
 ACTION_DESTROY = 'destroy'
 
 DEPLOY_ROUTES = [{
-    'func': AWSCLIController.deploy_ssn,
-    'args': [None, COMPONENT_SSN, ACTION_DEPLOY]
+    'func': lambda: AWSCLIController.deploy_ssn(SSN_ARGUMENTS),
+    'args': [None, COMPONENT_SSN, ACTION_DEPLOY],
 }, {
-    'func': AWSCLIController.destroy_ssn,
-    'args': [None, COMPONENT_SSN, ACTION_DESTROY]
+    'func': lambda: AWSCLIController.destroy_ssn(SSN_ARGUMENTS),
+    'args': [None, COMPONENT_SSN, ACTION_DESTROY],
 }, {
-    'func': AWSCLIController.deploy_endpoint,
-    'args': [None, COMPONENT_ENDPOINT, ACTION_DEPLOY]
+    'func': lambda: AWSCLIController.deploy_endpoint(
+        SSN_ARGUMENTS + ENDPOINT_ARGUMENTS),
+    'args': [None, COMPONENT_ENDPOINT, ACTION_DEPLOY],
 }, {
-    'func': AWSCLIController.destroy_endpoint,
-    'args': [None, COMPONENT_ENDPOINT, ACTION_DESTROY]
-}]
+    'func': lambda: AWSCLIController.destroy_endpoint(
+        SSN_ARGUMENTS + ENDPOINT_ARGUMENTS),
+    'args': [None, COMPONENT_ENDPOINT, ACTION_DESTROY],
+}, {
+    'func': lambda: AWSCLIController.deploy_project(PROJECT_ARGUMENTS),
+    'args': [None, COMPONENT_PROJECT, ACTION_DEPLOY],
+}, {
+    'func': lambda: AWSCLIController.destroy_project(PROJECT_ARGUMENTS),
+    'args': [None, COMPONENT_PROJECT, ACTION_DESTROY],
+},
+]
