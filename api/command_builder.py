@@ -12,12 +12,10 @@ class CommandBuilder(object):
 
     @property
     def params(self):
-        request_data = json.loads(self.request)
-
         return ' '.join(
             [
                 self.param_string.format(key.replace('-', '_'), val)
-                for key, val in request_data.items()
+                for key, val in json.loads(self.request).items()
             ]
         )
 
