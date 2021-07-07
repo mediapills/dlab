@@ -1,0 +1,99 @@
+swagger: '2.0'
+info:
+  title: DLab cloud endpoint API
+  description: DLab cloud endpoint API
+  contact:
+    email: Andriy_Yatskovets@epam.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.0.1
+tags:
+- name: notebooks
+- name: libs
+paths:
+  '/notebooks':
+    post:
+      summary: Create notebook
+      description: |
+        See `POST /notebooks` for the information returned
+      tags:
+        - notebooks
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/NotImplemented'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/NotImplemented'
+        '404':
+          description: Not Found
+    delete:
+      summary: Delete notebook
+      description: |
+        See `DELETE /notebooks` for the information returned
+      tags:
+        - notebooks
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/NotImplemented'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/NotImplemented'
+        '404':
+          description: Not Found
+  '/notebooks/libs':
+    get:
+      summary: List libraries
+      description: |
+        See `GET /notebooks/libs` for the information returned
+      tags:
+        - libs
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/NotImplemented'
+        '404':
+          description: Not Found
+    put:
+      summary: Add new library
+      description: |
+        See `PUT /notebooks/libs` for the information returned
+      tags:
+        - libs
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/NotImplemented'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/NotImplemented'
+        '404':
+          description: Not Found
+definitions:
+  NotImplemented:
+      type: object
+      properties:
+        test:
+          type: string
+          minLength: 1
+          description: test
