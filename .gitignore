@@ -11,3 +11,5 @@ dlab_core.egg-info
 htmlcov
 plugins/*/*.egg-info
 providers/*/*.egg-info
+data.db
+data3.db

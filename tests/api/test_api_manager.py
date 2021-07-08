@@ -18,33 +18,31 @@
 # under the License.
 #
 # ******************************************************************************
+import os
+import unittest
 
-from setuptools import setup
-from dlab_core.setup import (SetupParametersBuilder,
-                             SetupParametersDirector,
-                             VERSION_FILE)
-
-""" Distribution name of package"""
-NAME = 'dlab_api'
-
-"""Short summary of the package"""
-DESCRIPTION = 'This a provider to API support.'
+from api.managers import APIManager
+from dlab_core.infrastructure.repositories import (SQLiteRepository,
+                                                   FIFOSQLiteQueueRepository)
 
 
-class APISetupParametersBuilder(SetupParametersBuilder):
-    @property
-    def version_file(self):
-        return VERSION_FILE
+class TestAPIManager(unittest.TestCase):
 
+    def setUp(self):
+        self.base_dir = os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__))
+        )
+        self.api_manager = APIManager(
+            os.path.join(self.base_dir, '..', 'database')
+        )
 
-def do_setup():
-    builder = APISetupParametersBuilder(NAME, DESCRIPTION)
-    director = SetupParametersDirector()
-    director.build(builder)
-    args = director.parameters
-    args['scripts'] = ['api/wsgi.py']
-    setup(**args)
+    def tearDown(self):
+        del self.api_manager
 
+    def test_set_up_manager(self):
+        self.assertIsInstance(self.api_manager.repo, SQLiteRepository)
+        self.assertIsInstance(self.api_manager.queue, FIFOSQLiteQueueRepository)
 
-if __name__ == "__main__":
-    do_setup()
+    def test_create_record(self):
+        record_id = self.api_manager.create_record('data', 'resource', 'action')
+        self.assertGreater(record_id, 0)

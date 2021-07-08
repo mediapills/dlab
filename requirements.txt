@@ -1,2 +1,7 @@
 six >= 1.12.0
 configparser >= 3.7.0
+flask
+jsonschema
+flask_restful
+persist-queue
+uwsgi; platform_system != "Windows"

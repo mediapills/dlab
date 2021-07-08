@@ -24,6 +24,11 @@ import six
 
 from dlab_core.domain.exceptions import DLabException
 
+STATUS_OK = 200
+STATUS_BAD_REQUEST = 400
+STATUS_PROCESSED = 202
+STATUS_NOT_FOUND = 404
+
 
 class EntityException(DLabException):
     """Base class for Entity exceptions."""
